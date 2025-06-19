@@ -4,22 +4,22 @@ import { Menu, Heart } from "lucide-react";
 
 const Header = () => {
   return (
-    <header className="w-full px-6 lg:px-12 py-8 flex items-center justify-between">
+    <header className="w-full px-6 lg:px-12 py-8 flex items-center justify-between bg-white">
       <div className="flex items-center space-x-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-dusty-300 to-sage-400 flex items-center justify-center">
-          <Heart className="w-4 h-4 text-warm-800" />
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
+          <Heart className="w-4 h-4 text-white" />
         </div>
-        <span className="text-2xl font-light tracking-wide text-warm-800">Family Shapes</span>
+        <span className="text-2xl font-light tracking-wide text-navy-800">Family Shapes</span>
       </div>
       
       <nav className="hidden md:flex items-center space-x-12">
-        <a href="#features" className="text-xxs uppercase tracking-wider text-warm-600 hover:text-warm-800 transition-colors">
+        <a href="#features" className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors">
           Features
         </a>
-        <a href="#about" className="text-xxs uppercase tracking-wider text-warm-600 hover:text-warm-800 transition-colors">
+        <a href="#about" className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors">
           About
         </a>
-        <a href="#contact" className="text-xxs uppercase tracking-wider text-warm-600 hover:text-warm-800 transition-colors">
+        <a href="#contact" className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors">
           Contact
         </a>
       </nav>
@@ -28,13 +28,13 @@ const Header = () => {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="hidden md:block text-xxs uppercase tracking-wider text-warm-700 hover:text-warm-800 hover:bg-warm-100"
+          className="hidden md:block text-xxs uppercase tracking-wider text-navy-700 hover:text-coral-600 hover:bg-coral-50"
         >
           Sign In
         </Button>
         <Button 
           size="sm" 
-          className="bg-warm-700 hover:bg-warm-800 text-warm-50 text-xxs uppercase tracking-wider px-6"
+          className="bg-coral-600 hover:bg-coral-700 text-white text-xxs uppercase tracking-wider px-6"
         >
           Get Started
         </Button>

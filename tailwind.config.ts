@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,42 +62,69 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom warm neutral palette
+				// Enhanced warm neutral palette with more contrast
 				warm: {
-					50: '#fdfcfb',
-					100: '#faf8f6',
-					200: '#f5f1eb',
-					300: '#ede5dc',
-					400: '#e0d3c4',
-					500: '#d1c0a9',
-					600: '#bfa98a',
-					700: '#a08968',
-					800: '#7d6b4f',
-					900: '#5c4d39'
+					50: '#fefefe',
+					100: '#fdfbf8',
+					200: '#f8f4f0',
+					300: '#f0e8e0',
+					400: '#e5d5c8',
+					500: '#d4c0a8',
+					600: '#b8a082',
+					700: '#9a7f5f',
+					800: '#7a5f42',
+					900: '#5d4631'
 				},
+				// More vibrant sage palette
 				sage: {
-					50: '#f7f8f7',
-					100: '#eef1ee',
-					200: '#dde3dd',
-					300: '#c4cfc4',
-					400: '#a6b5a6',
-					500: '#8a9a8a',
-					600: '#707e70',
-					700: '#5a655a',
-					800: '#4a524a',
-					900: '#3d433d'
+					50: '#f8faf8',
+					100: '#f0f4f0',
+					200: '#e2ebe2',
+					300: '#c9d8c9',
+					400: '#a8c0a8',
+					500: '#82a182',
+					600: '#5f8260',
+					700: '#4a6b4b',
+					800: '#3a543b',
+					900: '#2d412e'
 				},
+				// Enhanced dusty rose palette
 				dusty: {
-					50: '#faf9f8',
-					100: '#f3f1f0',
-					200: '#e8e3e1',
-					300: '#d8cfc9',
-					400: '#c3b5ab',
-					500: '#ab998c',
-					600: '#927f70',
-					700: '#786859',
-					800: '#63564a',
-					900: '#524740'
+					50: '#fdf9f7',
+					100: '#f9f0ed',
+					200: '#f1ddd6',
+					300: '#e6c4b8',
+					400: '#d6a393',
+					500: '#c08269',
+					600: '#a6654a',
+					700: '#8b4f37',
+					800: '#6f3f2c',
+					900: '#553124'
+				},
+				// New accent colors for more vibrancy
+				coral: {
+					50: '#fef7f4',
+					100: '#fdeee8',
+					200: '#fad9cd',
+					300: '#f5bba8',
+					400: '#ee9176',
+					500: '#e36749',
+					600: '#d04a29',
+					700: '#b0391f',
+					800: '#91321e',
+					900: '#772e1f'
+				},
+				navy: {
+					50: '#f7f8fa',
+					100: '#eef1f5',
+					200: '#d9e0e8',
+					300: '#b8c7d4',
+					400: '#91a7bc',
+					500: '#718ba6',
+					600: '#597393',
+					700: '#495e78',
+					800: '#3e4f64',
+					900: '#364354'
 				}
 			},
 			borderRadius: {
