@@ -31,6 +31,10 @@ const SignIn = () => {
     }));
   };
 
+  const handleRememberMeChange = (checked: boolean | "indeterminate") => {
+    setRememberMe(checked === true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -108,7 +112,7 @@ const SignIn = () => {
                 <Checkbox
                   id="remember-me"
                   checked={rememberMe}
-                  onCheckedChange={setRememberMe}
+                  onCheckedChange={handleRememberMeChange}
                 />
                 <Label htmlFor="remember-me" className="text-sm text-navy-600">
                   Remember me
