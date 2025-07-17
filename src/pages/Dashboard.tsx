@@ -19,6 +19,7 @@ import {
   TreePine
 } from "lucide-react";
 
+// Fixed: Removed non-existent 'Family' icon import
 interface UserProfile {
   id: string;
   full_name: string | null;
