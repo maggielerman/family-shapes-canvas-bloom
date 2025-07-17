@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/layouts/MainLayout";
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
 import { PersonCard } from "@/components/family-trees/PersonCard";
+import { FamilyTreeVisualization } from "@/components/family-trees/FamilyTreeVisualization";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -230,19 +231,11 @@ export default function FamilyTreeDetail() {
           </TabsContent>
 
           <TabsContent value="tree" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Family Tree Visualization</CardTitle>
-                <CardDescription>
-                  Interactive family tree coming soon
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center py-12">
-                <div className="text-muted-foreground">
-                  Family tree visualization will be implemented here
-                </div>
-              </CardContent>
-            </Card>
+            <FamilyTreeVisualization
+              familyTreeId={familyTree.id}
+              persons={persons}
+              onPersonAdded={fetchPersons}
+            />
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-6">
