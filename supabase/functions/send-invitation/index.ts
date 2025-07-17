@@ -57,8 +57,11 @@ serve(async (req) => {
     const declineUrl = `${appUrl}/invitation/decline/${invitation.token}`;
 
     // Send the invitation email
+    console.log("Attempting to send email to:", inviteeEmail);
+    console.log("Organization name:", organizationName);
+    
     const { data, error: emailError } = await resend.emails.send({
-      from: "Family Shapes <invites@resend.dev>",
+      from: "Family Shapes <onboarding@resend.dev>",
       to: [inviteeEmail],
       subject: `You're invited to join ${organizationName} on Family Shapes`,
       html: `
@@ -159,7 +162,8 @@ serve(async (req) => {
     });
 
     if (emailError) {
-      throw new Error(`Failed to send email: ${emailError.message}`);
+      console.error("Resend API error:", emailError);
+      throw new Error(`Failed to send email: ${emailError.message || JSON.stringify(emailError)}`);
     }
 
     // Update invitation status to 'sent'
