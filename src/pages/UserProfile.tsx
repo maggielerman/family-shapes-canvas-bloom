@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Camera, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { Camera, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import Header from "@/components/Header";
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -43,30 +44,7 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="w-full px-6 lg:px-12 py-8 flex items-center justify-between bg-white border-b border-gray-100">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-            <Heart className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-2xl font-light tracking-wide text-navy-800">Family Shapes</span>
-        </div>
-        
-        <nav className="flex items-center space-x-8">
-          <a href="/" className="text-sm text-navy-600 hover:text-coral-600 transition-colors">
-            Home
-          </a>
-          <a href="/about" className="text-sm text-navy-600 hover:text-coral-600 transition-colors">
-            About
-          </a>
-          <a href="/contact" className="text-sm text-navy-600 hover:text-coral-600 transition-colors">
-            Contact
-          </a>
-          <a href="/profile" className="text-sm text-coral-600 font-medium">
-            Profile
-          </a>
-        </nav>
-      </header>
+      <Header />
 
       <div className="px-6 lg:px-12 py-12">
         <div className="max-w-4xl mx-auto">
