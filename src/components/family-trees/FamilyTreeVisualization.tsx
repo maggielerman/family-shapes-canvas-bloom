@@ -33,6 +33,8 @@ interface D3Node extends d3.SimulationNodeDatum {
   status: string;
   profile_photo_url?: string | null;
   date_of_birth?: string | null;
+  x?: number;
+  y?: number;
 }
 
 interface D3Link extends d3.SimulationLinkDatum<D3Node> {
@@ -73,7 +75,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
     if (persons.length > 0) {
       renderVisualization();
     }
-  }, [persons, connections]);
+  }, [persons, connections, selectedPersonIds]);
 
   const fetchConnections = async () => {
     try {
@@ -125,12 +127,14 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
       target: nodes.find(n => n.id === connection.to_person_id)!,
     })).filter(link => link.source && link.target);
 
-    // Create force simulation
+    // Create force simulation with bounds
     const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink<D3Node, D3Link>(links).id(d => d.id).distance(150))
       .force("charge", d3.forceManyBody().strength(-800))
       .force("center", d3.forceCenter((width - margin.left - margin.right) / 2, (height - margin.top - margin.bottom) / 2))
-      .force("collision", d3.forceCollide().radius(60));
+      .force("collision", d3.forceCollide().radius(60))
+      .force("boundary", d3.forceX().x((width - margin.left - margin.right) / 2).strength(0.1))
+      .force("boundaryY", d3.forceY().y((height - margin.top - margin.bottom) / 2).strength(0.1));
 
     // Create arrow markers for different relationship types
     const defs = svg.append("defs");
@@ -248,6 +252,12 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
 
     // Update positions on simulation tick
     simulation.on("tick", () => {
+      // Constrain nodes to canvas bounds
+      nodes.forEach(d => {
+        d.x = Math.max(60, Math.min(width - margin.left - margin.right - 60, d.x!));
+        d.y = Math.max(60, Math.min(height - margin.top - margin.bottom - 60, d.y!));
+      });
+
       link.attr("d", d => {
         const dx = d.target.x! - d.source.x!;
         const dy = d.target.y! - d.source.y!;
