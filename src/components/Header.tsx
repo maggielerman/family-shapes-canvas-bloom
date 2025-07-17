@@ -67,6 +67,12 @@ const Header = () => {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
+                <Link to="/family-trees" className="cursor-pointer">
+                  <Heart className="mr-2 h-4 w-4" />
+                  <span>Family Trees</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link to="/dashboard" className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Dashboard</span>

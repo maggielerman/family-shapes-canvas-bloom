@@ -17,6 +17,7 @@ export type Database = {
       connections: {
         Row: {
           created_at: string | null
+          family_tree_id: string | null
           from_person_id: string | null
           group_id: string | null
           id: string
@@ -29,6 +30,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          family_tree_id?: string | null
           from_person_id?: string | null
           group_id?: string | null
           id?: string
@@ -41,6 +43,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          family_tree_id?: string | null
           from_person_id?: string | null
           group_id?: string | null
           id?: string
@@ -52,6 +55,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "connections_family_tree_id_fkey"
+            columns: ["family_tree_id"]
+            isOneToOne: false
+            referencedRelation: "family_trees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "connections_from_person_id_fkey"
             columns: ["from_person_id"]
@@ -223,6 +233,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      family_trees: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          settings: Json | null
+          tree_data: Json | null
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          settings?: Json | null
+          tree_data?: Json | null
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          settings?: Json | null
+          tree_data?: Json | null
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
       }
       group_memberships: {
         Row: {
@@ -457,6 +503,7 @@ export type Database = {
           death_place: string | null
           donor: boolean | null
           email: string | null
+          family_tree_id: string | null
           fertility_treatments: Json | null
           gender: string | null
           id: string
@@ -483,6 +530,7 @@ export type Database = {
           death_place?: string | null
           donor?: boolean | null
           email?: string | null
+          family_tree_id?: string | null
           fertility_treatments?: Json | null
           gender?: string | null
           id?: string
@@ -509,6 +557,7 @@ export type Database = {
           death_place?: string | null
           donor?: boolean | null
           email?: string | null
+          family_tree_id?: string | null
           fertility_treatments?: Json | null
           gender?: string | null
           id?: string
@@ -527,6 +576,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "persons_family_tree_id_fkey"
+            columns: ["family_tree_id"]
+            isOneToOne: false
+            referencedRelation: "family_trees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "persons_organization_id_fkey"
             columns: ["organization_id"]

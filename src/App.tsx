@@ -14,6 +14,8 @@ import Organizations from "./pages/Organizations";
 import OrganizationDetails from "./pages/OrganizationDetails";
 import InvitationPage from "./pages/InvitationPage";
 import UserProfile from "./pages/UserProfile";
+import FamilyTrees from "./pages/FamilyTrees";
+import FamilyTreeDetail from "./pages/FamilyTreeDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +36,8 @@ const App = () => (
             <Route path="/organizations" element={<Organizations />} />
             <Route path="/organizations/:id" element={<OrganizationDetails />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/family-trees" element={<FamilyTrees />} />
+            <Route path="/family-trees/:id" element={<FamilyTreeDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
