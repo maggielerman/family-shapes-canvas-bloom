@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import CreateOrganizationDialog from "@/components/organizations/CreateOrganizationDialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Heart, 
@@ -70,32 +71,49 @@ const Dashboard = () => {
         setProfile(profileData);
       }
 
-      // Fetch user organizations
-      const { data: orgData, error: orgError } = await supabase
-        .from('organization_memberships')
-        .select(`
-          role,
-          organizations (
-            id,
-            name,
-            type,
-            description
-          )
-        `)
-        .eq('user_id', user!.id);
+      // Fetch user organizations (both owned and memberships)
+      const [ownedOrgsData, membershipOrgsData] = await Promise.all([
+        // Organizations owned by user
+        supabase
+          .from('organizations')
+          .select('id, name, type, description')
+          .eq('owner_id', user!.id),
+        
+        // Organizations where user is a member
+        supabase
+          .from('organization_memberships')
+          .select(`
+            role,
+            organizations (
+              id,
+              name,
+              type,
+              description
+            )
+          `)
+          .eq('user_id', user!.id)
+      ]);
 
-      if (orgError) {
-        console.error('Error fetching organizations:', orgError);
-      } else {
-        const orgs = orgData?.map(item => ({
-          id: item.organizations.id,
-          name: item.organizations.name,
-          type: item.organizations.type,
-          description: item.organizations.description,
-          role: item.role
-        })) || [];
-        setOrganizations(orgs);
-      }
+      const ownedOrgs = ownedOrgsData.data?.map(org => ({
+        ...org,
+        role: 'owner'
+      })) || [];
+
+      const memberOrgs = membershipOrgsData.data?.map(item => ({
+        id: item.organizations.id,
+        name: item.organizations.name,
+        type: item.organizations.type,
+        description: item.organizations.description,
+        role: item.role
+      })) || [];
+
+      // Combine and deduplicate organizations
+      const allOrgs = [...ownedOrgs, ...memberOrgs];
+      const uniqueOrgs = allOrgs.filter((org, index, self) => 
+        index === self.findIndex(o => o.id === org.id)
+      );
+      
+      setOrganizations(uniqueOrgs);
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
@@ -277,9 +295,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground mb-4">
                     You're not part of any organizations yet
                   </p>
-                  <Button size="sm">
-                    Create Organization
-                  </Button>
+                  <CreateOrganizationDialog onOrganizationCreated={fetchUserData} />
                 </div>
               )}
             </CardContent>
