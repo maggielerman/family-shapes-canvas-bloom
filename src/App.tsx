@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Organizations from "./pages/Organizations";
 import OrganizationDetails from "./pages/OrganizationDetails";
+import InvitationPage from "./pages/InvitationPage";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 

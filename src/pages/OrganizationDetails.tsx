@@ -151,21 +151,43 @@ const OrganizationDetails = () => {
     if (!id) return;
 
     try {
-      const { error } = await supabase
+      // First, create the invitation record
+      const { data: invitationData, error } = await supabase
         .from('organization_invitations')
         .insert({
           organization_id: id,
           inviter_id: user?.id,
           invitee_email: inviteEmail,
           role: inviteRole
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
-
-      toast({
-        title: 'Invitation Sent',
-        description: `Invitation sent to ${inviteEmail} as ${inviteRole}`
-      });
+      
+      if (invitationData?.id) {
+        // Then send the email using our edge function
+        const { error: emailError } = await supabase.functions.invoke('send-invitation', {
+          body: { 
+            invitationId: invitationData.id,
+            fromName: user?.email?.split('@')[0] || 'Organization Admin'
+          }
+        });
+        
+        if (emailError) {
+          console.error("Email sending error:", emailError);
+          toast({
+            title: 'Invitation Created',
+            description: 'Invitation was created but email could not be sent.',
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: 'Invitation Sent',
+            description: `Invitation sent to ${inviteEmail} as ${inviteRole}`
+          });
+        }
+      }
 
       setInviteEmail('');
       setInviteRole('viewer');
