@@ -101,6 +101,11 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
 
     svg.attr("width", width).attr("height", height);
 
+    // Add click handler to clear selections when clicking empty space
+    svg.on("click", () => {
+      setSelectedPersonIds([]);
+    });
+
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
     // Create nodes and links data
