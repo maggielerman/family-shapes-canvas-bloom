@@ -241,19 +241,23 @@ const Dashboard = () => {
             <CardContent>
               {organizations.length > 0 ? (
                 <div className="space-y-4">
-                  {organizations.map((org) => (
-                    <div key={org.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">{org.name}</h4>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {org.type} • {org.description || 'No description'}
-                        </p>
-                      </div>
-                      <Badge variant="secondary" className="capitalize">
-                        {org.role}
-                      </Badge>
-                    </div>
-                  ))}
+                   {organizations.map((org) => (
+                     <div 
+                       key={org.id} 
+                       className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                       onClick={() => navigate(`/organizations/${org.id}`)}
+                     >
+                       <div>
+                         <h4 className="font-medium">{org.name}</h4>
+                         <p className="text-sm text-muted-foreground capitalize">
+                           {org.type} • {org.description || 'No description'}
+                         </p>
+                       </div>
+                       <Badge variant="secondary" className="capitalize">
+                         {org.role}
+                       </Badge>
+                     </div>
+                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
