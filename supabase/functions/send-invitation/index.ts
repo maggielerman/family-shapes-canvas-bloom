@@ -61,7 +61,7 @@ serve(async (req) => {
     console.log("Organization name:", organizationName);
     
     const { data, error: emailError } = await resend.emails.send({
-      from: "Family Shapes <onboarding@resend.dev>",
+      from: "Family Shapes <noreply@familyshapes.com>",
       to: [inviteeEmail],
       subject: `You're invited to join ${organizationName} on Family Shapes`,
       html: `
