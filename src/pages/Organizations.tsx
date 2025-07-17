@@ -260,7 +260,11 @@ const Organizations = () => {
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                      <Button size="sm" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => navigate(`/organizations/${org.id}`)}
+                      >
                         Open
                       </Button>
                       {org.role === 'owner' && (
