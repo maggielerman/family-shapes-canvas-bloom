@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Phone, MapPin, Heart } from "lucide-react";
+import MainLayout from "@/components/layouts/MainLayout";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -33,31 +34,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="w-full px-6 lg:px-12 py-8 flex items-center justify-between bg-white border-b border-gray-100">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-            <Heart className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-2xl font-light tracking-wide text-navy-800">Family Shapes</span>
-        </div>
-        
-        <nav className="flex items-center space-x-8">
-          <a href="/" className="text-sm text-navy-600 hover:text-coral-600 transition-colors">
-            Home
-          </a>
-          <a href="/about" className="text-sm text-navy-600 hover:text-coral-600 transition-colors">
-            About
-          </a>
-          <a href="/contact" className="text-sm text-coral-600 font-medium">
-            Contact
-          </a>
-          <a href="/signin" className="text-sm text-navy-600 hover:text-coral-600 transition-colors">
-            Sign In
-          </a>
-        </nav>
-      </header>
+    <MainLayout>
 
       {/* Hero Section */}
       <section className="px-6 lg:px-12 py-20 text-center">
@@ -175,7 +152,7 @@ const Contact = () => {
           </div>
         </div>
       </section>
-    </div>
+    </MainLayout>
   );
 };
 

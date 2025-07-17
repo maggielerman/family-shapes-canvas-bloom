@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import MainLayout from "@/components/layouts/MainLayout";
 import { 
   Heart, 
   ArrowRight, 
@@ -59,35 +60,7 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="w-full px-6 lg:px-12 py-8 flex items-center justify-between bg-white border-b border-slate-100">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-            <Heart className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-2xl font-light tracking-wide text-navy-800">Family Shapes</span>
-        </div>
-        
-        <nav className="hidden md:flex items-center space-x-12">
-          <a href="/" className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors">
-            Home
-          </a>
-          <a href="/about" className="text-xxs uppercase tracking-wider text-coral-600">
-            About
-          </a>
-          <a href="#contact" className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors">
-            Contact
-          </a>
-        </nav>
-
-        <Button 
-          size="sm" 
-          className="bg-coral-600 hover:bg-coral-700 text-white text-xxs uppercase tracking-wider px-6"
-        >
-          Get Started
-        </Button>
-      </header>
+    <MainLayout showFooter={false}>
 
       {/* Hero */}
       <section className="w-full px-6 lg:px-12 py-24 lg:py-32 bg-white">
@@ -341,7 +314,7 @@ const About = () => {
           </div>
         </div>
       </footer>
-    </div>
+    </MainLayout>
   );
 };
 

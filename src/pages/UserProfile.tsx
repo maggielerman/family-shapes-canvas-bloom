@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Mail, Phone, MapPin, Calendar } from "lucide-react";
-import Header from "@/components/Header";
+import SidebarLayout from "@/components/layouts/SidebarLayout";
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -43,8 +43,7 @@ const UserProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+    <SidebarLayout>
 
       <div className="px-6 lg:px-12 py-12">
         <div className="max-w-4xl mx-auto">
@@ -249,7 +248,7 @@ const UserProfile = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </SidebarLayout>
   );
 };
 

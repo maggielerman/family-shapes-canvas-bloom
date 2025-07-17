@@ -8,13 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import CreateOrganizationDialog from "@/components/organizations/CreateOrganizationDialog";
 import { useToast } from "@/hooks/use-toast";
+import SidebarLayout from "@/components/layouts/SidebarLayout";
 import { 
   Heart, 
   Users, 
   Building2, 
   UserPlus, 
-  Settings, 
-  LogOut, 
   Home,
   Share2,
   TreePine
@@ -121,24 +120,13 @@ const Dashboard = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      navigate("/");
-    }
-  };
-
   if (loading || isLoadingData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <SidebarLayout>
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </SidebarLayout>
     );
   }
 
@@ -146,29 +134,7 @@ const Dashboard = () => {
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-              <Heart className="w-4 h-4 text-white" />
-            </div>
-            <h1 className="text-2xl font-light tracking-wide">Family Shapes</h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
+    <SidebarLayout>
 
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
@@ -322,7 +288,7 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </SidebarLayout>
   );
 };
 
