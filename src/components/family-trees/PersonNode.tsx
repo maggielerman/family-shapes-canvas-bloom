@@ -1,8 +1,8 @@
-import { memo } from 'react';
+import { memo, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Heart, Baby, Dna } from 'lucide-react';
+import { Users, Heart, Baby, Dna, Move } from 'lucide-react';
 
 interface PersonNodeProps {
   person: {
@@ -21,7 +21,8 @@ interface PersonNodeProps {
   onDragEnd?: () => void;
   onDragOver?: () => void;
   onDragLeave?: () => void;
-  onDrop?: (relationshipType: string) => void;
+  onDrop?: () => void;
+  onPositionChange?: (position: { x: number; y: number }) => void;
 }
 
 const relationshipTypes = [
@@ -44,7 +45,10 @@ export const PersonNode = memo(({
   onDragOver,
   onDragLeave,
   onDrop,
+  onPositionChange,
 }: PersonNodeProps) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const getNodeColor = (gender?: string | null) => {
     switch (gender?.toLowerCase()) {
       case 'male': return "hsl(var(--primary))";
@@ -57,43 +61,78 @@ export const PersonNode = memo(({
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only left click
+    e.preventDefault();
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const parentRect = e.currentTarget.parentElement?.getBoundingClientRect();
+    if (!parentRect) return;
+
+    setDragOffset({
+      x: e.clientX - rect.left - rect.width / 2,
+      y: e.clientY - rect.top - rect.height / 2,
+    });
+    setIsDragging(true);
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const newX = moveEvent.clientX - parentRect.left - dragOffset.x;
+      const newY = moveEvent.clientY - parentRect.top - dragOffset.y;
+      
+      // Keep within bounds
+      const boundedX = Math.max(40, Math.min(parentRect.width - 40, newX));
+      const boundedY = Math.max(40, Math.min(parentRect.height - 40, newY));
+      
+      onPositionChange?.({ x: boundedX, y: boundedY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [dragOffset, onPositionChange]);
+
   return (
     <div
-      className={`absolute transition-all duration-200 ${
-        isDragged ? 'scale-110 opacity-80 z-50' : ''
+      className={`absolute transition-all duration-200 select-none ${
+        isDragged || isDragging ? 'scale-110 opacity-80 z-50' : ''
       } ${isHovered ? 'scale-105' : ''}`}
       style={{
         left: position.x - 40,
         top: position.y - 40,
         transform: isDragged ? 'rotate(5deg)' : 'none',
+        cursor: isDragging ? 'grabbing' : 'grab',
       }}
+      onMouseDown={!isConnecting ? handleMouseDown : undefined}
     >
       {/* Main Node */}
       <div
-        className={`relative w-20 h-20 rounded-full border-2 cursor-grab active:cursor-grabbing transition-all ${
+        className={`relative w-20 h-20 rounded-full border-2 transition-all ${
           isDragged ? 'border-primary border-4' : 'border-border'
         } ${isHovered && isConnecting ? 'border-primary border-4 animate-pulse' : ''}`}
         style={{ backgroundColor: getNodeColor(person.gender) }}
-        draggable
-        onDragStart={(e) => {
+        draggable={isConnecting}
+        onDragStart={isConnecting ? (e) => {
           e.dataTransfer.effectAllowed = 'move';
           e.dataTransfer.setData('text/plain', person.id);
           onDragStart?.();
-        }}
+        } : undefined}
         onDragEnd={onDragEnd}
-        onDragOver={(e) => {
+        onDragOver={isConnecting ? (e) => {
           e.preventDefault();
           onDragOver?.();
-        }}
+        } : undefined}
         onDragLeave={onDragLeave}
-        onDrop={(e) => {
+        onDrop={isConnecting ? (e) => {
           e.preventDefault();
-          // Show relationship selector when dropping
           if (isConnecting && isHovered) {
-            // For now, default to sibling - we'll improve this
-            onDrop?.('sibling');
+            onDrop?.();
           }
-        }}
+        } : undefined}
       >
         {/* Profile Image or Initials */}
         <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
@@ -124,30 +163,18 @@ export const PersonNode = memo(({
         )}
       </div>
 
-      {/* Connection Options (shown when hovering during drag) */}
+      {/* Move indicator */}
+      {!isConnecting && (
+        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+            <Move className="w-3 h-3" />
+          </div>
+        </div>
+      )}
+
+      {/* Drop zone indicator */}
       {isHovered && isConnecting && (
-        <Card className="absolute top-full left-1/2 transform -translate-x-1/2 mt-16 z-50 animate-fade-in">
-          <CardContent className="p-2">
-            <div className="text-xs font-medium mb-2">Connect as:</div>
-            <div className="flex flex-col gap-1">
-              {relationshipTypes.slice(0, 4).map(type => {
-                const Icon = type.icon;
-                return (
-                  <Button
-                    key={type.value}
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start h-6 text-xs"
-                    onClick={() => onDrop?.(type.value)}
-                  >
-                    <Icon className="w-3 h-3 mr-1" />
-                    {type.label}
-                  </Button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="absolute inset-0 rounded-full border-4 border-primary border-dashed animate-pulse bg-primary/10" />
       )}
     </div>
   );

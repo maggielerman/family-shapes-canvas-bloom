@@ -72,14 +72,6 @@ export function useConnectionCreator({ familyTreeId, onConnectionAdded }: UseCon
     }
   }, [familyTreeId, onConnectionAdded, toast]);
 
-  const handleDrop = useCallback(async (targetPersonId: string, relationshipType: string) => {
-    if (draggedPersonId && draggedPersonId !== targetPersonId) {
-      const success = await createConnection(draggedPersonId, targetPersonId, relationshipType);
-      if (success) {
-        handleDragEnd();
-      }
-    }
-  }, [draggedPersonId, createConnection, handleDragEnd]);
 
   return {
     draggedPersonId,
@@ -89,7 +81,6 @@ export function useConnectionCreator({ familyTreeId, onConnectionAdded }: UseCon
     handleDragEnd,
     handleDragOver,
     handleDragLeave,
-    handleDrop,
     createConnection,
   };
 }
