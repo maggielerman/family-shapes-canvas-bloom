@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Building2, 
   Users, 
@@ -13,7 +14,9 @@ import {
   UserPlus, 
   ShieldCheck, 
   Lock, 
-  Globe 
+  Globe,
+  Trash2,
+  UserMinus
 } from "lucide-react";
 import { 
   Dialog, 
@@ -41,6 +44,14 @@ interface OrganizationMember {
   email: string;
 }
 
+interface PendingInvitation {
+  id: string;
+  invitee_email: string;
+  role: string;
+  status: string;
+  created_at: string;
+}
+
 const OrganizationDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -49,7 +60,9 @@ const OrganizationDetails = () => {
 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('viewer');
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
@@ -112,6 +125,19 @@ const OrganizationDetails = () => {
       }) || [];
 
       setMembers(formattedMembers);
+
+      // Fetch pending invitations if owner
+      if (orgData.owner_id === user?.id) {
+        const { data: invitationsData, error: invitationsError } = await supabase
+          .from('organization_invitations')
+          .select('*')
+          .eq('organization_id', id)
+          .eq('status', 'pending');
+
+        if (!invitationsError) {
+          setPendingInvitations(invitationsData || []);
+        }
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -131,21 +157,97 @@ const OrganizationDetails = () => {
           organization_id: id,
           inviter_id: user?.id,
           invitee_email: inviteEmail,
-          role: 'viewer'
+          role: inviteRole
         });
 
       if (error) throw error;
 
       toast({
         title: 'Invitation Sent',
-        description: `Invitation sent to ${inviteEmail}`
+        description: `Invitation sent to ${inviteEmail} as ${inviteRole}`
       });
 
       setInviteEmail('');
+      setInviteRole('viewer');
+      fetchOrganizationDetails(); // Refresh to show new pending invitation
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to send invitation',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const cancelInvitation = async (invitationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('organization_invitations')
+        .delete()
+        .eq('id', invitationId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Invitation Cancelled',
+        description: 'The invitation has been cancelled'
+      });
+
+      fetchOrganizationDetails(); // Refresh the list
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to cancel invitation',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const changeMemberRole = async (userId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('organization_memberships')
+        .update({ role: newRole })
+        .eq('organization_id', id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Role Updated',
+        description: 'Member role has been updated'
+      });
+
+      fetchOrganizationDetails(); // Refresh the list
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update role',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const removeMember = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('organization_memberships')
+        .delete()
+        .eq('organization_id', id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Member Removed',
+        description: 'Member has been removed from the organization'
+      });
+
+      fetchOrganizationDetails(); // Refresh the list
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove member',
         variant: 'destructive'
       });
     }
@@ -226,19 +328,47 @@ const OrganizationDetails = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {members.map(member => (
-                  <div 
-                    key={member.user_id} 
-                    className="flex items-center justify-between"
-                  >
-                    <div>
-                      <span>{member.full_name}</span>
-                      <Badge variant="secondary" className="ml-2">{member.role}</Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+               <div className="space-y-3">
+                 {members.map(member => (
+                   <div 
+                     key={member.user_id} 
+                     className="flex items-center justify-between p-3 bg-muted rounded"
+                   >
+                     <div className="flex-1">
+                       <div className="font-medium">{member.full_name}</div>
+                       <div className="text-sm text-muted-foreground">{member.email}</div>
+                     </div>
+                     <div className="flex items-center space-x-2">
+                       {isOwner && member.user_id !== user?.id ? (
+                         <>
+                           <Select 
+                             value={member.role} 
+                             onValueChange={(newRole) => changeMemberRole(member.user_id, newRole)}
+                           >
+                             <SelectTrigger className="w-24">
+                               <SelectValue />
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="viewer">Viewer</SelectItem>
+                               <SelectItem value="editor">Editor</SelectItem>
+                               <SelectItem value="admin">Admin</SelectItem>
+                             </SelectContent>
+                           </Select>
+                           <Button
+                             size="sm"
+                             variant="destructive"
+                             onClick={() => removeMember(member.user_id)}
+                           >
+                             <UserMinus className="w-3 h-3" />
+                           </Button>
+                         </>
+                       ) : (
+                         <Badge variant="secondary">{member.role}</Badge>
+                       )}
+                     </div>
+                   </div>
+                 ))}
+               </div>
               
               {isOwner && (
                 <Dialog>
@@ -257,9 +387,20 @@ const OrganizationDetails = () => {
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
                       />
+                      <Select value={inviteRole} onValueChange={setInviteRole}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="viewer">Viewer</SelectItem>
+                          <SelectItem value="editor">Editor</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Button 
                         onClick={inviteMember}
                         disabled={!inviteEmail}
+                        className="w-full"
                       >
                         Send Invitation
                       </Button>
@@ -278,8 +419,32 @@ const OrganizationDetails = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Pending invitations logic will be added later */}
-              <p className="text-muted-foreground">No pending invitations</p>
+              {pendingInvitations.length === 0 ? (
+                <p className="text-muted-foreground">No pending invitations</p>
+              ) : (
+                <div className="space-y-2">
+                  {pendingInvitations.map(invitation => (
+                    <div 
+                      key={invitation.id} 
+                      className="flex items-center justify-between p-2 bg-muted rounded"
+                    >
+                      <div>
+                        <span className="text-sm font-medium">{invitation.invitee_email}</span>
+                        <Badge variant="outline" className="ml-2">{invitation.role}</Badge>
+                      </div>
+                      {isOwner && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => cancelInvitation(invitation.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
