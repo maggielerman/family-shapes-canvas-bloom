@@ -14,279 +14,791 @@ export type Database = {
   }
   public: {
     Tables: {
-      book_drafts: {
-        Row: {
-          characters: Json | null
-          content: Json | null
-          created_at: string | null
-          id: string
-          title: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          characters?: Json | null
-          content?: Json | null
-          created_at?: string | null
-          id?: string
-          title: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Update: {
-          characters?: Json | null
-          content?: Json | null
-          created_at?: string | null
-          id?: string
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      communities: {
-        Row: {
-          avatar_url: string | null
-          banner_url: string | null
-          created_at: string | null
-          created_by: string
-          description: string | null
-          id: string
-          is_public: boolean | null
-          name: string
-          settings: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          banner_url?: string | null
-          created_at?: string | null
-          created_by: string
-          description?: string | null
-          id?: string
-          is_public?: boolean | null
-          name: string
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          banner_url?: string | null
-          created_at?: string | null
-          created_by?: string
-          description?: string | null
-          id?: string
-          is_public?: boolean | null
-          name?: string
-          settings?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      community_members: {
-        Row: {
-          community_id: string
-          id: string
-          joined_at: string | null
-          role: string | null
-          status: string | null
-          user_id: string
-        }
-        Insert: {
-          community_id: string
-          id?: string
-          joined_at?: string | null
-          role?: string | null
-          status?: string | null
-          user_id: string
-        }
-        Update: {
-          community_id?: string
-          id?: string
-          joined_at?: string | null
-          role?: string | null
-          status?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_members_community_id_fkey"
-            columns: ["community_id"]
-            isOneToOne: false
-            referencedRelation: "communities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      family_flows: {
+      connections: {
         Row: {
           created_at: string | null
-          group_expanded: boolean | null
-          id: string
-          name: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          group_expanded?: boolean | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          group_expanded?: boolean | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      flow_edges: {
-        Row: {
-          animated: boolean | null
-          created_at: string | null
-          custom_relationship: string | null
-          edge_id: string
-          edge_type: string | null
-          flow_id: string
-          id: string
-          label: string | null
-          relationship_type: string | null
-          relationships: Json | null
-          source_node_id: string
-          target_node_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          animated?: boolean | null
-          created_at?: string | null
-          custom_relationship?: string | null
-          edge_id: string
-          edge_type?: string | null
-          flow_id: string
-          id?: string
-          label?: string | null
-          relationship_type?: string | null
-          relationships?: Json | null
-          source_node_id: string
-          target_node_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          animated?: boolean | null
-          created_at?: string | null
-          custom_relationship?: string | null
-          edge_id?: string
-          edge_type?: string | null
-          flow_id?: string
-          id?: string
-          label?: string | null
-          relationship_type?: string | null
-          relationships?: Json | null
-          source_node_id?: string
-          target_node_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "flow_edges_flow_id_fkey"
-            columns: ["flow_id"]
-            isOneToOne: false
-            referencedRelation: "family_flows"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      flow_nodes: {
-        Row: {
-          created_at: string | null
-          draggable: boolean | null
-          flow_id: string
+          from_person_id: string | null
           group_id: string | null
           id: string
-          label: string
-          node_id: string
-          node_type: string | null
-          position_x: number
-          position_y: number
-          style: Json | null
+          metadata: Json | null
+          notes: string | null
+          organization_id: string | null
+          relationship_type: string
+          to_person_id: string | null
           updated_at: string | null
-          user_id: string
         }
         Insert: {
           created_at?: string | null
-          draggable?: boolean | null
-          flow_id: string
+          from_person_id?: string | null
           group_id?: string | null
           id?: string
-          label: string
-          node_id: string
-          node_type?: string | null
-          position_x?: number
-          position_y?: number
-          style?: Json | null
+          metadata?: Json | null
+          notes?: string | null
+          organization_id?: string | null
+          relationship_type: string
+          to_person_id?: string | null
           updated_at?: string | null
-          user_id: string
         }
         Update: {
           created_at?: string | null
-          draggable?: boolean | null
-          flow_id?: string
+          from_person_id?: string | null
           group_id?: string | null
           id?: string
-          label?: string
-          node_id?: string
-          node_type?: string | null
-          position_x?: number
-          position_y?: number
-          style?: Json | null
+          metadata?: Json | null
+          notes?: string | null
+          organization_id?: string | null
+          relationship_type?: string
+          to_person_id?: string | null
           updated_at?: string | null
-          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "flow_nodes_flow_id_fkey"
-            columns: ["flow_id"]
+            foreignKeyName: "connections_from_person_id_fkey"
+            columns: ["from_person_id"]
             isOneToOne: false
-            referencedRelation: "family_flows"
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_from_person_id_fkey"
+            columns: ["from_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_to_person_id_fkey"
+            columns: ["to_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_to_person_id_fkey"
+            columns: ["to_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_groups"
             referencedColumns: ["id"]
           },
         ]
       }
-      profiles: {
+      donors: {
         Row: {
-          avatar_url: string | null
-          full_name: string | null
+          blood_type: string | null
+          created_at: string | null
+          donor_number: string | null
+          donor_type: string | null
+          education_level: string | null
+          ethnicity: string | null
+          eye_color: string | null
+          hair_color: string | null
+          height: string | null
           id: string
+          is_anonymous: boolean | null
+          medical_history: Json | null
+          metadata: Json | null
+          notes: string | null
+          person_id: string | null
+          sperm_bank: string | null
+          updated_at: string | null
+          weight: string | null
+        }
+        Insert: {
+          blood_type?: string | null
+          created_at?: string | null
+          donor_number?: string | null
+          donor_type?: string | null
+          education_level?: string | null
+          ethnicity?: string | null
+          eye_color?: string | null
+          hair_color?: string | null
+          height?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          medical_history?: Json | null
+          metadata?: Json | null
+          notes?: string | null
+          person_id?: string | null
+          sperm_bank?: string | null
+          updated_at?: string | null
+          weight?: string | null
+        }
+        Update: {
+          blood_type?: string | null
+          created_at?: string | null
+          donor_number?: string | null
+          donor_type?: string | null
+          education_level?: string | null
+          ethnicity?: string | null
+          eye_color?: string | null
+          hair_color?: string | null
+          height?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          medical_history?: Json | null
+          metadata?: Json | null
+          notes?: string | null
+          person_id?: string | null
+          sperm_bank?: string | null
+          updated_at?: string | null
+          weight?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donors_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donors_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_invitations: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          group_id: string
+          id: string
+          invitee_email: string
+          invitee_id: string | null
+          inviter_id: string
+          message: string | null
+          role: string | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
-          avatar_url?: string | null
-          full_name?: string | null
-          id: string
+          created_at?: string | null
+          expires_at?: string | null
+          group_id: string
+          id?: string
+          invitee_email: string
+          invitee_id?: string | null
+          inviter_id: string
+          message?: string | null
+          role?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          group_id?: string
+          id?: string
+          invitee_email?: string
+          invitee_id?: string | null
+          inviter_id?: string
+          message?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_invitations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_memberships: {
+        Row: {
+          created_at: string | null
+          group_id: string | null
+          id: string
+          person_id: string | null
+          role: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          person_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          person_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_memberships_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_memberships_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_memberships_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          label: string
+          organization_id: string | null
+          owner_id: string
+          type: string
+          updated_at: string | null
+          visibility: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label: string
+          organization_id?: string | null
+          owner_id: string
+          type: string
+          updated_at?: string | null
+          visibility?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label?: string
+          organization_id?: string | null
+          owner_id?: string
+          type?: string
+          updated_at?: string | null
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_invitations: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          invitee_email: string
+          inviter_id: string | null
+          organization_id: string | null
+          role: string | null
+          status: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invitee_email: string
+          inviter_id?: string | null
+          organization_id?: string | null
+          role?: string | null
+          status?: string | null
+          token?: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invitee_email?: string
+          inviter_id?: string | null
+          organization_id?: string | null
+          role?: string | null
+          status?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_memberships: {
+        Row: {
+          id: string
+          invited_by: string | null
+          joined_at: string | null
+          organization_id: string | null
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          organization_id?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          organization_id?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_memberships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          domain: string | null
+          id: string
+          name: string
+          owner_id: string
+          plan: string | null
+          settings: Json | null
+          slug: string
+          subdomain: string
+          type: string
+          updated_at: string | null
+          visibility: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          domain?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          plan?: string | null
+          settings?: Json | null
+          slug: string
+          subdomain: string
+          type: string
+          updated_at?: string | null
+          visibility?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          domain?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          plan?: string | null
+          settings?: Json | null
+          slug?: string
+          subdomain?: string
+          type?: string
+          updated_at?: string | null
+          visibility?: string | null
+        }
+        Relationships: []
+      }
+      persons: {
+        Row: {
+          address: string | null
+          birth_place: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          date_of_death: string | null
+          death_place: string | null
+          donor: boolean | null
+          email: string | null
+          fertility_treatments: Json | null
+          gender: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          notes: string | null
+          organization_id: string | null
+          phone: string | null
+          preferred_contact_method: string | null
+          profile_photo_url: string | null
+          social_media_links: Json | null
+          status: string | null
+          updated_at: string | null
+          used_iui: boolean | null
+          used_ivf: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          birth_place?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          date_of_death?: string | null
+          death_place?: string | null
+          donor?: boolean | null
+          email?: string | null
+          fertility_treatments?: Json | null
+          gender?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          profile_photo_url?: string | null
+          social_media_links?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          used_iui?: boolean | null
+          used_ivf?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          birth_place?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          date_of_death?: string | null
+          death_place?: string | null
+          donor?: boolean | null
+          email?: string | null
+          fertility_treatments?: Json | null
+          gender?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          profile_photo_url?: string | null
+          social_media_links?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          used_iui?: boolean | null
+          used_ivf?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sharing_links: {
+        Row: {
+          access_level: string | null
+          created_at: string | null
+          created_by: string
+          current_uses: number | null
+          expires_at: string | null
+          group_id: string
+          id: string
+          is_active: boolean | null
+          link_token: string
+          max_uses: number | null
+          password_hash: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_level?: string | null
+          created_at?: string | null
+          created_by: string
+          current_uses?: number | null
+          expires_at?: string | null
+          group_id: string
+          id?: string
+          is_active?: boolean | null
+          link_token?: string
+          max_uses?: number | null
+          password_hash?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_level?: string | null
+          created_at?: string | null
+          created_by?: string
+          current_uses?: number | null
+          expires_at?: string | null
+          group_id?: string
+          id?: string
+          is_active?: boolean | null
+          link_token?: string
+          max_uses?: number | null
+          password_hash?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sharing_links_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          location: string | null
+          phone: string | null
+          preferred_contact: string | null
+          settings: Json | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          location?: string | null
+          phone?: string | null
+          preferred_contact?: string | null
+          settings?: Json | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          created_at?: string | null
           full_name?: string | null
           id?: string
+          location?: string | null
+          phone?: string | null
+          preferred_contact?: string | null
+          settings?: Json | null
           updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          data_sharing: boolean | null
+          email_notifications: boolean | null
+          id: string
+          marketing_emails: boolean | null
+          privacy_mode: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_sharing?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          marketing_emails?: boolean | null
+          privacy_mode?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_sharing?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          marketing_emails?: boolean | null
+          privacy_mode?: boolean | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      persons_with_groups: {
+        Row: {
+          address: string | null
+          birth_place: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          date_of_death: string | null
+          death_place: string | null
+          donor: boolean | null
+          email: string | null
+          fertility_treatments: Json | null
+          gender: string | null
+          group_memberships: Json | null
+          id: string | null
+          metadata: Json | null
+          name: string | null
+          notes: string | null
+          organization_id: string | null
+          phone: string | null
+          preferred_contact_method: string | null
+          profile_photo_url: string | null
+          social_media_links: Json | null
+          status: string | null
+          updated_at: string | null
+          used_iui: boolean | null
+          used_ivf: boolean | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      [_ in never]: never
+      check_organization_owner: {
+        Args: { org_id: string; user_id: string }
+        Returns: boolean
+      }
+      column_exists: {
+        Args: { table_name: string; column_name: string }
+        Returns: boolean
+      }
+      get_family_members: {
+        Args: { group_uuid: string }
+        Returns: {
+          id: string
+          name: string
+          date_of_birth: string
+          birth_place: string
+          gender: string
+          status: string
+          date_of_death: string
+          death_place: string
+          profile_photo_url: string
+          email: string
+          phone: string
+          address: string
+          preferred_contact_method: string
+          social_media_links: Json
+          used_ivf: boolean
+          used_iui: boolean
+          fertility_treatments: Json
+          donor: boolean
+          notes: string
+          metadata: Json
+          user_id: string
+          created_at: string
+          updated_at: string
+          role: string
+        }[]
+      }
+      get_policies_for_table: {
+        Args: { table_name: string }
+        Returns: {
+          policy_name: string
+          policy_command: string
+        }[]
+      }
+      get_postgres_version: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_table_columns: {
+        Args: { table_name: string }
+        Returns: {
+          column_name: string
+          data_type: string
+          is_nullable: string
+          column_default: string
+        }[]
+      }
+      get_table_constraints: {
+        Args: { table_name: string }
+        Returns: {
+          constraint_name: string
+          constraint_type: string
+          column_name: string
+        }[]
+      }
+      get_table_triggers: {
+        Args: { table_name: string }
+        Returns: {
+          trigger_name: string
+          event_manipulation: string
+          action_timing: string
+        }[]
+      }
+      get_user_tenant_groups: {
+        Args: { user_uuid: string }
+        Returns: {
+          group_id: string
+          role: string
+          is_owner: boolean
+        }[]
+      }
+      verify_tenant_isolation: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          policy_name: string
+          has_tenant_filter: boolean
+          potential_leaks: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
