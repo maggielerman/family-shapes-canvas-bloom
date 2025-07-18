@@ -42,21 +42,22 @@ export default function FamilyTrees() {
         .from('family_trees')
         .select(`
           *,
-          persons!family_tree_id(count),
+          family_tree_members(count),
           connections!family_tree_id(count)
         `)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
-      const treesWithCounts = data.map((tree: any) => ({
+      // Transform the data to include proper counts
+      const treesWithCounts = (data || []).map((tree: any) => ({
         ...tree,
         _count: {
-          persons: tree.persons?.[0]?.count || 0,
+          persons: tree.family_tree_members?.[0]?.count || 0,
           connections: tree.connections?.[0]?.count || 0
         }
       }));
-
+      
       setFamilyTrees(treesWithCounts);
     } catch (error) {
       console.error('Error fetching family trees:', error);
