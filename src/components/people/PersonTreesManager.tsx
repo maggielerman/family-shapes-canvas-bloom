@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TreePine, Plus, X, Users, Link } from 'lucide-react';
+import { TreePine, Plus, X, Users, Link, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { PersonConnectionManager } from './PersonConnectionManager';
 
 interface PersonTreesManagerProps {
   personId: string;
@@ -38,6 +39,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [addTreeDialogOpen, setAddTreeDialogOpen] = useState(false);
+  const [connectionsDialogOpen, setConnectionsDialogOpen] = useState(false);
   const [selectedTreeId, setSelectedTreeId] = useState<string>('');
 
   useEffect(() => {
@@ -316,10 +318,36 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
       {/* Connections Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Link className="h-5 w-5 mr-2" />
-            Connections
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Link className="h-5 w-5 mr-2" />
+              Connections
+            </CardTitle>
+            <Dialog open={connectionsDialogOpen} onOpenChange={setConnectionsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Manage Connections
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Manage Connections</DialogTitle>
+                </DialogHeader>
+                <PersonConnectionManager 
+                  person={{
+                    id: personId,
+                    name: 'Person', // Will be replaced by actual name in component
+                    family_tree_id: null
+                  }} 
+                  onConnectionUpdated={() => {
+                    fetchConnections();
+                    setConnectionsDialogOpen(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           {connections.length === 0 ? (
