@@ -77,7 +77,7 @@ export function PersonCard({
   return (
     <Card 
       className={`hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''} ${
-        person.is_self ? 'border-primary bg-primary/5 dark:bg-primary/10' : ''
+        person.is_self ? 'border-[hsl(9,67%,49%)] bg-[hsl(9,67%,49%)]/5 dark:bg-[hsl(9,67%,49%)]/10' : ''
       }`}
       onClick={onClick}
     >
@@ -104,7 +104,7 @@ export function PersonCard({
               {person.status}
             </Badge>
             {person.is_self && (
-              <Badge variant="default" className="bg-primary text-primary-foreground">
+              <Badge variant="default" className="bg-[hsl(9,67%,49%)] text-white border-[hsl(9,67%,49%)]">
                 Self
               </Badge>
             )}

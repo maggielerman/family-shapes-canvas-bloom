@@ -98,6 +98,7 @@ export default function People() {
           created_at
         `)
         .eq('user_id', user.id)
+        .order('is_self', { ascending: false })
         .order('name');
 
       if (error) throw error;
