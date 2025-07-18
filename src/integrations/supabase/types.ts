@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      album_media: {
+        Row: {
+          album_id: string
+          created_at: string
+          id: string
+          media_file_id: string
+          sort_order: number
+        }
+        Insert: {
+          album_id: string
+          created_at?: string
+          id?: string
+          media_file_id: string
+          sort_order?: number
+        }
+        Update: {
+          album_id?: string
+          created_at?: string
+          id?: string
+          media_file_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_media_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "media_albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_media_media_file_id_fkey"
+            columns: ["media_file_id"]
+            isOneToOne: false
+            referencedRelation: "media_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       connections: {
         Row: {
           created_at: string | null
@@ -387,6 +426,72 @@ export type Database = {
           },
         ]
       }
+      media_albums: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      media_files: {
+        Row: {
+          bucket_name: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          mime_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bucket_name?: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          mime_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bucket_name?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       organization_invitations: {
         Row: {
           created_at: string | null
@@ -513,6 +618,52 @@ export type Database = {
           visibility?: string | null
         }
         Relationships: []
+      }
+      person_media: {
+        Row: {
+          created_at: string
+          id: string
+          is_profile_photo: boolean
+          media_file_id: string
+          person_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_profile_photo?: boolean
+          media_file_id: string
+          person_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_profile_photo?: boolean
+          media_file_id?: string
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_media_media_file_id_fkey"
+            columns: ["media_file_id"]
+            isOneToOne: false
+            referencedRelation: "media_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_media_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_media_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       persons: {
         Row: {

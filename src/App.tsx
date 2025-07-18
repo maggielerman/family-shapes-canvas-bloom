@@ -19,6 +19,7 @@ import People from "./pages/People";
 import FamilyTreeDetail from "./pages/FamilyTreeDetail";
 import OrganizationInvitePage from "./pages/OrganizationInvitePage";
 import PublicFamilyTree from "./pages/PublicFamilyTree";
+import Media from "./pages/Media";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/people" element={<People />} />
             <Route path="/family-trees" element={<FamilyTrees />} />
             <Route path="/family-trees/:id" element={<FamilyTreeDetail />} />
+            <Route path="/media" element={<Media />} />
             <Route path="/connections" element={<FamilyTrees />} />
             <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
             <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />

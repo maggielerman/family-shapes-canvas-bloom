@@ -18,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddPersonDialogProps {
   open: boolean;
@@ -30,6 +32,7 @@ interface AddPersonDialogProps {
     phone?: string;
     notes?: string;
     status: string;
+    profile_photo_url?: string;
   }) => void;
 }
 
@@ -45,7 +48,20 @@ export function AddPersonDialog({
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("living");
+  const [uploadedPhoto, setUploadedPhoto] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleImageUploaded = (uploadedFile: any) => {
+    setUploadedPhoto(uploadedFile);
+  };
+
+  const getPhotoUrl = () => {
+    if (!uploadedPhoto) return undefined;
+    const { data } = supabase.storage
+      .from(uploadedPhoto.bucket_name)
+      .getPublicUrl(uploadedPhoto.file_path);
+    return data.publicUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +77,7 @@ export function AddPersonDialog({
         phone: phone.trim() || undefined,
         notes: notes.trim() || undefined,
         status,
+        profile_photo_url: getPhotoUrl(),
       });
       
       // Reset form
@@ -71,6 +88,7 @@ export function AddPersonDialog({
       setPhone("");
       setNotes("");
       setStatus("living");
+      setUploadedPhoto(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -88,6 +106,14 @@ export function AddPersonDialog({
         
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Profile Photo</Label>
+              <ImageUpload
+                onImageUploaded={handleImageUploaded}
+                disabled={isSubmitting}
+              />
+            </div>
+            
             <div className="grid gap-2">
               <Label htmlFor="name">Full Name *</Label>
               <Input
