@@ -37,7 +37,8 @@ export function useConnectionCreator({ familyTreeId, onConnectionAdded }: UseCon
   const createConnection = useCallback(async (
     fromPersonId: string, 
     toPersonId: string, 
-    relationshipType: string
+    relationshipType: string,
+    attributes: string[] = []
   ) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -50,6 +51,9 @@ export function useConnectionCreator({ familyTreeId, onConnectionAdded }: UseCon
           to_person_id: toPersonId,
           relationship_type: relationshipType,
           family_tree_id: familyTreeId,
+          metadata: {
+            attributes: attributes
+          }
         });
 
       if (error) throw error;

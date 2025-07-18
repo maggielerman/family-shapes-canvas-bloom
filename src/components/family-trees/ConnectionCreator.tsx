@@ -87,12 +87,13 @@ export function ConnectionCreator({
     handleDragEnd();
   };
 
-  const handleRelationshipConfirm = async (relationshipType: string) => {
+  const handleRelationshipConfirm = async (relationshipType: string, attributes: string[]) => {
     if (pendingConnection) {
       await createConnection(
         pendingConnection.fromPersonId,
         pendingConnection.toPersonId,
-        relationshipType
+        relationshipType,
+        attributes
       );
     }
   };

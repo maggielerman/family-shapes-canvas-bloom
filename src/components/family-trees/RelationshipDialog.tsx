@@ -9,13 +9,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Heart, Baby, Dna } from 'lucide-react';
+import { RelationshipAttributeSelector } from './RelationshipAttributeSelector';
 
 interface RelationshipDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   fromPersonName: string;
   toPersonName: string;
-  onConfirm: (relationshipType: string) => void;
+  onConfirm: (relationshipType: string, attributes: string[]) => void;
 }
 
 const relationshipTypes = [
@@ -35,12 +36,14 @@ export function RelationshipDialog({
   onConfirm,
 }: RelationshipDialogProps) {
   const [selectedType, setSelectedType] = useState<string>('');
+  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
 
   const handleConfirm = () => {
     if (selectedType) {
-      onConfirm(selectedType);
+      onConfirm(selectedType, selectedAttributes);
       onOpenChange(false);
       setSelectedType('');
+      setSelectedAttributes([]);
     }
   };
 
@@ -84,6 +87,17 @@ export function RelationshipDialog({
               );
             })}
           </div>
+          
+          {/* Attribute Selector */}
+          {selectedType && (
+            <div className="pt-4 border-t">
+              <RelationshipAttributeSelector
+                relationshipType={selectedType}
+                selectedAttributes={selectedAttributes}
+                onAttributesChange={setSelectedAttributes}
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter>

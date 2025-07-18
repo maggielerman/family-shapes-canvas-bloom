@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { RelationshipAttributeSelector } from '@/components/family-trees/RelationshipAttributeSelector';
 
 interface Person {
   id: string;
@@ -71,7 +72,8 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
   const [editingConnection, setEditingConnection] = useState<Connection | null>(null);
   const [newConnection, setNewConnection] = useState({
     to_person_id: '',
-    relationship_type: ''
+    relationship_type: '',
+    attributes: [] as string[]
   });
 
   const relationshipTypes = [
@@ -216,7 +218,10 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
           from_person_id: person.id,
           to_person_id: newConnection.to_person_id,
           relationship_type: newConnection.relationship_type,
-          family_tree_id: person.family_tree_id
+          family_tree_id: person.family_tree_id,
+          metadata: {
+            attributes: newConnection.attributes
+          }
         });
 
       if (mainError) throw mainError;
@@ -230,7 +235,10 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
             from_person_id: newConnection.to_person_id,
             to_person_id: person.id,
             relationship_type: reciprocalType,
-            family_tree_id: person.family_tree_id
+            family_tree_id: person.family_tree_id,
+            metadata: {
+              attributes: newConnection.attributes
+            }
           });
 
         if (reciprocalError) {
@@ -271,7 +279,7 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
         description: "Connection and reciprocal relationship created successfully",
       });
 
-      setNewConnection({ to_person_id: '', relationship_type: '' });
+      setNewConnection({ to_person_id: '', relationship_type: '', attributes: [] });
       setIsAddingConnection(false);
       fetchConnections();
       onConnectionUpdated?.();
@@ -456,6 +464,16 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* Attribute Selector */}
+              {newConnection.relationship_type && (
+                <RelationshipAttributeSelector
+                  relationshipType={newConnection.relationship_type}
+                  selectedAttributes={newConnection.attributes}
+                  onAttributesChange={(attributes) => setNewConnection(prev => ({ ...prev, attributes }))}
+                />
+              )}
+              
               <div className="flex gap-2">
                 <Button onClick={handleCreateConnection}>Create Connection</Button>
                 <Button variant="outline" onClick={() => setIsAddingConnection(false)}>
