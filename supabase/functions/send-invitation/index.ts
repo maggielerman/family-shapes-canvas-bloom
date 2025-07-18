@@ -5,7 +5,6 @@ import { Resend } from "npm:resend@2.0.0";
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const appUrl = Deno.env.get("APP_URL") || "https://6e4109b6-b165-4556-baab-bd21469c6dee.lovableproject.com";
 
 // Required CORS headers for browser requests
 const corsHeaders = {
@@ -26,6 +25,10 @@ serve(async (req) => {
   }
   
   try {
+    // Detect the app URL from request headers
+    const origin = req.headers.get("origin") || req.headers.get("referer");
+    const appUrl = Deno.env.get("APP_URL") || origin || "https://familyshapes.com";
+    
     // Parse the request body
     const { invitationId, fromName } = await req.json();
 
