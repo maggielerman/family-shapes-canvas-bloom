@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { User, Crown } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { User, Crown, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -28,12 +29,51 @@ export function MarkAsSelfDialog({
   onPersonUpdated,
 }: MarkAsSelfDialogProps) {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentSelfPerson, setCurrentSelfPerson] = useState<{id: string; name: string} | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open && !person.is_self) {
+      checkForExistingSelfPerson();
+    }
+  }, [open, person.is_self]);
+
+  const checkForExistingSelfPerson = async () => {
+    setLoading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data, error } = await supabase
+        .from('persons')
+        .select('id, name')
+        .eq('user_id', userData.user.id)
+        .eq('is_self', true)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+        throw error;
+      }
+
+      setCurrentSelfPerson(data || null);
+    } catch (error) {
+      console.error('Error checking for existing self person:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   const handleToggleSelf = async (isSelf: boolean) => {
+    // If trying to mark as self but someone else is already marked as self
+    if (isSelf && currentSelfPerson && currentSelfPerson.id !== person.id) {
+      toast.error(`Cannot mark as self. ${currentSelfPerson.name} is already marked as self. Please unmark them first.`);
+      return;
+    }
+
     setIsUpdating(true);
     try {
       const { error } = await supabase
@@ -41,7 +81,14 @@ export function MarkAsSelfDialog({
         .update({ is_self: isSelf })
         .eq('id', person.id);
 
-      if (error) throw error;
+      if (error) {
+        // Handle the unique constraint error specifically
+        if (error.code === '23505') {
+          toast.error('Another person is already marked as self. Please unmark them first.');
+          return;
+        }
+        throw error;
+      }
 
       toast.success(isSelf ? 'Person marked as self' : 'Person unmarked as self');
       onPersonUpdated();
@@ -49,6 +96,31 @@ export function MarkAsSelfDialog({
     } catch (error) {
       console.error('Error updating person:', error);
       toast.error('Failed to update person');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleUnmarkCurrentSelf = async () => {
+    if (!currentSelfPerson) return;
+
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('persons')
+        .update({ is_self: false })
+        .eq('id', currentSelfPerson.id);
+
+      if (error) throw error;
+
+      toast.success(`${currentSelfPerson.name} is no longer marked as self`);
+      setCurrentSelfPerson(null);
+      
+      // Now mark the current person as self
+      await handleToggleSelf(true);
+    } catch (error) {
+      console.error('Error unmarking current self person:', error);
+      toast.error('Failed to unmark current self person');
     } finally {
       setIsUpdating(false);
     }
@@ -95,11 +167,35 @@ export function MarkAsSelfDialog({
                 id="mark-self"
                 checked={person.is_self || false}
                 onCheckedChange={handleToggleSelf}
-                disabled={isUpdating}
+                disabled={isUpdating || loading || (currentSelfPerson && currentSelfPerson.id !== person.id && !person.is_self)}
               />
             </div>
 
-            {!person.is_self && (
+            {/* Show warning if another person is already marked as self */}
+            {!person.is_self && currentSelfPerson && currentSelfPerson.id !== person.id && (
+              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800 dark:text-amber-200">
+                  <div className="space-y-3">
+                    <p className="text-sm">
+                      <strong>{currentSelfPerson.name}</strong> is currently marked as self. 
+                      Only one person can be marked as self at a time.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUnmarkCurrentSelf}
+                      disabled={isUpdating}
+                      className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900"
+                    >
+                      {isUpdating ? 'Updating...' : `Unmark ${currentSelfPerson.name} and mark ${person.name} as self`}
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!person.is_self && !currentSelfPerson && (
               <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
                 <div className="flex items-start gap-2">
                   <Crown className="h-4 w-4 text-blue-600 mt-0.5" />
