@@ -141,12 +141,57 @@ export function ReactD3TreeLayout({ persons, connections, width, height, onPerso
 function createHierarchy(persons: Person[], connections: Connection[]): TreeData | null {
   if (persons.length === 0) return null;
 
+  // Create a set of valid person IDs for connection filtering
+  const validPersonIds = new Set(persons.map(p => p.id));
+  
+  // Filter out connections that reference non-existent persons
+  const validConnections = connections.filter(c => 
+    validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
+  );
+
   // Find root person (someone who is not a child)
-  const childIds = new Set(connections.map(c => c.to_person_id));
+  const childIds = new Set(validConnections.map(c => c.to_person_id));
   const rootPersons = persons.filter(p => !childIds.has(p.id));
   
+  // If we have a root person, use it; otherwise use the first person
   const root = rootPersons[0] || persons[0];
-  return buildTree(root, persons, connections, new Set());
+  
+  // Build the tree and add unconnected persons as children of root
+  const tree = buildTree(root, persons, validConnections, new Set());
+  
+  // Find persons not connected to the main tree
+  const connectedIds = new Set<string>();
+  collectConnectedIds(tree, connectedIds);
+  
+  const unconnectedPersons = persons.filter(p => p.id !== root.id && !connectedIds.has(p.id));
+  
+  // Add unconnected persons as direct children of root if they exist
+  if (unconnectedPersons.length > 0) {
+    const existingChildren = tree.children || [];
+    tree.children = [
+      ...existingChildren,
+      ...unconnectedPersons.map(p => ({
+        name: p.name,
+        attributes: {
+          id: p.id,
+          gender: p.gender,
+          profile_photo_url: p.profile_photo_url
+        },
+        children: undefined
+      }))
+    ];
+  }
+  
+  return tree;
+}
+
+function collectConnectedIds(node: TreeData, connectedIds: Set<string>) {
+  if (node.attributes?.id) {
+    connectedIds.add(node.attributes.id);
+  }
+  if (node.children) {
+    node.children.forEach(child => collectConnectedIds(child, connectedIds));
+  }
 }
 
 function buildTree(person: Person, allPersons: Person[], connections: Connection[], visited: Set<string>): TreeData {
