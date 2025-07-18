@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers } from "lucide-react";
 import { AddPersonDialog } from "./AddPersonDialog";
-import { ConnectionCreator } from "./ConnectionCreator";
+import { InteractiveFamilyTree } from "./InteractiveFamilyTree";
 import { TreeLayout } from "./layouts/TreeLayout";
 import { RadialTreeLayout } from "./layouts/RadialTreeLayout";
 import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
@@ -194,11 +194,14 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </TabsList>
           
           <TabsContent value="interactive" className="mt-4">
-            <ConnectionCreator
+            <InteractiveFamilyTree
               familyTreeId={familyTreeId}
               persons={persons}
               connections={connections}
+              onPersonAdded={onPersonAdded}
               onConnectionAdded={fetchConnections}
+              onPersonUpdated={onPersonAdded}
+              onPersonDeleted={onPersonAdded}
             />
           </TabsContent>
           
