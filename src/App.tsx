@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/family-trees/:id" element={<FamilyTreeDetail />} />
             <Route path="/connections" element={<FamilyTrees />} />
             <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
+            <Route path="/shared/:id" element={<PublicFamilyTree />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
