@@ -15,6 +15,7 @@ interface Person {
   status: string;
   notes?: string | null;
   created_at: string;
+  is_self?: boolean;
 }
 
 interface PersonCardProps {
@@ -75,7 +76,9 @@ export function PersonCard({
 
   return (
     <Card 
-      className={`hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`}
+      className={`hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''} ${
+        person.is_self ? 'border-primary bg-primary/5 dark:bg-primary/10' : ''
+      }`}
       onClick={onClick}
     >
       <CardHeader className="pb-3">
@@ -100,6 +103,11 @@ export function PersonCard({
             <Badge className={getStatusColor(person.status)}>
               {person.status}
             </Badge>
+            {person.is_self && (
+              <Badge variant="default" className="bg-primary text-primary-foreground">
+                Self
+              </Badge>
+            )}
             {(showActions || onEdit || onDelete || showRemoveFromTree) && (
               <div className="flex items-center gap-1">
                 {onEdit && (

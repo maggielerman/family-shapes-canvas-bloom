@@ -421,8 +421,8 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
         onOpenChange={setMarkAsSelfDialogOpen}
         person={person}
         onPersonUpdated={() => {
-          // Refresh the person data or trigger a parent component refresh
-          if (onEdit) onEdit(); // This might trigger a refresh in parent
+          // Force a page refresh to update the person data
+          window.location.reload();
         }}
       />
     </Card>

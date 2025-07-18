@@ -43,6 +43,7 @@ interface Person {
   used_ivf?: boolean;
   used_iui?: boolean;
   fertility_treatments?: any;
+  is_self?: boolean;
   created_at: string;
   _count?: {
     family_trees: number;
@@ -93,6 +94,7 @@ export default function People() {
           used_ivf,
           used_iui,
           fertility_treatments,
+          is_self,
           created_at
         `)
         .eq('user_id', user.id)
