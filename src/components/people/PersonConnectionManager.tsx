@@ -161,14 +161,14 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
       return {
         description: `${connection.other_person_name} is ${person.name}'s ${relationshipType?.label?.toLowerCase() || connection.relationship_type}`,
         otherPersonName: connection.other_person_name || 'Unknown',
-        canEdit: false // Can't edit incoming connections from this view
+        canEdit: true // Allow editing incoming connections
       };
     } else {
       // This person has a relationship TO someone else
       return {
         description: `${person.name} is ${connection.other_person_name}'s ${relationshipTypes.find(rt => rt.value === connection.relationship_type)?.label?.toLowerCase() || connection.relationship_type}`,
         otherPersonName: connection.other_person_name || 'Unknown',
-        canEdit: true // Can edit outgoing connections
+        canEdit: true // Allow editing outgoing connections
       };
     }
   };
@@ -408,77 +408,71 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
                       {displayInfo.description}
                     </TableCell>
                     <TableCell>
-                      {displayInfo.canEdit ? (
-                        <div className="flex gap-2">
-                          <Dialog 
-                            open={editingConnection?.id === connection.id} 
-                            onOpenChange={(open) => !open && setEditingConnection(null)}
-                          >
-                            <DialogTrigger asChild>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                onClick={() => setEditingConnection(connection)}
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit Connection</DialogTitle>
-                                <DialogDescription>
-                                  Change the relationship type from {person.name} to {displayInfo.otherPersonName}.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <label className="text-sm font-medium">Relationship Type</label>
-                                  <Select
-                                    value={editingConnection?.relationship_type || ''}
-                                    onValueChange={(value) => setEditingConnection(prev => 
-                                      prev ? { ...prev, relationship_type: value } : null
-                                    )}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select relationship" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {relationshipTypes.map(type => {
-                                        const Icon = type.icon;
-                                        return (
-                                          <SelectItem key={type.value} value={type.value}>
-                                            <div className="flex items-center gap-2">
-                                              <Icon className="w-4 h-4" />
-                                              {type.label}
-                                            </div>
-                                          </SelectItem>
-                                        );
-                                      })}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button onClick={handleUpdateConnection}>Update</Button>
-                                  <Button variant="outline" onClick={() => setEditingConnection(null)}>
-                                    Cancel
-                                  </Button>
-                                </div>
+                      <div className="flex gap-2">
+                        <Dialog 
+                          open={editingConnection?.id === connection.id} 
+                          onOpenChange={(open) => !open && setEditingConnection(null)}
+                        >
+                          <DialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => setEditingConnection(connection)}
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Connection</DialogTitle>
+                              <DialogDescription>
+                                Change the relationship type between {person.name} and {displayInfo.otherPersonName}.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <label className="text-sm font-medium">Relationship Type</label>
+                                <Select
+                                  value={editingConnection?.relationship_type || ''}
+                                  onValueChange={(value) => setEditingConnection(prev => 
+                                    prev ? { ...prev, relationship_type: value } : null
+                                  )}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select relationship" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {relationshipTypes.map(type => {
+                                      const Icon = type.icon;
+                                      return (
+                                        <SelectItem key={type.value} value={type.value}>
+                                          <div className="flex items-center gap-2">
+                                            <Icon className="w-4 h-4" />
+                                            {type.label}
+                                          </div>
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
                               </div>
-                            </DialogContent>
-                          </Dialog>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleDeleteConnection(connection.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">
-                          Cannot edit incoming connections
-                        </span>
-                      )}
+                              <div className="flex gap-2">
+                                <Button onClick={handleUpdateConnection}>Update</Button>
+                                <Button variant="outline" onClick={() => setEditingConnection(null)}>
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeleteConnection(connection.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
