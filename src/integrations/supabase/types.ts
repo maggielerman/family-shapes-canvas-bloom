@@ -238,8 +238,10 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          group_id: string | null
           id: string
           name: string
+          organization_id: string | null
           settings: Json | null
           tree_data: Json | null
           updated_at: string
@@ -249,8 +251,10 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          group_id?: string | null
           id?: string
           name: string
+          organization_id?: string | null
           settings?: Json | null
           tree_data?: Json | null
           updated_at?: string
@@ -260,15 +264,32 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          group_id?: string | null
           id?: string
           name?: string
+          organization_id?: string | null
           settings?: Json | null
           tree_data?: Json | null
           updated_at?: string
           user_id?: string
           visibility?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "family_trees_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_trees_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       group_memberships: {
         Row: {
@@ -328,7 +349,7 @@ export type Database = {
           description: string | null
           id: string
           label: string
-          organization_id: string | null
+          organization_id: string
           owner_id: string
           type: string
           updated_at: string | null
@@ -339,7 +360,7 @@ export type Database = {
           description?: string | null
           id?: string
           label: string
-          organization_id?: string | null
+          organization_id: string
           owner_id: string
           type: string
           updated_at?: string | null
@@ -350,7 +371,7 @@ export type Database = {
           description?: string | null
           id?: string
           label?: string
-          organization_id?: string | null
+          organization_id?: string
           owner_id?: string
           type?: string
           updated_at?: string | null
@@ -599,7 +620,7 @@ export type Database = {
           created_by: string
           current_uses: number | null
           expires_at: string | null
-          group_id: string
+          family_tree_id: string
           id: string
           invited_emails: string[] | null
           is_active: boolean | null
@@ -614,7 +635,7 @@ export type Database = {
           created_by: string
           current_uses?: number | null
           expires_at?: string | null
-          group_id: string
+          family_tree_id: string
           id?: string
           invited_emails?: string[] | null
           is_active?: boolean | null
@@ -629,7 +650,7 @@ export type Database = {
           created_by?: string
           current_uses?: number | null
           expires_at?: string | null
-          group_id?: string
+          family_tree_id?: string
           id?: string
           invited_emails?: string[] | null
           is_active?: boolean | null
@@ -640,10 +661,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "sharing_links_group_id_fkey"
-            columns: ["group_id"]
+            foreignKeyName: "sharing_links_family_tree_id_fkey"
+            columns: ["family_tree_id"]
             isOneToOne: false
-            referencedRelation: "groups"
+            referencedRelation: "family_trees"
             referencedColumns: ["id"]
           },
         ]
