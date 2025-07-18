@@ -52,6 +52,9 @@ interface Connection {
   to_person_id: string;
   relationship_type: string;
   family_tree_id?: string | null;
+  direction?: 'incoming' | 'outgoing';
+  other_person_name?: string;
+  other_person_id?: string;
 }
 
 interface PersonConnectionManagerProps {
@@ -87,14 +90,45 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
 
   const fetchConnections = async () => {
     try {
-      // Get connections where this person is the 'from' person
-      const { data, error } = await supabase
+      // Get connections where this person is the 'from' person (outgoing connections)
+      const { data: outgoingConnections, error: outgoingError } = await supabase
         .from('connections')
-        .select('*')
+        .select(`
+          *,
+          to_person:persons!connections_to_person_id_fkey(name)
+        `)
         .eq('from_person_id', person.id);
 
-      if (error) throw error;
-      setConnections(data || []);
+      if (outgoingError) throw outgoingError;
+
+      // Get connections where this person is the 'to' person (incoming connections)
+      const { data: incomingConnections, error: incomingError } = await supabase
+        .from('connections')
+        .select(`
+          *,
+          from_person:persons!connections_from_person_id_fkey(name)
+        `)
+        .eq('to_person_id', person.id);
+
+      if (incomingError) throw incomingError;
+
+      // Combine both types of connections with appropriate formatting
+      const allConnections = [
+        ...(outgoingConnections || []).map(conn => ({
+          ...conn,
+          direction: 'outgoing' as const,
+          other_person_name: conn.to_person?.name || 'Unknown',
+          other_person_id: conn.to_person_id
+        })),
+        ...(incomingConnections || []).map(conn => ({
+          ...conn,
+          direction: 'incoming' as const,
+          other_person_name: conn.from_person?.name || 'Unknown',
+          other_person_id: conn.from_person_id
+        }))
+      ];
+
+      setConnections(allConnections);
     } catch (error) {
       console.error('Error fetching connections:', error);
     } finally {
@@ -118,6 +152,25 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
 
   const getPersonName = (personId: string) => {
     return availablePersons.find(p => p.id === personId)?.name || 'Unknown';
+  };
+
+  const getConnectionDisplayText = (connection: Connection) => {
+    if (connection.direction === 'incoming') {
+      // Someone else has a relationship TO this person
+      const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
+      return {
+        description: `${connection.other_person_name} is ${person.name}'s ${relationshipType?.label?.toLowerCase() || connection.relationship_type}`,
+        otherPersonName: connection.other_person_name || 'Unknown',
+        canEdit: false // Can't edit incoming connections from this view
+      };
+    } else {
+      // This person has a relationship TO someone else
+      return {
+        description: `${person.name} is ${connection.other_person_name}'s ${relationshipTypes.find(rt => rt.value === connection.relationship_type)?.label?.toLowerCase() || connection.relationship_type}`,
+        otherPersonName: connection.other_person_name || 'Unknown',
+        canEdit: true // Can edit outgoing connections
+      };
+    }
   };
 
   const getRelationshipIcon = (type: string) => {
@@ -313,111 +366,126 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
       {connections.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No connections from {person.name} yet.</p>
+          <p>No connections for {person.name} yet.</p>
           <p className="text-sm">Add connections to define relationships.</p>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Relationship</TableHead>
-              <TableHead>To</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {connections.map(connection => {
-              const Icon = getRelationshipIcon(connection.relationship_type);
-              return (
-                <TableRow key={connection.id}>
-                  <TableCell>
-                    <Badge 
-                      variant="secondary" 
-                      className="flex items-center gap-1 w-fit"
-                      style={{ 
-                        backgroundColor: `${getRelationshipColor(connection.relationship_type)}20`,
-                        color: getRelationshipColor(connection.relationship_type)
-                      }}
-                    >
-                      <Icon className="w-3 h-3" />
-                      {relationshipTypes.find(r => r.value === connection.relationship_type)?.label || connection.relationship_type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {getPersonName(connection.to_person_id)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Dialog 
-                        open={editingConnection?.id === connection.id} 
-                        onOpenChange={(open) => !open && setEditingConnection(null)}
+        <div className="space-y-4">
+          <div className="text-sm text-muted-foreground mb-4">
+            Showing both outgoing connections (relationships {person.name} has to others) and incoming connections (relationships others have to {person.name}).
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Relationship</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {connections.map(connection => {
+                const Icon = getRelationshipIcon(connection.relationship_type);
+                const displayInfo = getConnectionDisplayText(connection);
+                return (
+                  <TableRow key={connection.id}>
+                    <TableCell>
+                      <Badge 
+                        variant="secondary" 
+                        className="flex items-center gap-1 w-fit"
+                        style={{ 
+                          backgroundColor: `${getRelationshipColor(connection.relationship_type)}20`,
+                          color: getRelationshipColor(connection.relationship_type)
+                        }}
                       >
-                        <DialogTrigger asChild>
+                        <Icon className="w-3 h-3" />
+                        {relationshipTypes.find(r => r.value === connection.relationship_type)?.label || connection.relationship_type}
+                        {connection.direction === 'incoming' && (
+                          <span className="text-xs opacity-70">(incoming)</span>
+                        )}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {displayInfo.description}
+                    </TableCell>
+                    <TableCell>
+                      {displayInfo.canEdit ? (
+                        <div className="flex gap-2">
+                          <Dialog 
+                            open={editingConnection?.id === connection.id} 
+                            onOpenChange={(open) => !open && setEditingConnection(null)}
+                          >
+                            <DialogTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setEditingConnection(connection)}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit Connection</DialogTitle>
+                                <DialogDescription>
+                                  Change the relationship type from {person.name} to {displayInfo.otherPersonName}.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-sm font-medium">Relationship Type</label>
+                                  <Select
+                                    value={editingConnection?.relationship_type || ''}
+                                    onValueChange={(value) => setEditingConnection(prev => 
+                                      prev ? { ...prev, relationship_type: value } : null
+                                    )}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select relationship" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {relationshipTypes.map(type => {
+                                        const Icon = type.icon;
+                                        return (
+                                          <SelectItem key={type.value} value={type.value}>
+                                            <div className="flex items-center gap-2">
+                                              <Icon className="w-4 h-4" />
+                                              {type.label}
+                                            </div>
+                                          </SelectItem>
+                                        );
+                                      })}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button onClick={handleUpdateConnection}>Update</Button>
+                                  <Button variant="outline" onClick={() => setEditingConnection(null)}>
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => setEditingConnection(connection)}
+                            onClick={() => handleDeleteConnection(connection.id)}
                           >
-                            <Edit className="w-3 h-3" />
+                            <Trash2 className="w-3 h-3" />
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Edit Connection</DialogTitle>
-                            <DialogDescription>
-                              Change the relationship type from {person.name} to {getPersonName(connection.to_person_id)}.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <label className="text-sm font-medium">Relationship Type</label>
-                              <Select
-                                value={editingConnection?.relationship_type || ''}
-                                onValueChange={(value) => setEditingConnection(prev => 
-                                  prev ? { ...prev, relationship_type: value } : null
-                                )}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select relationship" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {relationshipTypes.map(type => {
-                                    const Icon = type.icon;
-                                    return (
-                                      <SelectItem key={type.value} value={type.value}>
-                                        <div className="flex items-center gap-2">
-                                          <Icon className="w-4 h-4" />
-                                          {type.label}
-                                        </div>
-                                      </SelectItem>
-                                    );
-                                  })}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button onClick={handleUpdateConnection}>Update</Button>
-                              <Button variant="outline" onClick={() => setEditingConnection(null)}>
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleDeleteConnection(connection.id)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          Cannot edit incoming connections
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );
