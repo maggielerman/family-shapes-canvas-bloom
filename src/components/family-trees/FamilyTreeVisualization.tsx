@@ -43,12 +43,12 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const { toast } = useToast();
 
   const relationshipTypes = [
-    { value: "parent", label: "Parent", icon: Users, color: "bg-blue-100 text-blue-800" },
-    { value: "child", label: "Child", icon: Baby, color: "bg-green-100 text-green-800" },
-    { value: "partner", label: "Partner", icon: Heart, color: "bg-pink-100 text-pink-800" },
-    { value: "sibling", label: "Sibling", icon: Users, color: "bg-purple-100 text-purple-800" },
-    { value: "donor", label: "Donor", icon: Dna, color: "bg-orange-100 text-orange-800" },
-    { value: "half_sibling", label: "Half Sibling", icon: Users, color: "bg-indigo-100 text-indigo-800" },
+    { value: "parent", label: "Parent", icon: Users, color: "hsl(var(--chart-1))" },
+    { value: "child", label: "Child", icon: Baby, color: "hsl(var(--chart-2))" },
+    { value: "partner", label: "Partner", icon: Heart, color: "hsl(var(--chart-3))" },
+    { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))" },
+    { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))" },
+    { value: "half_sibling", label: "Half Sibling", icon: Users, color: "hsl(var(--chart-1))" },
   ];
 
   useEffect(() => {
@@ -127,42 +127,24 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <Heart className="w-4 h-4" />
-            Relationship Types & Gender Colors
+            Relationship Types
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-xs font-medium mb-2">Relationships</h4>
-              <div className="flex flex-wrap gap-2">
-                {relationshipTypes.map(type => {
-                  const Icon = type.icon;
-                  return (
-                    <div key={type.value} className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs">
-                      <Icon className="w-3 h-3" />
-                      {type.label}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div>
-              <h4 className="text-xs font-medium mb-2">Gender Colors</h4>
-              <div className="flex flex-wrap gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-1))' }}></div>
-                  Male
+          <div className="flex flex-wrap gap-2">
+            {relationshipTypes.map(type => {
+              const Icon = type.icon;
+              return (
+                <div key={type.value} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted text-xs">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: type.color }}
+                  ></div>
+                  <Icon className="w-3 h-3" />
+                  <span>{type.label}</span>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }}></div>
-                  Female
-                </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-xs">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }}></div>
-                  Other/Unknown
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
