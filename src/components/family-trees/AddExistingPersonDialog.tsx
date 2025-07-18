@@ -53,8 +53,19 @@ export function AddExistingPersonDialog({
         .from('persons')
         .select('id, name, date_of_birth, gender, profile_photo_url, status, email')
         .eq('user_id', userData.user.id)
-        .is('family_tree_id', null) // Only show persons not assigned to any tree
         .order('name');
+
+      // Exclude persons already in this family tree
+      const { data: existingMembers } = await supabase
+        .from('family_tree_members')
+        .select('person_id')
+        .eq('family_tree_id', familyTreeId);
+
+      const existingPersonIds = existingMembers?.map(m => m.person_id) || [];
+
+      if (existingPersonIds.length > 0) {
+        query = query.not('id', 'in', `(${existingPersonIds.join(',')})`);
+      }
 
       if (searchTerm.trim()) {
         query = query.ilike('name', `%${searchTerm.trim()}%`);
@@ -74,10 +85,17 @@ export function AddExistingPersonDialog({
   const addPersonToTree = async (personId: string) => {
     setAdding(personId);
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
       const { error } = await supabase
-        .from('persons')
-        .update({ family_tree_id: familyTreeId })
-        .eq('id', personId);
+        .from('family_tree_members')
+        .insert({
+          family_tree_id: familyTreeId,
+          person_id: personId,
+          added_by: userData.user.id,
+          is_primary: false
+        });
 
       if (error) throw error;
 

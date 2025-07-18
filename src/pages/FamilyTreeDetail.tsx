@@ -91,31 +91,46 @@ export default function FamilyTreeDetail() {
 
   const fetchPersons = async () => {
     try {
+      // Fetch persons through the family_tree_members junction table
       const { data, error } = await supabase
-        .from('persons')
+        .from('family_tree_members')
         .select(`
-          id,
-          name,
-          date_of_birth,
-          birth_place,
-          gender,
-          profile_photo_url,
-          email,
-          phone,
-          address,
-          status,
-          notes,
-          donor,
-          used_ivf,
-          used_iui,
-          fertility_treatments,
-          created_at
+          person_id,
+          is_primary,
+          role,
+          person:persons(
+            id,
+            name,
+            date_of_birth,
+            birth_place,
+            gender,
+            profile_photo_url,
+            email,
+            phone,
+            address,
+            status,
+            notes,
+            donor,
+            used_ivf,
+            used_iui,
+            fertility_treatments,
+            is_self,
+            created_at
+          )
         `)
         .eq('family_tree_id', id)
-        .order('name');
+        .order('is_primary', { ascending: false });
 
       if (error) throw error;
-      setPersons(data || []);
+      
+      // Transform the data to match our Person interface
+      const personsData = (data || []).map(membership => ({
+        ...membership.person,
+        membership_role: membership.role,
+        is_primary: membership.is_primary
+      }));
+      
+      setPersons(personsData || []);
     } catch (error) {
       console.error('Error fetching persons:', error);
       toast({
@@ -133,17 +148,29 @@ export default function FamilyTreeDetail() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('No user found');
 
-      const { data: newPerson, error } = await supabase
+      // First create the person
+      const { data: newPerson, error: personError } = await supabase
         .from('persons')
         .insert({
           ...personData,
-          family_tree_id: id,
           user_id: userData.user.id,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (personError) throw personError;
+
+      // Then add them to the family tree
+      const { error: membershipError } = await supabase
+        .from('family_tree_members')
+        .insert({
+          family_tree_id: id,
+          person_id: newPerson.id,
+          added_by: userData.user.id,
+          is_primary: false
+        });
+
+      if (membershipError) throw membershipError;
 
       toast({
         title: "Success",

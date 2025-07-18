@@ -34,6 +34,7 @@ import { usePersonMedia } from '@/hooks/use-person-media';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { FileUpload } from '@/components/ui/file-upload';
 import { PersonTreesManager } from './PersonTreesManager';
+import { MarkAsSelfDialog } from './MarkAsSelfDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -54,6 +55,7 @@ interface PersonCardProps {
     used_ivf?: boolean;
     used_iui?: boolean;
     fertility_treatments?: any;
+    is_self?: boolean;
   };
   onEdit?: () => void;
   onClose?: () => void;
@@ -63,6 +65,7 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
   const { mediaFiles, loading: mediaLoading, getFileUrl, linkMediaToPerson, refetch } = usePersonMedia(person.id);
   const { uploadMultipleFiles, isUploading } = useFileUpload();
   const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
+  const [markAsSelfDialogOpen, setMarkAsSelfDialogOpen] = useState(false);
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
@@ -184,6 +187,12 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                     Donor
                   </Badge>
                 )}
+                {person.is_self && (
+                  <Badge variant="outline" className="text-blue-600 border-blue-600">
+                    <User className="h-3 w-3 mr-1" />
+                    Self
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -193,6 +202,13 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                 <Edit className="h-4 w-4" />
               </Button>
             )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setMarkAsSelfDialogOpen(true)}
+            >
+              <User className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -399,6 +415,16 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      <MarkAsSelfDialog
+        open={markAsSelfDialogOpen}
+        onOpenChange={setMarkAsSelfDialogOpen}
+        person={person}
+        onPersonUpdated={() => {
+          // Refresh the person data or trigger a parent component refresh
+          if (onEdit) onEdit(); // This might trigger a refresh in parent
+        }}
+      />
     </Card>
   );
 }
@@ -420,6 +446,7 @@ interface PersonCardDialogProps {
     used_ivf?: boolean;
     used_iui?: boolean;
     fertility_treatments?: any;
+    is_self?: boolean;
   } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;

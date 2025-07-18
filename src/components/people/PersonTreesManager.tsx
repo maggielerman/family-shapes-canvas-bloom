@@ -17,6 +17,9 @@ interface FamilyTree {
   name: string;
   description?: string;
   visibility: string;
+  membership_id?: string;
+  is_primary?: boolean;
+  role?: string;
 }
 
 interface Connection {
@@ -45,28 +48,38 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
 
   const fetchPersonTrees = async () => {
     try {
-      // First get the person's current family_tree_id
-      const { data: personData, error: personError } = await supabase
-        .from('persons')
-        .select('family_tree_id')
-        .eq('id', personId)
-        .single();
+      const { data, error } = await supabase
+        .from('family_tree_members')
+        .select(`
+          id,
+          family_tree_id,
+          is_primary,
+          role,
+          created_at,
+          family_tree:family_trees(
+            id,
+            name,
+            description,
+            visibility
+          )
+        `)
+        .eq('person_id', personId)
+        .order('is_primary', { ascending: false });
 
-      if (personError) throw personError;
+      if (error) throw error;
       
-      if (personData?.family_tree_id) {
-        // Then fetch the family tree details
-        const { data: treeData, error: treeError } = await supabase
-          .from('family_trees')
-          .select('*')
-          .eq('id', personData.family_tree_id)
-          .single();
-
-        if (treeError) throw treeError;
-        setPersonTrees(treeData ? [treeData] : []);
-      } else {
-        setPersonTrees([]);
-      }
+      // Transform the data to match our interface
+      const trees = (data || []).map(membership => ({
+        id: membership.family_tree.id,
+        name: membership.family_tree.name,
+        description: membership.family_tree.description,
+        visibility: membership.family_tree.visibility,
+        membership_id: membership.id,
+        is_primary: membership.is_primary,
+        role: membership.role
+      }));
+      
+      setPersonTrees(trees);
     } catch (error) {
       console.error('Error fetching person trees:', error);
       setPersonTrees([]);
@@ -151,10 +164,17 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
     if (!selectedTreeId) return;
 
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
       const { error } = await supabase
-        .from('persons')
-        .update({ family_tree_id: selectedTreeId })
-        .eq('id', personId);
+        .from('family_tree_members')
+        .insert({
+          family_tree_id: selectedTreeId,
+          person_id: personId,
+          added_by: userData.user.id,
+          is_primary: personTrees.length === 0 // Mark as primary if it's their first tree
+        });
 
       if (error) throw error;
 
@@ -168,13 +188,12 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
     }
   };
 
-  const removeFromTree = async (treeId: string) => {
+  const removeFromTree = async (membershipId: string) => {
     try {
       const { error } = await supabase
-        .from('persons')
-        .update({ family_tree_id: null })
-        .eq('id', personId)
-        .eq('family_tree_id', treeId);
+        .from('family_tree_members')
+        .delete()
+        .eq('id', membershipId);
 
       if (error) throw error;
 
@@ -260,20 +279,30 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
           ) : (
             <div className="space-y-3">
               {personTrees.map((tree) => (
-                <div key={tree.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={tree.membership_id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <h4 className="font-medium">{tree.name}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{tree.name}</h4>
+                      {tree.is_primary && (
+                        <Badge variant="secondary" className="text-xs">Primary</Badge>
+                      )}
+                    </div>
                     {tree.description && (
                       <p className="text-sm text-muted-foreground">{tree.description}</p>
                     )}
-                    <Badge className={getVisibilityColor(tree.visibility)} variant="outline">
-                      {tree.visibility}
-                    </Badge>
+                    <div className="flex gap-2 mt-1">
+                      <Badge className={getVisibilityColor(tree.visibility)} variant="outline">
+                        {tree.visibility}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {tree.role}
+                      </Badge>
+                    </div>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => removeFromTree(tree.id)}
+                    onClick={() => removeFromTree(tree.membership_id)}
                   >
                     <X className="h-4 w-4" />
                   </Button>

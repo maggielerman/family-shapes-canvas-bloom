@@ -116,6 +116,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "connections_from_person_id_fkey"
+            columns: ["from_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_trees"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "connections_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
@@ -141,6 +148,13 @@ export type Database = {
             columns: ["to_person_id"]
             isOneToOne: false
             referencedRelation: "persons_with_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_to_person_id_fkey"
+            columns: ["to_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_trees"
             referencedColumns: ["id"]
           },
         ]
@@ -219,6 +233,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "persons_with_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donors_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_trees"
             referencedColumns: ["id"]
           },
         ]
@@ -365,6 +386,68 @@ export type Database = {
           },
         ]
       }
+      family_tree_members: {
+        Row: {
+          added_by: string
+          created_at: string
+          family_tree_id: string
+          id: string
+          is_primary: boolean | null
+          person_id: string
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          family_tree_id: string
+          id?: string
+          is_primary?: boolean | null
+          person_id: string
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          family_tree_id?: string
+          id?: string
+          is_primary?: boolean | null
+          person_id?: string
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_tree_members_family_tree_id_fkey"
+            columns: ["family_tree_id"]
+            isOneToOne: false
+            referencedRelation: "family_trees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_tree_members_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_tree_members_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_tree_members_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_trees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_trees: {
         Row: {
           created_at: string
@@ -470,6 +553,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "persons_with_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_memberships_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_trees"
             referencedColumns: ["id"]
           },
         ]
@@ -824,6 +914,13 @@ export type Database = {
             referencedRelation: "persons_with_groups"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "person_media_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons_with_trees"
+            referencedColumns: ["id"]
+          },
         ]
       }
       persons: {
@@ -840,6 +937,7 @@ export type Database = {
           fertility_treatments: Json | null
           gender: string | null
           id: string
+          is_self: boolean | null
           metadata: Json | null
           name: string
           notes: string | null
@@ -867,6 +965,7 @@ export type Database = {
           fertility_treatments?: Json | null
           gender?: string | null
           id?: string
+          is_self?: boolean | null
           metadata?: Json | null
           name: string
           notes?: string | null
@@ -894,6 +993,7 @@ export type Database = {
           fertility_treatments?: Json | null
           gender?: string | null
           id?: string
+          is_self?: boolean | null
           metadata?: Json | null
           name?: string
           notes?: string | null
@@ -1096,6 +1196,53 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "persons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persons_with_trees: {
+        Row: {
+          address: string | null
+          birth_place: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          date_of_death: string | null
+          death_place: string | null
+          donor: boolean | null
+          email: string | null
+          family_tree_id: string | null
+          family_trees: Json | null
+          fertility_treatments: Json | null
+          gender: string | null
+          id: string | null
+          is_self: boolean | null
+          metadata: Json | null
+          name: string | null
+          notes: string | null
+          organization_id: string | null
+          phone: string | null
+          preferred_contact_method: string | null
+          profile_photo_url: string | null
+          social_media_links: Json | null
+          status: string | null
+          updated_at: string | null
+          used_iui: boolean | null
+          used_ivf: boolean | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persons_family_tree_id_fkey"
+            columns: ["family_tree_id"]
+            isOneToOne: false
+            referencedRelation: "family_trees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "persons_organization_id_fkey"
             columns: ["organization_id"]
