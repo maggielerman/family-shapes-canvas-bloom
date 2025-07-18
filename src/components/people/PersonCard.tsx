@@ -27,11 +27,13 @@ import {
   Download,
   UserCircle,
   File,
-  Loader2
+  Loader2,
+  TreePine
 } from 'lucide-react';
 import { usePersonMedia } from '@/hooks/use-person-media';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { FileUpload } from '@/components/ui/file-upload';
+import { PersonTreesManager } from './PersonTreesManager';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -197,10 +199,11 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
       
       <CardContent>
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="medical">Medical</TabsTrigger>
+            <TabsTrigger value="trees">Trees</TabsTrigger>
             <TabsTrigger value="media">Media</TabsTrigger>
           </TabsList>
           
@@ -303,6 +306,10 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                 </div>
               )}
             </div>
+          </TabsContent>
+          
+          <TabsContent value="trees" className="space-y-4 mt-4">
+            <PersonTreesManager personId={person.id} />
           </TabsContent>
           
           <TabsContent value="media" className="space-y-4 mt-4">

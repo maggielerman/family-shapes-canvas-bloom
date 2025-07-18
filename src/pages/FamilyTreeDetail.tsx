@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
+import { AddExistingPersonDialog } from "@/components/family-trees/AddExistingPersonDialog";
 import { PersonCard } from "@/components/family-trees/PersonCard";
 import { PersonCardDialog } from "@/components/people/PersonCard";
 import { EditPersonDialog } from "@/components/people/EditPersonDialog";
@@ -55,6 +56,7 @@ export default function FamilyTreeDetail() {
   const [persons, setPersons] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
+  const [addExistingPersonDialogOpen, setAddExistingPersonDialogOpen] = useState(false);
   const [sharingDialogOpen, setSharingDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
@@ -236,10 +238,19 @@ export default function FamilyTreeDetail() {
         <TabsContent value="people" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Family Members</h2>
-            <Button onClick={() => setAddPersonDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Person
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setAddExistingPersonDialogOpen(true)}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Add Existing
+              </Button>
+              <Button onClick={() => setAddPersonDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Person
+              </Button>
+            </div>
           </div>
 
           {persons.length === 0 ? (
@@ -250,10 +261,19 @@ export default function FamilyTreeDetail() {
                 <p className="text-muted-foreground mb-4">
                   Start building your family tree by adding family members.
                 </p>
-                <Button onClick={() => setAddPersonDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add First Person
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setAddExistingPersonDialogOpen(true)}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Add Existing Person
+                  </Button>
+                  <Button onClick={() => setAddPersonDialogOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New Person
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (
@@ -313,6 +333,13 @@ export default function FamilyTreeDetail() {
         open={addPersonDialogOpen}
         onOpenChange={setAddPersonDialogOpen}
         onSubmit={handleAddPerson}
+      />
+
+      <AddExistingPersonDialog
+        open={addExistingPersonDialogOpen}
+        onOpenChange={setAddExistingPersonDialogOpen}
+        familyTreeId={familyTree.id}
+        onPersonAdded={fetchPersons}
       />
       
       <SharingSettingsDialog
