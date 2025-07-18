@@ -13,7 +13,9 @@ import {
   Trash2,
   Edit,
   Eye,
-  Tag
+  Tag,
+  Grid3X3,
+  List
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,6 +88,8 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [draggedFile, setDraggedFile] = useState<string | null>(null);
   
   // Dialog states
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
@@ -235,6 +239,41 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
     }
   };
 
+  const moveFileToFolder = async (mediaId: string, targetFolderId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('family_tree_media')
+        .update({ folder_id: targetFolderId })
+        .eq('id', mediaId);
+
+      if (error) throw error;
+
+      toast.success('File moved successfully');
+      fetchMedia();
+    } catch (error) {
+      console.error('Error moving file:', error);
+      toast.error('Failed to move file');
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, mediaId: string) => {
+    setDraggedFile(mediaId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetFolderId: string | null) => {
+    e.preventDefault();
+    if (draggedFile) {
+      moveFileToFolder(draggedFile, targetFolderId);
+      setDraggedFile(null);
+    }
+  };
+
   const downloadFile = async (file: MediaFile) => {
     try {
       const { data, error } = await supabase.storage
@@ -308,6 +347,25 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
         </div>
         
         <div className="flex gap-2">
+          <div className="flex border rounded-md">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="rounded-r-none"
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="rounded-l-none"
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+          
           <Dialog open={createFolderOpen} onOpenChange={setCreateFolderOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -416,17 +474,41 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" : "space-y-2"}>
           {/* Folders */}
-          {filteredFolders.map((folder) => (
+          {filteredFolders.map((folder) => viewMode === 'grid' ? (
             <Card 
               key={folder.id} 
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              className="cursor-pointer hover:shadow-md transition-shadow border-2 border-dashed border-transparent hover:border-primary/50"
               onClick={() => setCurrentFolderId(folder.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, folder.id)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <Folder className="w-8 h-8 text-blue-500" />
+                  <Folder className="w-8 h-8 text-primary" />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium truncate">{folder.name}</h4>
+                    {folder.description && (
+                      <p className="text-sm text-muted-foreground truncate">
+                        {folder.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card 
+              key={folder.id} 
+              className="cursor-pointer hover:shadow-sm transition-shadow border-2 border-dashed border-transparent hover:border-primary/50"
+              onClick={() => setCurrentFolderId(folder.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, folder.id)}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  <Folder className="w-6 h-6 text-primary" />
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium truncate">{folder.name}</h4>
                     {folder.description && (
@@ -443,8 +525,13 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
           {/* Media Files */}
           {filteredMedia.map((item) => {
             const FileIcon = getFileIcon(item.media_file.mime_type);
-            return (
-              <Card key={item.id} className="overflow-hidden">
+            return viewMode === 'grid' ? (
+              <Card 
+                key={item.id} 
+                className="overflow-hidden cursor-move"
+                draggable
+                onDragStart={(e) => handleDragStart(e, item.id)}
+              >
                 <div className="aspect-square bg-muted relative">
                   {item.media_file.mime_type.startsWith('image/') ? (
                     <img
@@ -510,12 +597,80 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+                 </CardContent>
+               </Card>
+             ) : (
+               <Card 
+                 key={item.id} 
+                 className="cursor-move"
+                 draggable
+                 onDragStart={(e) => handleDragStart(e, item.id)}
+               >
+                 <CardContent className="p-3">
+                   <div className="flex items-center gap-3">
+                     {item.media_file.mime_type.startsWith('image/') ? (
+                       <img
+                         src={getFileUrl(item.media_file.bucket_name, item.media_file.file_path)}
+                         alt={item.media_file.file_name}
+                         className="w-12 h-12 object-cover rounded"
+                         loading="lazy"
+                       />
+                     ) : (
+                       <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                         <FileIcon className="h-6 w-6 text-muted-foreground" />
+                       </div>
+                     )}
+                     
+                     <div className="flex-1 min-w-0">
+                       <h4 className="font-medium truncate">{item.media_file.file_name}</h4>
+                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                         <span>{formatFileSize(item.media_file.file_size)}</span>
+                         <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                       </div>
+                       {item.tags && item.tags.length > 0 && (
+                         <div className="flex flex-wrap gap-1 mt-1">
+                           {item.tags.slice(0, 3).map((tag, index) => (
+                             <Badge key={index} variant="secondary" className="text-xs">
+                               {tag}
+                             </Badge>
+                           ))}
+                           {item.tags.length > 3 && (
+                             <Badge variant="secondary" className="text-xs">
+                               +{item.tags.length - 3}
+                             </Badge>
+                           )}
+                         </div>
+                       )}
+                     </div>
+                     
+                     <DropdownMenu>
+                       <DropdownMenuTrigger asChild>
+                         <Button variant="ghost" size="sm">
+                           <MoreVertical className="h-4 w-4" />
+                         </Button>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent>
+                         <DropdownMenuItem onClick={() => downloadFile(item.media_file)}>
+                           <Download className="h-4 w-4 mr-2" />
+                           Download
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem 
+                           onClick={() => removeFromTree(item.id)}
+                           className="text-destructive"
+                         >
+                           <Trash2 className="h-4 w-4 mr-2" />
+                           Remove from Tree
+                         </DropdownMenuItem>
+                       </DropdownMenuContent>
+                     </DropdownMenu>
+                   </div>
+                 </CardContent>
+               </Card>
+             );
+           })}
+         </div>
+       )}
+     </div>
+   );
+ }
