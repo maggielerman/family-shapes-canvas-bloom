@@ -16,6 +16,7 @@ import InvitationPage from "./pages/InvitationPage";
 import UserProfile from "./pages/UserProfile";
 import FamilyTrees from "./pages/FamilyTrees";
 import FamilyTreeDetail from "./pages/FamilyTreeDetail";
+import OrganizationInvitePage from "./pages/OrganizationInvitePage";
 import PublicFamilyTree from "./pages/PublicFamilyTree";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/connections" element={<FamilyTrees />} />
             <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
             <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />
+            <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />
             <Route path="/invitation/:action/:token" element={<InvitationPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
