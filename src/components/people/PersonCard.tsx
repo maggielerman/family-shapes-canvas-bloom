@@ -30,6 +30,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { usePersonMedia } from '@/hooks/use-person-media';
+import { useFileUpload } from '@/hooks/use-file-upload';
+import { FileUpload } from '@/components/ui/file-upload';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -56,7 +58,9 @@ interface PersonCardProps {
 }
 
 export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
-  const { mediaFiles, loading: mediaLoading, getFileUrl } = usePersonMedia(person.id);
+  const { mediaFiles, loading: mediaLoading, getFileUrl, linkMediaToPerson, refetch } = usePersonMedia(person.id);
+  const { uploadMultipleFiles, isUploading } = useFileUpload();
+  const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
@@ -95,6 +99,29 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
       });
     }
     return treatments;
+  };
+
+  const handleFilesSelected = (files: File[]) => {
+    setUploadingFiles(files);
+  };
+
+  const handleUpload = async () => {
+    if (uploadingFiles.length === 0) return;
+
+    try {
+      const uploadedFiles = await uploadMultipleFiles(uploadingFiles);
+      
+      // Link each uploaded file to the person
+      for (const file of uploadedFiles) {
+        await linkMediaToPerson(file.id);
+      }
+      
+      setUploadingFiles([]);
+      toast.success(`Uploaded and linked ${uploadedFiles.length} file(s) to ${person.name}`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Upload failed');
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -279,6 +306,31 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
           </TabsContent>
           
           <TabsContent value="media" className="space-y-4 mt-4">
+            {/* Upload Section */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Upload Media</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <FileUpload
+                  onFilesSelected={handleFilesSelected}
+                  multiple={true}
+                  maxFiles={5}
+                />
+                {uploadingFiles.length > 0 && (
+                  <Button 
+                    onClick={handleUpload} 
+                    disabled={isUploading}
+                    size="sm"
+                    className="w-full"
+                  >
+                    {isUploading ? 'Uploading...' : `Upload ${uploadingFiles.length} file(s)`}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Media Files */}
             {mediaLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
