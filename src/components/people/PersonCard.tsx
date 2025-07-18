@@ -188,8 +188,8 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                   </Badge>
                 )}
                 {person.is_self && (
-                  <Badge variant="outline" className="text-[hsl(9,67%,49%)] border-[hsl(9,67%,49%)]">
-                    <User className="h-3 w-3 mr-1" />
+                  <Badge variant="default" className="bg-[hsl(9,67%,49%)] text-white border-[hsl(9,67%,49%)]">
+                    <User className="h-3 w-3 mr-1 fill-current" />
                     Self
                   </Badge>
                 )}

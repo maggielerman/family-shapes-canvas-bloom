@@ -76,9 +76,7 @@ export function PersonCard({
 
   return (
     <Card 
-      className={`hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''} ${
-        person.is_self ? 'border-[hsl(9,67%,49%)] bg-[hsl(9,67%,49%)]/5 dark:bg-[hsl(9,67%,49%)]/10' : ''
-      }`}
+      className={`hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <CardHeader className="pb-3">
