@@ -38,7 +38,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
   const [availableTrees, setAvailableTrees] = useState<FamilyTree[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [addTreeDialogOpen, setAddTreeDialogOpen] = useState(false);
+  const [manageTreesDialogOpen, setManageTreesDialogOpen] = useState(false);
   const [connectionsDialogOpen, setConnectionsDialogOpen] = useState(false);
   const [selectedTreeId, setSelectedTreeId] = useState<string>('');
 
@@ -181,7 +181,6 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
       if (error) throw error;
 
       toast.success('Person added to family tree');
-      setAddTreeDialogOpen(false);
       setSelectedTreeId('');
       fetchPersonTrees();
     } catch (error) {
@@ -235,37 +234,85 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
               <TreePine className="h-5 w-5 mr-2" />
               Family Trees
             </CardTitle>
-            <Dialog open={addTreeDialogOpen} onOpenChange={setAddTreeDialogOpen}>
+            <Dialog open={manageTreesDialogOpen} onOpenChange={setManageTreesDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add to Tree
+                  <Settings className="h-4 w-4 mr-2" />
+                  Manage Trees
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Add to Family Tree</DialogTitle>
+                  <DialogTitle>Manage Family Trees</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <Select value={selectedTreeId} onValueChange={setSelectedTreeId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a family tree" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableTrees.map((tree) => (
-                        <SelectItem key={tree.id} value={tree.id}>
-                          {tree.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setAddTreeDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={addToTree} disabled={!selectedTreeId}>
-                      Add to Tree
-                    </Button>
+                <div className="space-y-6">
+                  {/* Add to Tree Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Add to New Tree</h4>
+                    <div className="flex gap-2">
+                      <Select value={selectedTreeId} onValueChange={setSelectedTreeId}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Select a family tree" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableTrees
+                            .filter(tree => !personTrees.some(pt => pt.id === tree.id))
+                            .map((tree) => (
+                            <SelectItem key={tree.id} value={tree.id}>
+                              {tree.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button onClick={addToTree} disabled={!selectedTreeId}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Current Trees Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Current Trees</h4>
+                    {personTrees.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <TreePine className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>Not added to any family trees</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {personTrees.map((tree) => (
+                          <div key={tree.membership_id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium">{tree.name}</h4>
+                                {tree.is_primary && (
+                                  <Badge variant="secondary" className="text-xs">Primary</Badge>
+                                )}
+                              </div>
+                              {tree.description && (
+                                <p className="text-sm text-muted-foreground">{tree.description}</p>
+                              )}
+                              <div className="flex gap-2 mt-1">
+                                <Badge className={getVisibilityColor(tree.visibility)} variant="outline">
+                                  {tree.visibility}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {tree.role}
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromTree(tree.membership_id!)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </DialogContent>
@@ -301,13 +348,6 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
                       </Badge>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeFromTree(tree.membership_id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
               ))}
             </div>
