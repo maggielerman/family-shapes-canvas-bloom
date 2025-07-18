@@ -620,12 +620,14 @@ export type Database = {
           created_by: string
           current_uses: number | null
           expires_at: string | null
-          family_tree_id: string
+          family_tree_id: string | null
+          group_id: string | null
           id: string
           invited_emails: string[] | null
           is_active: boolean | null
           link_token: string
           max_uses: number | null
+          organization_id: string | null
           password_hash: string | null
           updated_at: string | null
         }
@@ -635,12 +637,14 @@ export type Database = {
           created_by: string
           current_uses?: number | null
           expires_at?: string | null
-          family_tree_id: string
+          family_tree_id?: string | null
+          group_id?: string | null
           id?: string
           invited_emails?: string[] | null
           is_active?: boolean | null
           link_token?: string
           max_uses?: number | null
+          organization_id?: string | null
           password_hash?: string | null
           updated_at?: string | null
         }
@@ -650,12 +654,14 @@ export type Database = {
           created_by?: string
           current_uses?: number | null
           expires_at?: string | null
-          family_tree_id?: string
+          family_tree_id?: string | null
+          group_id?: string | null
           id?: string
           invited_emails?: string[] | null
           is_active?: boolean | null
           link_token?: string
           max_uses?: number | null
+          organization_id?: string | null
           password_hash?: string | null
           updated_at?: string | null
         }
