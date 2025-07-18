@@ -45,15 +45,31 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
 
   const fetchPersonTrees = async () => {
     try {
-      const { data, error } = await supabase
-        .from('family_trees')
-        .select('*')
-        .eq('id', personId);
+      // First get the person's current family_tree_id
+      const { data: personData, error: personError } = await supabase
+        .from('persons')
+        .select('family_tree_id')
+        .eq('id', personId)
+        .single();
 
-      if (error) throw error;
-      setPersonTrees(data || []);
+      if (personError) throw personError;
+      
+      if (personData?.family_tree_id) {
+        // Then fetch the family tree details
+        const { data: treeData, error: treeError } = await supabase
+          .from('family_trees')
+          .select('*')
+          .eq('id', personData.family_tree_id)
+          .single();
+
+        if (treeError) throw treeError;
+        setPersonTrees(treeData ? [treeData] : []);
+      } else {
+        setPersonTrees([]);
+      }
     } catch (error) {
       console.error('Error fetching person trees:', error);
+      setPersonTrees([]);
     }
   };
 
