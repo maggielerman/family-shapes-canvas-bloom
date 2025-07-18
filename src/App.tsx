@@ -38,6 +38,7 @@ const App = () => (
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/family-trees" element={<FamilyTrees />} />
             <Route path="/family-trees/:id" element={<FamilyTreeDetail />} />
+            <Route path="/connections" element={<FamilyTrees />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

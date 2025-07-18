@@ -152,6 +152,9 @@ export function ConnectionManager({
   const handleUpdateConnection = async () => {
     if (!editingConnection) return;
 
+    console.log('Updating connection:', editingConnection);
+    console.log('New relationship type:', editingConnection.relationship_type);
+
     try {
       const { error } = await supabase
         .from('connections')
@@ -160,7 +163,12 @@ export function ConnectionManager({
         })
         .eq('id', editingConnection.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Connection updated successfully');
 
       toast({
         title: "Success",
