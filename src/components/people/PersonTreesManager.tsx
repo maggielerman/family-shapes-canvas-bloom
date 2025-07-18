@@ -93,7 +93,8 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
 
   const fetchConnections = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch connections where this person is the "from_person"
+      const { data: fromConnections, error: fromError } = await supabase
         .from('connections')
         .select(`
           id,
@@ -104,8 +105,41 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
         `)
         .eq('from_person_id', personId);
 
-      if (error) throw error;
-      setConnections(data || []);
+      if (fromError) throw fromError;
+
+      // Fetch connections where this person is the "to_person"
+      const { data: toConnections, error: toError } = await supabase
+        .from('connections')
+        .select(`
+          id,
+          from_person_id,
+          to_person_id,
+          relationship_type,
+          from_person:persons!connections_from_person_id_fkey(name)
+        `)
+        .eq('to_person_id', personId);
+
+      if (toError) throw toError;
+
+      // Combine and format connections
+      const allConnections = [
+        ...(fromConnections || []).map(conn => ({
+          id: conn.id,
+          from_person_id: conn.from_person_id,
+          to_person_id: conn.to_person_id,
+          relationship_type: conn.relationship_type,
+          to_person: conn.to_person
+        })),
+        ...(toConnections || []).map(conn => ({
+          id: conn.id,
+          from_person_id: conn.from_person_id,
+          to_person_id: conn.to_person_id,
+          relationship_type: conn.relationship_type,
+          to_person: conn.from_person // Show the other person in the relationship
+        }))
+      ];
+
+      setConnections(allConnections);
     } catch (error) {
       console.error('Error fetching connections:', error);
     } finally {
