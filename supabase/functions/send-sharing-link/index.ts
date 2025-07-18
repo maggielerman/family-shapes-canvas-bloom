@@ -50,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate the sharing URL
     const baseUrl = Deno.env.get("SITE_URL") || "https://familyshapes.lovable.app";
-    const sharingUrl = `${baseUrl}/shared/${linkData.family_tree_id}?token=${linkData.link_token}`;
+    const sharingUrl = `${baseUrl}/shared/tree/${linkData.family_tree_id}?token=${linkData.link_token}`;
 
     // Send emails to all recipients
     const emailPromises = emails.map(async (email) => {

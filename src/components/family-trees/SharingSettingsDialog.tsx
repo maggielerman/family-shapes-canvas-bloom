@@ -294,7 +294,7 @@ export function SharingSettingsDialog({
   };
 
   const copyToClipboard = async (linkToken: string) => {
-    const url = `${window.location.origin}/shared/${familyTree.id}?token=${linkToken}`;
+    const url = `${window.location.origin}/shared/tree/${familyTree.id}?token=${linkToken}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedLink(linkToken);
@@ -564,7 +564,7 @@ export function SharingSettingsDialog({
 
                             <div className="flex items-center gap-2">
                               <Input
-                                value={`${window.location.origin}/shared/${familyTree.id}?token=${link.link_token}`}
+                                value={`${window.location.origin}/shared/tree/${familyTree.id}?token=${link.link_token}`}
                                 readOnly
                                 className="text-xs font-mono"
                               />
