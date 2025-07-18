@@ -15,6 +15,7 @@ import OrganizationDetails from "./pages/OrganizationDetails";
 import InvitationPage from "./pages/InvitationPage";
 import UserProfile from "./pages/UserProfile";
 import FamilyTrees from "./pages/FamilyTrees";
+import People from "./pages/People";
 import FamilyTreeDetail from "./pages/FamilyTreeDetail";
 import OrganizationInvitePage from "./pages/OrganizationInvitePage";
 import PublicFamilyTree from "./pages/PublicFamilyTree";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/organizations" element={<Organizations />} />
             <Route path="/organizations/:id" element={<OrganizationDetails />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/people" element={<People />} />
             <Route path="/family-trees" element={<FamilyTrees />} />
             <Route path="/family-trees/:id" element={<FamilyTreeDetail />} />
             <Route path="/connections" element={<FamilyTrees />} />

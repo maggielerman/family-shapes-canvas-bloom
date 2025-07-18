@@ -233,7 +233,38 @@ export default function FamilyTreeDetail() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {persons.map((person) => (
-                  <PersonCard key={person.id} person={person} />
+                  <PersonCard 
+                    key={person.id} 
+                    person={person}
+                    onEdit={(p) => console.log('Edit person:', p)}
+                    showRemoveFromTree={true}
+                    onRemoveFromTree={async (p) => {
+                      try {
+                        // Remove person from this specific tree by setting family_tree_id to null
+                        const { error } = await supabase
+                          .from('persons')
+                          .update({ family_tree_id: null })
+                          .eq('id', p.id)
+                          .eq('family_tree_id', familyTree.id);
+
+                        if (error) throw error;
+
+                        toast({
+                          title: "Person Removed",
+                          description: `${p.name} has been removed from this family tree`
+                        });
+
+                        fetchPersons();
+                      } catch (error) {
+                        console.error('Error removing person from tree:', error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to remove person from tree",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                  />
                 ))}
               </div>
             )}

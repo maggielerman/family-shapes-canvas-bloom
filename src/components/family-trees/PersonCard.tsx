@@ -1,4 +1,4 @@
-import { Edit, Mail, Phone, Calendar, UserCircle } from "lucide-react";
+import { Edit, Mail, Phone, Calendar, UserCircle, Trash2, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +20,20 @@ interface Person {
 interface PersonCardProps {
   person: Person;
   onEdit?: (person: Person) => void;
+  onDelete?: (person: Person) => void;
+  onRemoveFromTree?: (person: Person) => void;
+  showActions?: boolean;
+  showRemoveFromTree?: boolean;
 }
 
-export function PersonCard({ person, onEdit }: PersonCardProps) {
+export function PersonCard({ 
+  person, 
+  onEdit, 
+  onDelete, 
+  onRemoveFromTree, 
+  showActions = false,
+  showRemoveFromTree = false 
+}: PersonCardProps) {
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -80,18 +91,45 @@ export function PersonCard({ person, onEdit }: PersonCardProps) {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Badge className={getStatusColor(person.status)}>
               {person.status}
             </Badge>
-            {onEdit && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => onEdit(person)}
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
+            {(showActions || onEdit || onDelete || showRemoveFromTree) && (
+              <div className="flex items-center gap-1">
+                {onEdit && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onEdit(person)}
+                    title="Edit person"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                )}
+                {showRemoveFromTree && onRemoveFromTree && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onRemoveFromTree(person)}
+                    title="Remove from this tree"
+                    className="text-amber-600 hover:text-amber-700"
+                  >
+                    <UserMinus className="w-4 h-4" />
+                  </Button>
+                )}
+                {showActions && onDelete && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onDelete(person)}
+                    title="Delete person permanently"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>
