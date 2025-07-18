@@ -555,6 +555,7 @@ export type Database = {
           file_name: string
           file_path: string
           file_size: number
+          folder_id: string | null
           id: string
           mime_type: string
           updated_at: string
@@ -566,6 +567,7 @@ export type Database = {
           file_name: string
           file_path: string
           file_size: number
+          folder_id?: string | null
           id?: string
           mime_type: string
           updated_at?: string
@@ -577,8 +579,39 @@ export type Database = {
           file_name?: string
           file_path?: string
           file_size?: number
+          folder_id?: string | null
           id?: string
           mime_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      media_folders: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_folder_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_folder_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_folder_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -627,6 +660,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      organization_media: {
+        Row: {
+          added_by: string
+          created_at: string
+          description: string | null
+          folder_id: string | null
+          id: string
+          media_file_id: string
+          organization_id: string
+          sort_order: number | null
+          tags: string[] | null
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          description?: string | null
+          folder_id?: string | null
+          id?: string
+          media_file_id: string
+          organization_id: string
+          sort_order?: number | null
+          tags?: string[] | null
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          description?: string | null
+          folder_id?: string | null
+          id?: string
+          media_file_id?: string
+          organization_id?: string
+          sort_order?: number | null
+          tags?: string[] | null
+        }
+        Relationships: []
       }
       organization_memberships: {
         Row: {
