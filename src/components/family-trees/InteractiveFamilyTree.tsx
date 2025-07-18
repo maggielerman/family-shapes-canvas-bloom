@@ -66,6 +66,7 @@ interface InteractiveFamilyTreeProps {
   onConnectionAdded: () => void;
   onPersonUpdated: () => void;
   onPersonDeleted: () => void;
+  readOnly?: boolean;
 }
 
 export function InteractiveFamilyTree({
@@ -75,7 +76,8 @@ export function InteractiveFamilyTree({
   onPersonAdded,
   onConnectionAdded,
   onPersonUpdated,
-  onPersonDeleted
+  onPersonDeleted,
+  readOnly = false
 }: InteractiveFamilyTreeProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -199,6 +201,12 @@ export function InteractiveFamilyTree({
   }, [simulation]);
 
   const handlePersonClick = useCallback((person: NodeData) => {
+    if (readOnly) {
+      // Only allow viewing in read-only mode
+      setExpandedPersonId(expandedPersonId === person.id ? null : person.id);
+      return;
+    }
+
     switch (editMode) {
       case 'view':
         setExpandedPersonId(expandedPersonId === person.id ? null : person.id);
@@ -225,9 +233,10 @@ export function InteractiveFamilyTree({
         handleDeletePerson(person.id);
         break;
     }
-  }, [editMode, pendingConnection, expandedPersonId]);
+  }, [editMode, pendingConnection, expandedPersonId, readOnly]);
 
   const handleDeletePerson = async (personId: string) => {
+    if (readOnly) return;
     if (!window.confirm("Are you sure you want to delete this person? This will also remove all their connections.")) {
       return;
     }
@@ -264,6 +273,7 @@ export function InteractiveFamilyTree({
   };
 
   const handleCreateConnection = async (relationshipType: string) => {
+    if (readOnly) return;
     if (!pendingConnection?.fromPersonId || !pendingConnection?.toPersonId) return;
 
     try {
@@ -322,25 +332,26 @@ export function InteractiveFamilyTree({
 
   return (
     <div className="space-y-4">
-      {/* Mode Selection Toolbar */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Target className="w-4 h-4" />
-            Interactive Controls
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2 items-center justify-between">
-            <div className="flex gap-2">
-              <Button
-                variant={editMode === 'view' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setEditMode('view')}
-              >
-                <MousePointer className="w-4 h-4 mr-2" />
-                View
-              </Button>
+      {/* Mode Selection Toolbar - Hide in read-only mode */}
+      {!readOnly && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Interactive Controls
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2 items-center justify-between">
+              <div className="flex gap-2">
+                <Button
+                  variant={editMode === 'view' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setEditMode('view')}
+                >
+                  <MousePointer className="w-4 h-4 mr-2" />
+                  View
+                </Button>
               <Button
                 variant={editMode === 'move' ? 'default' : 'outline'}
                 size="sm"
@@ -436,8 +447,9 @@ export function InteractiveFamilyTree({
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Family Tree Visualization */}
       <div className="relative w-full h-[600px] border rounded-lg overflow-hidden bg-card">
@@ -494,7 +506,7 @@ export function InteractiveFamilyTree({
               key={person.id}
               person={person}
               position={{ x: person.x || 400, y: person.y || 300 }}
-              editMode={editMode}
+              editMode={readOnly ? 'view' : editMode}
               isSelected={selectedPersonId === person.id}
               isExpanded={expandedPersonId === person.id}
               isPendingConnection={
@@ -502,7 +514,7 @@ export function InteractiveFamilyTree({
                 pendingConnection?.toPersonId === person.id
               }
               onClick={() => handlePersonClick(person)}
-              onPositionChange={(newPosition) => {
+              onPositionChange={readOnly ? () => {} : (newPosition) => {
                 if (simulation && editMode === 'move') {
                   const node = simulation.nodes().find(n => n.id === person.id);
                   if (node) {
@@ -512,7 +524,7 @@ export function InteractiveFamilyTree({
                   }
                 }
               }}
-              onUpdate={onPersonUpdated}
+              onUpdate={readOnly ? () => {} : onPersonUpdated}
             />
           ))}
         </div>
@@ -529,13 +541,15 @@ export function InteractiveFamilyTree({
         )}
       </div>
 
-      {/* Connection Manager for advanced features */}
-      <ConnectionManager
-        familyTreeId={familyTreeId}
-        connections={connections}
-        persons={persons}
-        onConnectionUpdated={onConnectionAdded}
-      />
+      {/* Connection Manager for advanced features - Hide in read-only mode */}
+      {!readOnly && (
+        <ConnectionManager
+          familyTreeId={familyTreeId}
+          connections={connections}
+          persons={persons}
+          onConnectionUpdated={onConnectionAdded}
+        />
+      )}
     </div>
   );
 }

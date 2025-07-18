@@ -305,6 +305,7 @@ export function PublicFamilyTreeViewer({
                   onConnectionAdded={() => {}}
                   onPersonUpdated={() => {}}
                   onPersonDeleted={() => {}}
+                  readOnly={true}
                 />
               </CardContent>
             </Card>
