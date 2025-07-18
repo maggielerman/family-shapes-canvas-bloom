@@ -19,12 +19,12 @@ interface RelationshipDialogProps {
 }
 
 const relationshipTypes = [
-  { value: "parent", label: "Parent", icon: Users, color: "bg-blue-100 text-blue-800", description: "Parent-child relationship" },
-  { value: "child", label: "Child", icon: Baby, color: "bg-green-100 text-green-800", description: "Child-parent relationship" },
-  { value: "partner", label: "Partner/Spouse", icon: Heart, color: "bg-pink-100 text-pink-800", description: "Romantic partnership or marriage" },
-  { value: "sibling", label: "Sibling", icon: Users, color: "bg-purple-100 text-purple-800", description: "Full siblings sharing both parents" },
-  { value: "half_sibling", label: "Half Sibling", icon: Users, color: "bg-indigo-100 text-indigo-800", description: "Siblings sharing one parent" },
-  { value: "donor", label: "Donor", icon: Dna, color: "bg-orange-100 text-orange-800", description: "Genetic donor relationship" },
+  { value: "parent", label: "Parent", icon: Users, color: "hsl(var(--chart-1))", description: "Parent-child relationship" },
+  { value: "child", label: "Child", icon: Baby, color: "hsl(var(--chart-2))", description: "Child-parent relationship" },
+  { value: "partner", label: "Partner/Spouse", icon: Heart, color: "hsl(var(--chart-3))", description: "Romantic partnership or marriage" },
+  { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))", description: "Full siblings sharing both parents" },
+  { value: "half_sibling", label: "Half Sibling", icon: Users, color: "hsl(var(--chart-1))", description: "Siblings sharing one parent" },
+  { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))", description: "Genetic donor relationship" },
 ];
 
 export function RelationshipDialog({

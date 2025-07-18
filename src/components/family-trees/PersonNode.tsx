@@ -27,12 +27,12 @@ interface PersonNodeProps {
 }
 
 const relationshipTypes = [
-  { value: "parent", label: "Parent", icon: Users, color: "bg-blue-100 text-blue-800" },
-  { value: "child", label: "Child", icon: Baby, color: "bg-green-100 text-green-800" },
-  { value: "partner", label: "Partner", icon: Heart, color: "bg-pink-100 text-pink-800" },
-  { value: "sibling", label: "Sibling", icon: Users, color: "bg-purple-100 text-purple-800" },
-  { value: "donor", label: "Donor", icon: Dna, color: "bg-orange-100 text-orange-800" },
-  { value: "half_sibling", label: "Half Sibling", icon: Users, color: "bg-indigo-100 text-indigo-800" },
+  { value: "parent", label: "Parent", icon: Users, color: "hsl(var(--chart-1))" },
+  { value: "child", label: "Child", icon: Baby, color: "hsl(var(--chart-2))" },
+  { value: "partner", label: "Partner", icon: Heart, color: "hsl(var(--chart-3))" },
+  { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))" },
+  { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))" },
+  { value: "half_sibling", label: "Half Sibling", icon: Users, color: "hsl(var(--chart-1))" },
 ];
 
 export const PersonNode = memo(({
@@ -53,9 +53,9 @@ export const PersonNode = memo(({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const getNodeColor = (gender?: string | null) => {
     switch (gender?.toLowerCase()) {
-      case 'male': return "hsl(var(--primary))";
-      case 'female': return "hsl(var(--secondary))";
-      default: return "hsl(var(--muted))";
+      case 'male': return "hsl(var(--chart-1))";
+      case 'female': return "hsl(var(--chart-2))";
+      default: return "hsl(var(--chart-3))";
     }
   };
 
