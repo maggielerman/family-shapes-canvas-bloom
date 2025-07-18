@@ -10,6 +10,7 @@ import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
 import { PersonCard } from "@/components/family-trees/PersonCard";
 import { FamilyTreeVisualization } from "@/components/family-trees/FamilyTreeVisualization";
 import { SharingSettingsDialog } from "@/components/family-trees/SharingSettingsDialog";
+import { FamilyTreeDocumentManager } from "@/components/family-trees/FamilyTreeDocumentManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -275,19 +276,7 @@ export default function FamilyTreeDetail() {
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Family Documents</CardTitle>
-              <CardDescription>
-                Upload and manage family documents and photos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center py-12">
-              <div className="text-muted-foreground">
-                Document management will be implemented here
-              </div>
-            </CardContent>
-          </Card>
+          <FamilyTreeDocumentManager familyTreeId={familyTree.id} />
         </TabsContent>
       </Tabs>
 
