@@ -46,6 +46,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const sidebarItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: User, label: "Profile", path: "/profile" },
+    { icon: Users, label: "People", path: "/people" },
     { icon: TreePine, label: "Family Trees", path: "/family-trees" },
     { icon: Users, label: "Connections", path: "/connections" },
     { icon: Share2, label: "Share", path: "/share" },

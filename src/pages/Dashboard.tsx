@@ -16,7 +16,8 @@ import {
   UserPlus, 
   Home,
   Share2,
-  TreePine
+  TreePine,
+  User
 } from "lucide-react";
 
 // Fixed: Removed non-existent 'Family' icon import
@@ -157,7 +158,10 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/family-trees')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <TreePine className="w-5 h-5 text-sage-600" />
@@ -174,53 +178,62 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/people')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="w-5 h-5 text-coral-600" />
-                Connections
+                <User className="w-5 h-5 text-coral-600" />
+                People
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-3">
-                Connect with donor siblings
+                Manage family members and contacts
               </p>
               <Button size="sm" variant="outline" className="w-full">
-                Explore
+                View People
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/organizations')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-dusty-600" />
-                Share
+                <Building2 className="w-5 h-5 text-dusty-600" />
+                Organizations
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-3">
-                Share family information
+                Manage organizations and groups
               </p>
               <Button size="sm" variant="outline" className="w-full">
-                Manage
+                View All
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/profile')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-navy-600" />
-                Invite
+                Profile
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-3">
-                Invite family members
+                Manage your account settings
               </p>
               <Button size="sm" variant="outline" className="w-full">
-                Send Invite
+                Edit Profile
               </Button>
             </CardContent>
           </Card>
