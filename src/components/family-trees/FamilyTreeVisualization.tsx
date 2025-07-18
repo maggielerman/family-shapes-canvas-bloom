@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers } from "lucide-react";
 import { AddPersonDialog } from "./AddPersonDialog";
+import { PersonCardDialog } from "@/components/people/PersonCard";
 import { InteractiveFamilyTree } from "./InteractiveFamilyTree";
 import { TreeLayout } from "./layouts/TreeLayout";
 import { RadialTreeLayout } from "./layouts/RadialTreeLayout";
@@ -17,10 +18,19 @@ interface Person {
   id: string;
   name: string;
   date_of_birth?: string | null;
+  birth_place?: string | null;
   gender?: string | null;
   profile_photo_url?: string | null;
   status: string;
   family_tree_id?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  donor?: boolean;
+  used_ivf?: boolean;
+  used_iui?: boolean;
+  fertility_treatments?: any;
 }
 
 interface Connection {
@@ -40,6 +50,7 @@ interface FamilyTreeVisualizationProps {
 export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }: FamilyTreeVisualizationProps) {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
+  const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const { toast } = useToast();
 
   const relationshipTypes = [
@@ -102,8 +113,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   };
 
   const handlePersonClick = (person: Person) => {
-    console.log('Person clicked:', person);
-    // You can add more functionality here, like opening a person details dialog
+    setViewingPerson(person);
   };
 
   return (
@@ -261,6 +271,12 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
         open={addPersonDialogOpen}
         onOpenChange={setAddPersonDialogOpen}
         onSubmit={handleAddPerson}
+      />
+
+      <PersonCardDialog
+        person={viewingPerson}
+        open={!!viewingPerson}
+        onOpenChange={(open) => !open && setViewingPerson(null)}
       />
     </div>
   );
