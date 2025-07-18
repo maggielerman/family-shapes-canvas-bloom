@@ -202,7 +202,7 @@ export default function FamilyTreeDetail() {
         <TabsList>
           <TabsTrigger value="people">People</TabsTrigger>
           <TabsTrigger value="tree">Tree View</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="documents">Media</TabsTrigger>
         </TabsList>
 
         <TabsContent value="people" className="space-y-6">

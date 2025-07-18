@@ -105,12 +105,18 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
 
   const fetchFolders = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('family_tree_folders')
         .select('*')
-        .eq('family_tree_id', familyTreeId)
-        .eq('parent_folder_id', currentFolderId)
-        .order('name');
+        .eq('family_tree_id', familyTreeId);
+      
+      if (currentFolderId === null) {
+        query = query.is('parent_folder_id', null);
+      } else {
+        query = query.eq('parent_folder_id', currentFolderId);
+      }
+      
+      const { data, error } = await query.order('name');
 
       if (error) throw error;
       setFolders(data || []);
@@ -122,15 +128,21 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
 
   const fetchMedia = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('family_tree_media')
         .select(`
           *,
           media_file:media_files(*)
         `)
-        .eq('family_tree_id', familyTreeId)
-        .eq('folder_id', currentFolderId)
-        .order('sort_order', { ascending: true });
+        .eq('family_tree_id', familyTreeId);
+      
+      if (currentFolderId === null) {
+        query = query.is('folder_id', null);
+      } else {
+        query = query.eq('folder_id', currentFolderId);
+      }
+      
+      const { data, error } = await query.order('sort_order', { ascending: true });
 
       if (error) throw error;
       setMedia(data || []);
@@ -270,7 +282,7 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading documents...</div>
+        <div className="text-lg">Loading media...</div>
       </div>
     );
   }
@@ -291,7 +303,7 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
             </Button>
           )}
           <h3 className="text-xl font-semibold">
-            {currentFolderId ? 'Folder Contents' : 'Family Documents'}
+            {currentFolderId ? 'Folder Contents' : 'Family Media'}
           </h3>
         </div>
         
@@ -307,7 +319,7 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
               <DialogHeader>
                 <DialogTitle>Create New Folder</DialogTitle>
                 <DialogDescription>
-                  Create a new folder to organize your family documents.
+                  Create a new folder to organize your family media files.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -397,9 +409,9 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
         <Card className="text-center py-12">
           <CardContent>
             <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No documents yet</h3>
+            <h3 className="text-lg font-semibold mb-2">No media files yet</h3>
             <p className="text-muted-foreground mb-4">
-              Start organizing your family documents by creating folders and uploading files.
+              Start organizing your family media by creating folders and uploading files.
             </p>
           </CardContent>
         </Card>

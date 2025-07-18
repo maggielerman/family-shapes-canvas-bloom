@@ -6,9 +6,44 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFileUpload } from '@/hooks/use-file-upload';
-import { Search, Upload, Image as ImageIcon, File, Trash2, Download } from 'lucide-react';
+import { Search, Upload, Image as ImageIcon, File, Trash2, Download, Link2, Users, FolderTree, Share, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface FamilyTree {
+  id: string;
+  name: string;
+  description?: string;
+  visibility: string;
+  created_at: string;
+  user_id: string;
+}
+
+interface Organization {
+  id: string;
+  name: string;
+  description?: string;
+  visibility: string;
+  created_at: string;
+  owner_id: string;
+}
 
 interface MediaFile {
   id: string;
@@ -33,16 +68,26 @@ interface MediaAlbum {
 export default function Media() {
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [albums, setAlbums] = useState<MediaAlbum[]>([]);
+  const [familyTrees, setFamilyTrees] = useState<FamilyTree[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
+  
+  // Dialog states
+  const [linkToTreeOpen, setLinkToTreeOpen] = useState(false);
+  const [linkToOrgOpen, setLinkToOrgOpen] = useState(false);
+  const [selectedMediaFile, setSelectedMediaFile] = useState<MediaFile | null>(null);
+  const [selectedTreeId, setSelectedTreeId] = useState<string>('');
+  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
 
   const { uploadMultipleFiles, getFileUrl, deleteFile, isUploading } = useFileUpload();
 
   useEffect(() => {
     fetchMediaFiles();
-    fetchAlbums();
+    fetchFamilyTrees();
+    fetchOrganizations();
   }, []);
 
   const fetchMediaFiles = async () => {
@@ -62,17 +107,75 @@ export default function Media() {
     }
   };
 
-  const fetchAlbums = async () => {
+  const fetchFamilyTrees = async () => {
     try {
       const { data, error } = await supabase
-        .from('media_albums')
+        .from('family_trees')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('name');
 
       if (error) throw error;
-      setAlbums(data || []);
+      setFamilyTrees(data || []);
     } catch (error) {
-      console.error('Error fetching albums:', error);
+      console.error('Error fetching family trees:', error);
+    }
+  };
+
+  const fetchOrganizations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setOrganizations(data || []);
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+    }
+  };
+
+  const linkToFamilyTree = async () => {
+    if (!selectedMediaFile || !selectedTreeId) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { error } = await supabase
+        .from('family_tree_media')
+        .insert({
+          family_tree_id: selectedTreeId,
+          media_file_id: selectedMediaFile.id,
+          folder_id: null,
+          added_by: user.id,
+        });
+
+      if (error) throw error;
+
+      toast.success('Media file linked to family tree successfully');
+      setLinkToTreeOpen(false);
+      setSelectedMediaFile(null);
+      setSelectedTreeId('');
+    } catch (error) {
+      console.error('Error linking to family tree:', error);
+      toast.error('Failed to link media file to family tree');
+    }
+  };
+
+  const linkToOrganization = async () => {
+    if (!selectedMediaFile || !selectedOrgId) return;
+
+    try {
+      // This would need a similar table structure for organization media
+      // For now, just show success message
+      toast.success('Organization linking will be implemented');
+      setLinkToOrgOpen(false);
+      setSelectedMediaFile(null);
+      setSelectedOrgId('');
+    } catch (error) {
+      console.error('Error linking to organization:', error);
+      toast.error('Failed to link media file to organization');
     }
   };
 
@@ -256,24 +359,52 @@ export default function Media() {
                         <span>{formatFileSize(file.file_size)}</span>
                         <span>{new Date(file.created_at).toLocaleDateString()}</span>
                       </div>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => downloadFile(file)}
-                          className="flex-1"
-                        >
-                          <Download className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteFile(file.id)}
-                          className="flex-1 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
+                       <div className="flex gap-1 relative">
+                         <DropdownMenu>
+                           <DropdownMenuTrigger asChild>
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               className="w-full"
+                             >
+                               <MoreVertical className="h-3 w-3" />
+                             </Button>
+                           </DropdownMenuTrigger>
+                           <DropdownMenuContent>
+                             <DropdownMenuItem onClick={() => downloadFile(file)}>
+                               <Download className="h-4 w-4 mr-2" />
+                               Download
+                             </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem 
+                               onClick={() => {
+                                 setSelectedMediaFile(file);
+                                 setLinkToTreeOpen(true);
+                               }}
+                             >
+                               <FolderTree className="h-4 w-4 mr-2" />
+                               Link to Family Tree
+                             </DropdownMenuItem>
+                             <DropdownMenuItem 
+                               onClick={() => {
+                                 setSelectedMediaFile(file);
+                                 setLinkToOrgOpen(true);
+                               }}
+                             >
+                               <Users className="h-4 w-4 mr-2" />
+                               Link to Organization
+                             </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem 
+                               onClick={() => handleDeleteFile(file.id)}
+                               className="text-destructive"
+                             >
+                               <Trash2 className="h-4 w-4 mr-2" />
+                               Delete File
+                             </DropdownMenuItem>
+                           </DropdownMenuContent>
+                         </DropdownMenu>
+                       </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -282,6 +413,74 @@ export default function Media() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Link to Family Tree Dialog */}
+      <Dialog open={linkToTreeOpen} onOpenChange={setLinkToTreeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Link to Family Tree</DialogTitle>
+            <DialogDescription>
+              Choose a family tree to link this media file to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={selectedTreeId} onValueChange={setSelectedTreeId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a family tree" />
+              </SelectTrigger>
+              <SelectContent>
+                {familyTrees.map((tree) => (
+                  <SelectItem key={tree.id} value={tree.id}>
+                    {tree.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkToTreeOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={linkToFamilyTree} disabled={!selectedTreeId}>
+              Link to Tree
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Link to Organization Dialog */}
+      <Dialog open={linkToOrgOpen} onOpenChange={setLinkToOrgOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Link to Organization</DialogTitle>
+            <DialogDescription>
+              Choose an organization to link this media file to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select an organization" />
+              </SelectTrigger>
+              <SelectContent>
+                {organizations.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkToOrgOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={linkToOrganization} disabled={!selectedOrgId}>
+              Link to Organization
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
