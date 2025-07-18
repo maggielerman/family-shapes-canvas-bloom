@@ -34,6 +34,7 @@ import { usePersonMedia } from '@/hooks/use-person-media';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { FileUpload } from '@/components/ui/file-upload';
 import { PersonTreesManager } from './PersonTreesManager';
+import { PersonConnectionManager } from './PersonConnectionManager';
 import { MarkAsSelfDialog } from './MarkAsSelfDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -215,10 +216,11 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
       
       <CardContent>
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="medical">Medical</TabsTrigger>
+            <TabsTrigger value="connections">Connections</TabsTrigger>
             <TabsTrigger value="trees">Trees</TabsTrigger>
             <TabsTrigger value="media">Media</TabsTrigger>
           </TabsList>
@@ -322,6 +324,10 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                 </div>
               )}
             </div>
+          </TabsContent>
+          
+          <TabsContent value="connections" className="space-y-4 mt-4">
+            <PersonConnectionManager person={person} />
           </TabsContent>
           
           <TabsContent value="trees" className="space-y-4 mt-4">
