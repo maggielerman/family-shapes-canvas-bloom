@@ -205,6 +205,10 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     }
 
     try {
+      // Get current user
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('No user found');
+
       // Create the main connection
       const { error: mainError } = await supabase
         .from('connections')
@@ -231,7 +235,34 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
 
         if (reciprocalError) {
           console.error('Error creating reciprocal connection:', reciprocalError);
-          // Don't throw here - the main connection was created successfully
+        }
+      }
+
+      // Ensure both people are in the family tree (if person has a family_tree_id)
+      if (person.family_tree_id) {
+        // Check if the "to_person" is already in this family tree
+        const { data: existingMembership } = await supabase
+          .from('family_tree_members')
+          .select('id')
+          .eq('family_tree_id', person.family_tree_id)
+          .eq('person_id', newConnection.to_person_id)
+          .single();
+
+        // If not in the tree, add them
+        if (!existingMembership) {
+          const { error: membershipError } = await supabase
+            .from('family_tree_members')
+            .insert({
+              family_tree_id: person.family_tree_id,
+              person_id: newConnection.to_person_id,
+              added_by: userData.user.id,
+              is_primary: false,
+              role: 'member'
+            });
+
+          if (membershipError) {
+            console.error('Error adding person to family tree:', membershipError);
+          }
         }
       }
 

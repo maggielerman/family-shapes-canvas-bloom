@@ -395,12 +395,11 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
                 <PersonConnectionManager 
                   person={{
                     id: personId,
-                    name: 'Person', // Will be replaced by actual name in component
-                    family_tree_id: null
+                    name: 'Person', // This will be updated by fetching the person name
+                    family_tree_id: personTrees.length > 0 ? personTrees[0].id : null
                   }} 
                   onConnectionUpdated={() => {
                     fetchConnections();
-                    setConnectionsDialogOpen(false);
                   }}
                 />
               </DialogContent>
