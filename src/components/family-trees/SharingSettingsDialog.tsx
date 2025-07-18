@@ -141,7 +141,7 @@ export function SharingSettingsDialog({
     try {
       setLoading(true);
       
-      const expiresAt = newLinkSettings.expires_in_days 
+      const expiresAt = newLinkSettings.expires_in_days && newLinkSettings.expires_in_days !== 'never' 
         ? new Date(Date.now() + parseInt(newLinkSettings.expires_in_days) * 24 * 60 * 60 * 1000).toISOString()
         : null;
 
@@ -406,7 +406,7 @@ export function SharingSettingsDialog({
                           <SelectItem value="7">1 week</SelectItem>
                           <SelectItem value="30">1 month</SelectItem>
                           <SelectItem value="90">3 months</SelectItem>
-                          <SelectItem value="">Never</SelectItem>
+                          <SelectItem value="never">Never</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
