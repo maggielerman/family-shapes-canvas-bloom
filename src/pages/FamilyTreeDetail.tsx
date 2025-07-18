@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MainLayout from "@/components/layouts/MainLayout";
+
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
 import { PersonCard } from "@/components/family-trees/PersonCard";
 import { FamilyTreeVisualization } from "@/components/family-trees/FamilyTreeVisualization";
@@ -144,170 +144,165 @@ export default function FamilyTreeDetail() {
 
   if (loading || !familyTree) {
     return (
-      <MainLayout>
-        <div className="space-y-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/family-trees')}
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/family-trees')}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Trees
+        </Button>
+      </div>
+
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold">{familyTree.name}</h1>
+            <Badge className={getVisibilityColor(familyTree.visibility)}>
+              {familyTree.visibility}
+            </Badge>
+          </div>
+          {familyTree.description && (
+            <p className="text-muted-foreground">{familyTree.description}</p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setSharingDialogOpen(true)}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Trees
+            <Share2 className="w-4 h-4 mr-2" />
+            Share
+          </Button>
+          <Button variant="outline">
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Tree
+          </Button>
+          <Button variant="outline">
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Documents
           </Button>
         </div>
+      </div>
 
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold">{familyTree.name}</h1>
-              <Badge className={getVisibilityColor(familyTree.visibility)}>
-                {familyTree.visibility}
-              </Badge>
-            </div>
-            {familyTree.description && (
-              <p className="text-muted-foreground">{familyTree.description}</p>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => setSharingDialogOpen(true)}
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
-            </Button>
-            <Button variant="outline">
-              <Edit className="w-4 h-4 mr-2" />
-              Edit Tree
-            </Button>
-            <Button variant="outline">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Documents
+      <Tabs defaultValue="people" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="people">People</TabsTrigger>
+          <TabsTrigger value="tree">Tree View</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="people" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Family Members</h2>
+            <Button onClick={() => setAddPersonDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Person
             </Button>
           </div>
-        </div>
 
-        <Tabs defaultValue="people" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="people">People</TabsTrigger>
-            <TabsTrigger value="tree">Tree View</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="people" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Family Members</h2>
-              <Button onClick={() => setAddPersonDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Person
-              </Button>
-            </div>
-
-            {persons.length === 0 ? (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start building your family tree by adding family members.
-                  </p>
-                  <Button onClick={() => setAddPersonDialogOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add First Person
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {persons.map((person) => (
-                  <PersonCard 
-                    key={person.id} 
-                    person={person}
-                    onEdit={(p) => console.log('Edit person:', p)}
-                    showRemoveFromTree={true}
-                    onRemoveFromTree={async (p) => {
-                      try {
-                        // Remove person from this specific tree by setting family_tree_id to null
-                        const { error } = await supabase
-                          .from('persons')
-                          .update({ family_tree_id: null })
-                          .eq('id', p.id)
-                          .eq('family_tree_id', familyTree.id);
-
-                        if (error) throw error;
-
-                        toast({
-                          title: "Person Removed",
-                          description: `${p.name} has been removed from this family tree`
-                        });
-
-                        fetchPersons();
-                      } catch (error) {
-                        console.error('Error removing person from tree:', error);
-                        toast({
-                          title: "Error",
-                          description: "Failed to remove person from tree",
-                          variant: "destructive"
-                        });
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="tree" className="space-y-6">
-            <FamilyTreeVisualization
-              familyTreeId={familyTree.id}
-              persons={persons}
-              onPersonAdded={fetchPersons}
-            />
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Family Documents</CardTitle>
-                <CardDescription>
-                  Upload and manage family documents and photos
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center py-12">
-                <div className="text-muted-foreground">
-                  Document management will be implemented here
-                </div>
+          {persons.length === 0 ? (
+            <Card className="text-center py-12">
+              <CardContent>
+                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start building your family tree by adding family members.
+                </p>
+                <Button onClick={() => setAddPersonDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Person
+                </Button>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {persons.map((person) => (
+                <PersonCard 
+                  key={person.id} 
+                  person={person}
+                  onEdit={(p) => console.log('Edit person:', p)}
+                  showRemoveFromTree={true}
+                  onRemoveFromTree={async (p) => {
+                    try {
+                      const { error } = await supabase
+                        .from('persons')
+                        .update({ family_tree_id: null })
+                        .eq('id', p.id)
+                        .eq('family_tree_id', familyTree.id);
 
-        <AddPersonDialog
-          open={addPersonDialogOpen}
-          onOpenChange={setAddPersonDialogOpen}
-          onSubmit={handleAddPerson}
-        />
-        
-        <SharingSettingsDialog
-          open={sharingDialogOpen}
-          onOpenChange={setSharingDialogOpen}
-          familyTree={familyTree}
-          onTreeUpdated={fetchFamilyTree}
-        />
-      </div>
-    </MainLayout>
+                      if (error) throw error;
+
+                      toast({
+                        title: "Person Removed",
+                        description: `${p.name} has been removed from this family tree`
+                      });
+
+                      fetchPersons();
+                    } catch (error) {
+                      console.error('Error removing person from tree:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to remove person from tree",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="tree" className="space-y-6">
+          <FamilyTreeVisualization
+            familyTreeId={familyTree.id}
+            persons={persons}
+            onPersonAdded={fetchPersons}
+          />
+        </TabsContent>
+
+        <TabsContent value="documents" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Family Documents</CardTitle>
+              <CardDescription>
+                Upload and manage family documents and photos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center py-12">
+              <div className="text-muted-foreground">
+                Document management will be implemented here
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <AddPersonDialog
+        open={addPersonDialogOpen}
+        onOpenChange={setAddPersonDialogOpen}
+        onSubmit={handleAddPerson}
+      />
+      
+      <SharingSettingsDialog
+        open={sharingDialogOpen}
+        onOpenChange={setSharingDialogOpen}
+        familyTree={familyTree}
+        onTreeUpdated={fetchFamilyTree}
+      />
+    </div>
   );
 }

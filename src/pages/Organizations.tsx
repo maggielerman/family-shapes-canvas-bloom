@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import CreateOrganizationDialog from "@/components/organizations/CreateOrganizationDialog";
 import { useToast } from "@/hooks/use-toast";
-import SidebarLayout from "@/components/layouts/SidebarLayout";
+
 import {
   Building2,
   Users,
@@ -141,146 +141,142 @@ const Organizations = () => {
 
   if (loading || isLoadingData) {
     return (
-      <SidebarLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </SidebarLayout>
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <SidebarLayout>
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-light mb-2">Organizations</h1>
-            <p className="text-muted-foreground">
-              Manage your family groups, clinics, and other organizations
-            </p>
-          </div>
-          <CreateOrganizationDialog onOrganizationCreated={fetchOrganizations} />
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-light mb-2">Organizations</h1>
+          <p className="text-muted-foreground">
+            Manage your family groups, clinics, and other organizations
+          </p>
         </div>
+        <CreateOrganizationDialog onOrganizationCreated={fetchOrganizations} />
+      </div>
 
-        {organizations.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-medium mb-2">No organizations yet</h3>
-              <p className="text-muted-foreground mb-6">
-                Create your first organization to start managing family connections
-              </p>
-              <CreateOrganizationDialog onOrganizationCreated={fetchOrganizations} />
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {organizations.map((org) => (
-              <Card key={org.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="w-12 h-12">
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {getOrgInitials(org.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <CardTitle className="text-lg">{org.name}</CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-sm">{getOrgTypeIcon(org.type)}</span>
-                          <span className="text-sm text-muted-foreground capitalize">
-                            {org.type.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        {org.role === 'owner' && (
-                          <>
-                            <DropdownMenuItem>
-                              <Settings className="w-4 h-4 mr-2" />
-                              Settings
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <UserPlus className="w-4 h-4 mr-2" />
-                              Invite Members
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
-                              Delete Organization
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {org.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {org.description}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          {org.member_count} member{org.member_count !== 1 ? 's' : ''}
+      {organizations.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-medium mb-2">No organizations yet</h3>
+            <p className="text-muted-foreground mb-6">
+              Create your first organization to start managing family connections
+            </p>
+            <CreateOrganizationDialog onOrganizationCreated={fetchOrganizations} />
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {organizations.map((org) => (
+            <Card key={org.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getOrgInitials(org.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-lg">{org.name}</CardTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm">{getOrgTypeIcon(org.type)}</span>
+                        <span className="text-sm text-muted-foreground capitalize">
+                          {org.type.replace('_', ' ')}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant={org.role === 'owner' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {org.role === 'owner' && <Crown className="w-3 h-3 mr-1" />}
-                          {org.role}
-                        </Badge>
-                        <Badge 
-                          variant={org.visibility === 'public' ? 'outline' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {org.visibility}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button 
-                        size="sm" 
-                        className="flex-1"
-                        onClick={() => navigate(`/organizations/${org.id}`)}
-                      >
-                        Open
-                      </Button>
-                      {org.role === 'owner' && (
-                        <Button size="sm" variant="outline">
-                          <Settings className="w-4 h-4" />
-                        </Button>
-                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-    </SidebarLayout>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      {org.role === 'owner' && (
+                        <>
+                          <DropdownMenuItem>
+                            <Settings className="w-4 h-4 mr-2" />
+                            Settings
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Invite Members
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive">
+                            Delete Organization
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {org.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {org.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {org.member_count} member{org.member_count !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant={org.role === 'owner' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {org.role === 'owner' && <Crown className="w-3 h-3 mr-1" />}
+                        {org.role}
+                      </Badge>
+                      <Badge 
+                        variant={org.visibility === 'public' ? 'outline' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {org.visibility}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => navigate(`/organizations/${org.id}`)}
+                    >
+                      Open
+                    </Button>
+                    {org.role === 'owner' && (
+                      <Button size="sm" variant="outline">
+                        <Settings className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

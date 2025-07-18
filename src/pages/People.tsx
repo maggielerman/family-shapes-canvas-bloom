@@ -24,7 +24,7 @@ import { PersonCard } from "@/components/family-trees/PersonCard";
 import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { DeletePersonDialog } from "@/components/people/DeletePersonDialog";
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
-import SidebarLayout from "@/components/layouts/SidebarLayout";
+
 
 interface Person {
   id: string;
@@ -178,221 +178,217 @@ export default function People() {
 
   if (loading) {
     return (
-      <SidebarLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </SidebarLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <SidebarLayout>
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">People</h1>
-            <p className="text-muted-foreground">
-              Manage all people in your family trees and connections
-            </p>
-          </div>
-          <Button onClick={() => setAddPersonDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Person
-          </Button>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">People</h1>
+          <p className="text-muted-foreground">
+            Manage all people in your family trees and connections
+          </p>
         </div>
+        <Button onClick={() => setAddPersonDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Person
+        </Button>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total People</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{persons.length}</div>
-              <p className="text-xs text-muted-foreground">
-                In your database
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Living</CardTitle>
-              <UserPlus className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {persons.filter(p => p.status === 'living').length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Active family members
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Connections</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {persons.reduce((sum, p) => sum + (p._count?.connections || 0), 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Family relationships
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total People</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by name or email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-              </div>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-[150px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="living">Living</SelectItem>
-                  <SelectItem value="deceased">Deceased</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={genderFilter} onValueChange={setGenderFilter}>
-                <SelectTrigger className="w-full md:w-[150px]">
-                  <SelectValue placeholder="Gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Genders</SelectItem>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="non-binary">Non-Binary</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="text-2xl font-bold">{persons.length}</div>
+            <p className="text-xs text-muted-foreground">
+              In your database
+            </p>
           </CardContent>
         </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Living</CardTitle>
+            <UserPlus className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {persons.filter(p => p.status === 'living').length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Active family members
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Connections</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {persons.reduce((sum, p) => sum + (p._count?.connections || 0), 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Family relationships
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* People Grid */}
-        {filteredPersons.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">
-                {searchTerm || statusFilter !== "all" || genderFilter !== "all" 
-                  ? "No people match your filters" 
-                  : "No people yet"}
-              </h3>
-              <p className="text-muted-foreground mb-4 text-center">
-                {searchTerm || statusFilter !== "all" || genderFilter !== "all"
-                  ? "Try adjusting your search criteria or filters"
-                  : "Add your first family member to get started"}
-              </p>
-              {!searchTerm && statusFilter === "all" && genderFilter === "all" && (
-                <Button onClick={() => setAddPersonDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add First Person
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPersons.map((person) => (
-              <div key={person.id} className="relative">
-                <PersonCard
-                  person={person}
-                  onEdit={(p) => setEditingPerson(p)}
-                  onDelete={(p) => setDeletingPerson(p)}
-                  showActions={true}
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
                 />
-                <div className="mt-2 text-xs text-muted-foreground text-center">
-                  {getStatsForPerson(person)}
-                </div>
               </div>
-            ))}
+            </div>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full md:w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="living">Living</SelectItem>
+                <SelectItem value="deceased">Deceased</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={genderFilter} onValueChange={setGenderFilter}>
+              <SelectTrigger className="w-full md:w-[150px]">
+                <SelectValue placeholder="Gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Genders</SelectItem>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="non-binary">Non-Binary</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        {/* Dialogs */}
-        <AddPersonDialog
-          open={addPersonDialogOpen}
-          onOpenChange={setAddPersonDialogOpen}
-          onSubmit={async (data) => {
-            try {
-              const { error } = await supabase
-                .from('persons')
-                .insert({
-                  ...data,
-                  user_id: user?.id
-                });
+      {/* People Grid */}
+      {filteredPersons.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Users className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              {searchTerm || statusFilter !== "all" || genderFilter !== "all" 
+                ? "No people match your filters" 
+                : "No people yet"}
+            </h3>
+            <p className="text-muted-foreground mb-4 text-center">
+              {searchTerm || statusFilter !== "all" || genderFilter !== "all"
+                ? "Try adjusting your search criteria or filters"
+                : "Add your first family member to get started"}
+            </p>
+            {!searchTerm && statusFilter === "all" && genderFilter === "all" && (
+              <Button onClick={() => setAddPersonDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add First Person
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredPersons.map((person) => (
+            <div key={person.id} className="relative">
+              <PersonCard
+                person={person}
+                onEdit={(p) => setEditingPerson(p)}
+                onDelete={(p) => setDeletingPerson(p)}
+                showActions={true}
+              />
+              <div className="mt-2 text-xs text-muted-foreground text-center">
+                {getStatsForPerson(person)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-              if (error) throw error;
-
-              toast({
-                title: "Person Added",
-                description: `${data.name} has been added successfully`
+      {/* Dialogs */}
+      <AddPersonDialog
+        open={addPersonDialogOpen}
+        onOpenChange={setAddPersonDialogOpen}
+        onSubmit={async (data) => {
+          try {
+            const { error } = await supabase
+              .from('persons')
+              .insert({
+                ...data,
+                user_id: user?.id
               });
 
-              fetchPersons();
-              setAddPersonDialogOpen(false);
-            } catch (error) {
-              console.error('Error adding person:', error);
-              toast({
-                title: "Error",
-                description: "Failed to add person",
-                variant: "destructive"
-              });
-            }
+            if (error) throw error;
+
+            toast({
+              title: "Person Added",
+              description: `${data.name} has been added successfully`
+            });
+
+            fetchPersons();
+            setAddPersonDialogOpen(false);
+          } catch (error) {
+            console.error('Error adding person:', error);
+            toast({
+              title: "Error",
+              description: "Failed to add person",
+              variant: "destructive"
+            });
+          }
+        }}
+      />
+
+      {editingPerson && (
+        <EditPersonDialog
+          person={editingPerson}
+          open={!!editingPerson}
+          onOpenChange={(open) => !open && setEditingPerson(null)}
+          onPersonUpdated={fetchPersons}
+        />
+      )}
+
+      {deletingPerson && (
+        <DeletePersonDialog
+          person={deletingPerson}
+          open={!!deletingPerson}
+          onOpenChange={(open) => !open && setDeletingPerson(null)}
+          onConfirmDelete={() => {
+            handleDeletePerson(deletingPerson.id);
+            setDeletingPerson(null);
           }}
         />
-
-        {editingPerson && (
-          <EditPersonDialog
-            person={editingPerson}
-            open={!!editingPerson}
-            onOpenChange={(open) => !open && setEditingPerson(null)}
-            onPersonUpdated={fetchPersons}
-          />
-        )}
-
-        {deletingPerson && (
-          <DeletePersonDialog
-            person={deletingPerson}
-            open={!!deletingPerson}
-            onOpenChange={(open) => !open && setDeletingPerson(null)}
-            onConfirmDelete={() => {
-              handleDeletePerson(deletingPerson.id);
-              setDeletingPerson(null);
-            }}
-          />
-        )}
-      </div>
-    </SidebarLayout>
+      )}
+    </div>
   );
 }

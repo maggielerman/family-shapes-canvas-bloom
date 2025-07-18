@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import CreateOrganizationDialog from "@/components/organizations/CreateOrganizationDialog";
 import { useToast } from "@/hooks/use-toast";
-import SidebarLayout from "@/components/layouts/SidebarLayout";
+
 import { 
   Heart, 
   Users, 
@@ -123,11 +123,9 @@ const Dashboard = () => {
 
   if (loading || isLoadingData) {
     return (
-      <SidebarLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </SidebarLayout>
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
@@ -135,177 +133,174 @@ const Dashboard = () => {
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
-    <SidebarLayout>
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-6">
-            <Avatar className="w-16 h-16">
-              <AvatarImage src={profile?.avatar_url || ''} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="text-3xl font-light">Welcome back, {displayName}!</h2>
-              <p className="text-muted-foreground mt-1">
-                {user?.email}
-              </p>
-            </div>
+    <div className="container mx-auto px-4 py-8">
+      {/* Welcome Section */}
+      <div className="mb-8">
+        <div className="flex items-center space-x-4 mb-6">
+          <Avatar className="w-16 h-16">
+            <AvatarImage src={profile?.avatar_url || ''} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-3xl font-light">Welcome back, {displayName}!</h2>
+            <p className="text-muted-foreground mt-1">
+              {user?.email}
+            </p>
           </div>
         </div>
-
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card 
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/family-trees')}
-          >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <TreePine className="w-5 h-5 text-sage-600" />
-                Family Trees
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
-                Create and manage family trees
-              </p>
-              <Button size="sm" className="w-full">
-                View Trees
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/people')}
-          >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <User className="w-5 h-5 text-coral-600" />
-                People
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
-                Manage family members and contacts
-              </p>
-              <Button size="sm" variant="outline" className="w-full">
-                View People
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/organizations')}
-          >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-dusty-600" />
-                Organizations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
-                Manage organizations and groups
-              </p>
-              <Button size="sm" variant="outline" className="w-full">
-                View All
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/profile')}
-          >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-navy-600" />
-                Profile
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
-                Manage your account settings
-              </p>
-              <Button size="sm" variant="outline" className="w-full">
-                Edit Profile
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Organizations Section */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
-                Organizations
-              </CardTitle>
-              <CardDescription>
-                Organizations you belong to
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {organizations.length > 0 ? (
-                <div className="space-y-4">
-                   {organizations.map((org) => (
-                     <div 
-                       key={org.id} 
-                       className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                       onClick={() => navigate(`/organizations/${org.id}`)}
-                     >
-                       <div>
-                         <h4 className="font-medium">{org.name}</h4>
-                         <p className="text-sm text-muted-foreground capitalize">
-                           {org.type} • {org.description || 'No description'}
-                         </p>
-                       </div>
-                       <Badge variant="secondary" className="capitalize">
-                         {org.role}
-                       </Badge>
-                     </div>
-                   ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">
-                    You're not part of any organizations yet
-                  </p>
-                  <CreateOrganizationDialog onOrganizationCreated={fetchUserData} />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Home className="w-5 h-5" />
-                Recent Activity
-              </CardTitle>
-              <CardDescription>
-                Recent updates and connections
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No recent activity to show
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
-    </SidebarLayout>
+
+      {/* Quick Actions */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => navigate('/family-trees')}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TreePine className="w-5 h-5 text-sage-600" />
+              Family Trees
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Create and manage family trees
+            </p>
+            <Button size="sm" className="w-full">
+              View Trees
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => navigate('/people')}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="w-5 h-5 text-coral-600" />
+              People
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Manage family members and contacts
+            </p>
+            <Button size="sm" variant="outline" className="w-full">
+              View People
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => navigate('/organizations')}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-dusty-600" />
+              Organizations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Manage organizations and groups
+            </p>
+            <Button size="sm" variant="outline" className="w-full">
+              View All
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => navigate('/profile')}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-navy-600" />
+              Profile
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Manage your account settings
+            </p>
+            <Button size="sm" variant="outline" className="w-full">
+              Edit Profile
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Organizations Section */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Organizations
+            </CardTitle>
+            <CardDescription>
+              Organizations you belong to
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {organizations.length > 0 ? (
+              <div className="space-y-4">
+                 {organizations.map((org) => (
+                   <div 
+                     key={org.id} 
+                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                     onClick={() => navigate(`/organizations/${org.id}`)}
+                   >
+                     <div>
+                       <h4 className="font-medium">{org.name}</h4>
+                       <p className="text-sm text-muted-foreground capitalize">
+                         {org.type} • {org.description || 'No description'}
+                       </p>
+                     </div>
+                     <Badge variant="secondary" className="capitalize">
+                       {org.role}
+                     </Badge>
+                   </div>
+                 ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  You're not part of any organizations yet
+                </p>
+                <CreateOrganizationDialog onOrganizationCreated={fetchUserData} />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Home className="w-5 h-5" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription>
+              Recent updates and connections
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                No recent activity to show
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
