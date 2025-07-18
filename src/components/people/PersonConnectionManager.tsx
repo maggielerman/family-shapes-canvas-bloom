@@ -182,6 +182,18 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     return relationshipTypes.find(r => r.value === type)?.color || "hsl(var(--muted-foreground))";
   };
 
+  const getReciprocalRelationship = (relationshipType: string) => {
+    const reciprocals: Record<string, string> = {
+      'parent': 'child',
+      'child': 'parent',
+      'partner': 'partner',
+      'sibling': 'sibling',
+      'half_sibling': 'half_sibling',
+      'donor': 'child' // donor -> child, but child -> donor is handled separately
+    };
+    return reciprocals[relationshipType];
+  };
+
   const handleCreateConnection = async () => {
     if (!newConnection.to_person_id || !newConnection.relationship_type) {
       toast({
@@ -193,7 +205,8 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     }
 
     try {
-      const { error } = await supabase
+      // Create the main connection
+      const { error: mainError } = await supabase
         .from('connections')
         .insert({
           from_person_id: person.id,
@@ -202,11 +215,29 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
           family_tree_id: person.family_tree_id
         });
 
-      if (error) throw error;
+      if (mainError) throw mainError;
+
+      // Create the reciprocal connection
+      const reciprocalType = getReciprocalRelationship(newConnection.relationship_type);
+      if (reciprocalType) {
+        const { error: reciprocalError } = await supabase
+          .from('connections')
+          .insert({
+            from_person_id: newConnection.to_person_id,
+            to_person_id: person.id,
+            relationship_type: reciprocalType,
+            family_tree_id: person.family_tree_id
+          });
+
+        if (reciprocalError) {
+          console.error('Error creating reciprocal connection:', reciprocalError);
+          // Don't throw here - the main connection was created successfully
+        }
+      }
 
       toast({
         title: "Success",
-        description: "Connection created successfully",
+        description: "Connection and reciprocal relationship created successfully",
       });
 
       setNewConnection({ to_person_id: '', relationship_type: '' });
@@ -227,18 +258,43 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     if (!editingConnection) return;
 
     try {
-      const { error } = await supabase
+      // Update the main connection
+      const { error: mainError } = await supabase
         .from('connections')
         .update({
           relationship_type: editingConnection.relationship_type
         })
         .eq('id', editingConnection.id);
 
-      if (error) throw error;
+      if (mainError) throw mainError;
+
+      // Find and update the reciprocal connection
+      const reciprocalType = getReciprocalRelationship(editingConnection.relationship_type);
+      if (reciprocalType) {
+        // Find the reciprocal connection
+        const { data: reciprocalConnections, error: findError } = await supabase
+          .from('connections')
+          .select('id')
+          .eq('from_person_id', editingConnection.direction === 'outgoing' ? editingConnection.to_person_id : editingConnection.from_person_id)
+          .eq('to_person_id', editingConnection.direction === 'outgoing' ? editingConnection.from_person_id : editingConnection.to_person_id);
+
+        if (!findError && reciprocalConnections && reciprocalConnections.length > 0) {
+          const { error: reciprocalError } = await supabase
+            .from('connections')
+            .update({
+              relationship_type: reciprocalType
+            })
+            .eq('id', reciprocalConnections[0].id);
+
+          if (reciprocalError) {
+            console.error('Error updating reciprocal connection:', reciprocalError);
+          }
+        }
+      }
 
       toast({
         title: "Success",
-        description: "Connection updated successfully",
+        description: "Connection and reciprocal relationship updated successfully",
       });
 
       setEditingConnection(null);
@@ -255,11 +311,28 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
   };
 
   const handleDeleteConnection = async (connectionId: string) => {
-    if (!window.confirm("Are you sure you want to delete this connection?")) {
+    if (!window.confirm("Are you sure you want to delete this connection? This will also remove the reciprocal relationship.")) {
       return;
     }
 
     try {
+      // Find the connection to get details for reciprocal deletion
+      const connectionToDelete = connections.find(c => c.id === connectionId);
+      
+      if (connectionToDelete) {
+        // Delete reciprocal connection first
+        const { error: reciprocalError } = await supabase
+          .from('connections')
+          .delete()
+          .eq('from_person_id', connectionToDelete.direction === 'outgoing' ? connectionToDelete.to_person_id : connectionToDelete.from_person_id)
+          .eq('to_person_id', connectionToDelete.direction === 'outgoing' ? connectionToDelete.from_person_id : connectionToDelete.to_person_id);
+
+        if (reciprocalError) {
+          console.error('Error deleting reciprocal connection:', reciprocalError);
+        }
+      }
+
+      // Delete the main connection
       const { error } = await supabase
         .from('connections')
         .delete()
@@ -269,7 +342,7 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
 
       toast({
         title: "Success",
-        description: "Connection deleted successfully",
+        description: "Connection and reciprocal relationship deleted successfully",
       });
 
       fetchConnections();
