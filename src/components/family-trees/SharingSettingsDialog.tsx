@@ -96,7 +96,7 @@ export function SharingSettingsDialog({
       const { data, error } = await supabase
         .from('sharing_links')
         .select('*')
-        .eq('group_id', familyTree.id)
+        .eq('family_tree_id', familyTree.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -150,7 +150,7 @@ export function SharingSettingsDialog({
       const { data, error } = await supabase
         .from('sharing_links')
         .insert({
-          group_id: familyTree.id,
+          family_tree_id: familyTree.id,
           created_by: familyTree.user_id,
           access_level: newLinkSettings.access_level,
           max_uses: newLinkSettings.max_uses ? parseInt(newLinkSettings.max_uses) : null,
@@ -294,7 +294,7 @@ export function SharingSettingsDialog({
   };
 
   const copyToClipboard = async (linkToken: string) => {
-    const url = `${window.location.origin}/public/tree/${familyTree.id}?token=${linkToken}`;
+    const url = `${window.location.origin}/shared/${familyTree.id}?token=${linkToken}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedLink(linkToken);
@@ -564,7 +564,7 @@ export function SharingSettingsDialog({
 
                             <div className="flex items-center gap-2">
                               <Input
-                                value={`${window.location.origin}/public/tree/${familyTree.id}?token=${link.link_token}`}
+                                value={`${window.location.origin}/shared/${familyTree.id}?token=${link.link_token}`}
                                 readOnly
                                 className="text-xs font-mono"
                               />
