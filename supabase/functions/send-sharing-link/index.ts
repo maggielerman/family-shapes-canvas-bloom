@@ -27,6 +27,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Detect the app URL from request headers
+    const origin = req.headers.get("origin") || req.headers.get("referer");
+    const appUrl = Deno.env.get("APP_URL") || origin || "https://familyshapes.com";
+    
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -49,8 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Generate the sharing URL
-    const baseUrl = Deno.env.get("SITE_URL") || "https://familyshapes.lovable.app";
-    const sharingUrl = `${baseUrl}/shared/tree/${linkData.family_tree_id}?token=${linkData.link_token}`;
+    const sharingUrl = `${appUrl}/shared/tree/${linkData.family_tree_id}?token=${linkData.link_token}`;
 
     // Send emails to all recipients
     const emailPromises = emails.map(async (email) => {
