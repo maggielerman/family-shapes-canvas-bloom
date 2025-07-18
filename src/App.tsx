@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthContext";
+import SidebarLayout from "@/components/layouts/SidebarLayout";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -32,23 +33,27 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/organizations" element={<Organizations />} />
-            <Route path="/organizations/:id" element={<OrganizationDetails />} />
-            <Route path="/profile" element={<UserProfile />} />
-            <Route path="/people" element={<People />} />
-            <Route path="/family-trees" element={<FamilyTrees />} />
-            <Route path="/family-trees/:id" element={<FamilyTreeDetail />} />
-            <Route path="/media" element={<Media />} />
-            <Route path="/connections" element={<FamilyTrees />} />
             <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
             <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />
             <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />
             <Route path="/invitation/:action/:token" element={<InvitationPage />} />
+            
+            {/* Protected routes with sidebar layout */}
+            <Route path="/dashboard" element={<SidebarLayout><Dashboard /></SidebarLayout>} />
+            <Route path="/profile" element={<SidebarLayout><UserProfile /></SidebarLayout>} />
+            <Route path="/people" element={<SidebarLayout><People /></SidebarLayout>} />
+            <Route path="/family-trees" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
+            <Route path="/family-trees/:id" element={<SidebarLayout><FamilyTreeDetail /></SidebarLayout>} />
+            <Route path="/media" element={<SidebarLayout><Media /></SidebarLayout>} />
+            <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
+            <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDetails /></SidebarLayout>} />
+            <Route path="/connections" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
