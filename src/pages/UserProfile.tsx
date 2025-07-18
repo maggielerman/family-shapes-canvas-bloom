@@ -6,21 +6,24 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { Camera, Mail, Phone, MapPin, Calendar, UserPlus } from "lucide-react";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "sarah.johnson@email.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    bio: "Family-focused professional passionate about creating meaningful connections and building lasting relationships.",
-    memberSince: "January 2024"
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    location: "",
+    bio: "",
+    memberSince: ""
   });
   const { toast } = useToast();
+
+  // Check if profile is empty
+  const isProfileEmpty = !profileData.firstName && !profileData.lastName && !profileData.email;
 
   const handleSave = () => {
     setIsEditing(false);
@@ -42,9 +45,41 @@ const UserProfile = () => {
     }));
   };
 
+  // Empty state when no profile data
+  if (isProfileEmpty && !isEditing) {
+    return (
+      <SidebarLayout>
+        <div className="px-6 lg:px-12 py-12">
+          <div className="max-w-4xl mx-auto">
+            <Card className="text-center py-16">
+              <CardContent>
+                <div className="flex flex-col items-center space-y-6">
+                  <div className="w-24 h-24 bg-coral-100 rounded-full flex items-center justify-center">
+                    <UserPlus className="w-12 h-12 text-coral-600" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-light text-navy-800">Complete Your Profile</h2>
+                    <p className="text-navy-600 max-w-md">
+                      Set up your profile to get started with Family Shapes. Add your personal information to connect with your family network.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setIsEditing(true)}
+                    className="bg-coral-600 hover:bg-coral-700 text-white"
+                  >
+                    Create Profile
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </SidebarLayout>
+    );
+  }
+
   return (
     <SidebarLayout>
-
       <div className="px-6 lg:px-12 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Profile Header */}
@@ -54,7 +89,7 @@ const UserProfile = () => {
                 <Avatar className="w-24 h-24">
                   <AvatarImage src="/placeholder.svg" alt="Profile picture" />
                   <AvatarFallback className="bg-coral-100 text-coral-600 text-2xl">
-                    {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
+                    {profileData.firstName?.charAt(0) || "U"}{profileData.lastName?.charAt(0) || ""}
                   </AvatarFallback>
                 </Avatar>
                 <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-coral-600 rounded-full flex items-center justify-center text-white hover:bg-coral-700 transition-colors">
@@ -64,12 +99,12 @@ const UserProfile = () => {
               
               <div className="flex-1">
                 <h1 className="text-3xl font-light text-navy-800 mb-2">
-                  {profileData.firstName} {profileData.lastName}
+                  {profileData.firstName || "Your"} {profileData.lastName || "Name"}
                 </h1>
-                <p className="text-navy-600 mb-4">{profileData.bio}</p>
+                <p className="text-navy-600 mb-4">{profileData.bio || "Add a bio to tell others about yourself"}</p>
                 <div className="flex items-center text-sm text-navy-500">
                   <Calendar className="w-4 h-4 mr-2" />
-                  Member since {profileData.memberSince}
+                  Member since {profileData.memberSince || "Today"}
                 </div>
               </div>
               
@@ -120,10 +155,11 @@ const UserProfile = () => {
                         name="firstName"
                         value={profileData.firstName}
                         onChange={handleChange}
+                        placeholder="Enter your first name"
                         className="mt-1"
                       />
                     ) : (
-                      <p className="mt-1 text-navy-800">{profileData.firstName}</p>
+                      <p className="mt-1 text-navy-800">{profileData.firstName || "Not provided"}</p>
                     )}
                   </div>
                   <div>
@@ -134,10 +170,11 @@ const UserProfile = () => {
                         name="lastName"
                         value={profileData.lastName}
                         onChange={handleChange}
+                        placeholder="Enter your last name"
                         className="mt-1"
                       />
                     ) : (
-                      <p className="mt-1 text-navy-800">{profileData.lastName}</p>
+                      <p className="mt-1 text-navy-800">{profileData.lastName || "Not provided"}</p>
                     )}
                   </div>
                 </div>
@@ -154,10 +191,11 @@ const UserProfile = () => {
                       type="email"
                       value={profileData.email}
                       onChange={handleChange}
+                      placeholder="Enter your email address"
                       className="mt-1"
                     />
                   ) : (
-                    <p className="mt-1 text-navy-800">{profileData.email}</p>
+                    <p className="mt-1 text-navy-800">{profileData.email || "Not provided"}</p>
                   )}
                 </div>
                 
@@ -172,10 +210,11 @@ const UserProfile = () => {
                       name="phone"
                       value={profileData.phone}
                       onChange={handleChange}
+                      placeholder="Enter your phone number"
                       className="mt-1"
                     />
                   ) : (
-                    <p className="mt-1 text-navy-800">{profileData.phone}</p>
+                    <p className="mt-1 text-navy-800">{profileData.phone || "Not provided"}</p>
                   )}
                 </div>
                 
@@ -190,10 +229,11 @@ const UserProfile = () => {
                       name="location"
                       value={profileData.location}
                       onChange={handleChange}
+                      placeholder="Enter your location"
                       className="mt-1"
                     />
                   ) : (
-                    <p className="mt-1 text-navy-800">{profileData.location}</p>
+                    <p className="mt-1 text-navy-800">{profileData.location || "Not provided"}</p>
                   )}
                 </div>
               </CardContent>
@@ -213,11 +253,12 @@ const UserProfile = () => {
                     name="bio"
                     value={profileData.bio}
                     onChange={handleChange}
+                    placeholder="Tell us about yourself..."
                     rows={6}
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-coral-500 focus:border-coral-500"
                   />
                 ) : (
-                  <p className="mt-1 text-navy-800 leading-relaxed">{profileData.bio}</p>
+                  <p className="mt-1 text-navy-800 leading-relaxed">{profileData.bio || "No biography provided yet."}</p>
                 )}
               </CardContent>
             </Card>
