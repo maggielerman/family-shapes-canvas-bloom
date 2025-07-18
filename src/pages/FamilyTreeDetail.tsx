@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Users, Edit, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Users, Edit, Trash2, Upload, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import MainLayout from "@/components/layouts/MainLayout";
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
 import { PersonCard } from "@/components/family-trees/PersonCard";
 import { FamilyTreeVisualization } from "@/components/family-trees/FamilyTreeVisualization";
+import { SharingSettingsDialog } from "@/components/family-trees/SharingSettingsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,6 +45,7 @@ export default function FamilyTreeDetail() {
   const [persons, setPersons] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
+  const [sharingDialogOpen, setSharingDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -180,6 +182,13 @@ export default function FamilyTreeDetail() {
             )}
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => setSharingDialogOpen(true)}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Share
+            </Button>
             <Button variant="outline">
               <Edit className="w-4 h-4 mr-2" />
               Edit Tree
@@ -259,6 +268,13 @@ export default function FamilyTreeDetail() {
           open={addPersonDialogOpen}
           onOpenChange={setAddPersonDialogOpen}
           onSubmit={handleAddPerson}
+        />
+        
+        <SharingSettingsDialog
+          open={sharingDialogOpen}
+          onOpenChange={setSharingDialogOpen}
+          familyTree={familyTree}
+          onTreeUpdated={fetchFamilyTree}
         />
       </div>
     </MainLayout>
