@@ -80,7 +80,7 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     { value: "partner", label: "Partner", icon: Heart, color: "hsl(var(--chart-3))" },
     { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))" },
     { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))" },
-    { value: "half_sibling", label: "Half Sibling", icon: Users, color: "hsl(var(--chart-1))" },
+    { value: "gestational_carrier", label: "Gestational Carrier", icon: Baby, color: "hsl(var(--chart-1))" },
   ];
 
   useEffect(() => {
@@ -188,8 +188,8 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
       'child': 'parent',
       'partner': 'partner',
       'sibling': 'sibling',
-      'half_sibling': 'half_sibling',
-      'donor': 'child' // donor -> child, but child -> donor is handled separately
+      'donor': 'child', // donor -> child, but child -> donor is handled separately
+      'gestational_carrier': 'child' // gestational carrier -> child
     };
     return reciprocals[relationshipType];
   };

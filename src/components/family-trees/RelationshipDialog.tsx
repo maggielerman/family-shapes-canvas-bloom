@@ -22,9 +22,9 @@ const relationshipTypes = [
   { value: "parent", label: "Parent", icon: Users, color: "hsl(var(--chart-1))", description: "Parent-child relationship" },
   { value: "child", label: "Child", icon: Baby, color: "hsl(var(--chart-2))", description: "Child-parent relationship" },
   { value: "partner", label: "Partner/Spouse", icon: Heart, color: "hsl(var(--chart-3))", description: "Romantic partnership or marriage" },
-  { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))", description: "Full siblings sharing both parents" },
-  { value: "half_sibling", label: "Half Sibling", icon: Users, color: "hsl(var(--chart-1))", description: "Siblings sharing one parent" },
-  { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))", description: "Genetic donor relationship" },
+  { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))", description: "Sibling relationship (full, half, step, etc.)" },
+  { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))", description: "Genetic donor (sperm, egg, embryo)" },
+  { value: "gestational_carrier", label: "Gestational Carrier", icon: Baby, color: "hsl(var(--chart-1))", description: "Surrogate or gestational carrier" },
 ];
 
 export function RelationshipDialog({
