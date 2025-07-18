@@ -315,9 +315,9 @@ export default function FamilyTreeDetail() {
                   onRemoveFromTree={async (p) => {
                     try {
                       const { error } = await supabase
-                        .from('persons')
-                        .update({ family_tree_id: null })
-                        .eq('id', p.id)
+                        .from('family_tree_members')
+                        .delete()
+                        .eq('person_id', p.id)
                         .eq('family_tree_id', familyTree.id);
 
                       if (error) throw error;
