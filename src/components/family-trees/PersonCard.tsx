@@ -22,6 +22,7 @@ interface PersonCardProps {
   onEdit?: (person: Person) => void;
   onDelete?: (person: Person) => void;
   onRemoveFromTree?: (person: Person) => void;
+  onClick?: () => void;
   showActions?: boolean;
   showRemoveFromTree?: boolean;
 }
@@ -31,6 +32,7 @@ export function PersonCard({
   onEdit, 
   onDelete, 
   onRemoveFromTree, 
+  onClick,
   showActions = false,
   showRemoveFromTree = false 
 }: PersonCardProps) {
@@ -72,7 +74,10 @@ export function PersonCard({
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card 
+      className={`hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -101,7 +106,10 @@ export function PersonCard({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => onEdit(person)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(person);
+                    }}
                     title="Edit person"
                   >
                     <Edit className="w-4 h-4" />
@@ -111,7 +119,10 @@ export function PersonCard({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => onRemoveFromTree(person)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveFromTree(person);
+                    }}
                     title="Remove from this tree"
                     className="text-amber-600 hover:text-amber-700"
                   >
@@ -122,7 +133,10 @@ export function PersonCard({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => onDelete(person)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(person);
+                    }}
                     title="Delete person permanently"
                     className="text-destructive hover:text-destructive"
                   >

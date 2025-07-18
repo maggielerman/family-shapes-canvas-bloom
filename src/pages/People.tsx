@@ -21,6 +21,7 @@ import {
   Loader2
 } from "lucide-react";
 import { PersonCard } from "@/components/family-trees/PersonCard";
+import { PersonCardDialog } from "@/components/people/PersonCard";
 import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { DeletePersonDialog } from "@/components/people/DeletePersonDialog";
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
@@ -30,12 +31,18 @@ interface Person {
   id: string;
   name: string;
   date_of_birth?: string | null;
+  birth_place?: string | null;
   gender?: string | null;
   profile_photo_url?: string | null;
   email?: string | null;
   phone?: string | null;
+  address?: string | null;
   status: string;
   notes?: string | null;
+  donor?: boolean;
+  used_ivf?: boolean;
+  used_iui?: boolean;
+  fertility_treatments?: any;
   created_at: string;
   _count?: {
     family_trees: number;
@@ -56,6 +63,7 @@ export default function People() {
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [deletingPerson, setDeletingPerson] = useState<Person | null>(null);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
+  const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
 
   useEffect(() => {
     fetchPersons();
@@ -73,12 +81,18 @@ export default function People() {
           id,
           name,
           date_of_birth,
+          birth_place,
           gender,
           profile_photo_url,
           email,
           phone,
+          address,
           status,
           notes,
+          donor,
+          used_ivf,
+          used_iui,
+          fertility_treatments,
           created_at
         `)
         .eq('user_id', user.id)
@@ -326,6 +340,7 @@ export default function People() {
                 person={person}
                 onEdit={(p) => setEditingPerson(p)}
                 onDelete={(p) => setDeletingPerson(p)}
+                onClick={() => setViewingPerson(person)}
                 showActions={true}
               />
               <div className="mt-2 text-xs text-muted-foreground text-center">
@@ -389,6 +404,16 @@ export default function People() {
           }}
         />
       )}
+
+      <PersonCardDialog
+        person={viewingPerson}
+        open={!!viewingPerson}
+        onOpenChange={(open) => !open && setViewingPerson(null)}
+        onEdit={() => {
+          setEditingPerson(viewingPerson);
+          setViewingPerson(null);
+        }}
+      />
     </div>
   );
 }

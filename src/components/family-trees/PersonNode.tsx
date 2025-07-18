@@ -23,6 +23,7 @@ interface PersonNodeProps {
   onDragLeave?: () => void;
   onDrop?: () => void;
   onPositionChange?: (position: { x: number; y: number }) => void;
+  onClick?: () => void;
 }
 
 const relationshipTypes = [
@@ -46,6 +47,7 @@ export const PersonNode = memo(({
   onDragLeave,
   onDrop,
   onPositionChange,
+  onClick,
 }: PersonNodeProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -108,6 +110,7 @@ export const PersonNode = memo(({
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
       onMouseDown={!isConnecting ? handleMouseDown : undefined}
+      onClick={onClick}
     >
       {/* Main Node */}
       <div

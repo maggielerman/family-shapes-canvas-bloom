@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { EnhancedPersonNode } from './EnhancedPersonNode';
 import { ConnectionManager } from './ConnectionManager';
+import { PersonCardDialog } from '@/components/people/PersonCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,13 +27,19 @@ interface Person {
   id: string;
   name: string;
   date_of_birth?: string | null;
+  birth_place?: string | null;
   gender?: string | null;
   profile_photo_url?: string | null;
   status: string;
   family_tree_id?: string | null;
   email?: string | null;
   phone?: string | null;
+  address?: string | null;
   notes?: string | null;
+  donor?: boolean;
+  used_ivf?: boolean;
+  used_iui?: boolean;
+  fertility_treatments?: any;
 }
 
 interface Connection {
@@ -91,6 +98,7 @@ export function InteractiveFamilyTree({
     fromPersonId: string;
     toPersonId: string | null;
   } | null>(null);
+  const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
 
   // D3 simulation state
   const [simulation, setSimulation] = useState<d3.Simulation<NodeData, LinkData> | null>(null);
@@ -202,14 +210,15 @@ export function InteractiveFamilyTree({
 
   const handlePersonClick = useCallback((person: NodeData) => {
     if (readOnly) {
-      // Only allow viewing in read-only mode
-      setExpandedPersonId(expandedPersonId === person.id ? null : person.id);
+      // Only allow viewing in read-only mode - show expanded dialog
+      setViewingPerson(person);
       return;
     }
 
     switch (editMode) {
       case 'view':
-        setExpandedPersonId(expandedPersonId === person.id ? null : person.id);
+        // Show expanded person card dialog
+        setViewingPerson(person);
         break;
       case 'connect':
         if (pendingConnection?.fromPersonId) {
@@ -233,7 +242,7 @@ export function InteractiveFamilyTree({
         handleDeletePerson(person.id);
         break;
     }
-  }, [editMode, pendingConnection, expandedPersonId, readOnly]);
+  }, [editMode, pendingConnection, readOnly]);
 
   const handleDeletePerson = async (personId: string) => {
     if (readOnly) return;
@@ -550,6 +559,13 @@ export function InteractiveFamilyTree({
           onConnectionUpdated={onConnectionAdded}
         />
       )}
+
+      {/* Person Detail Dialog */}
+      <PersonCardDialog
+        person={viewingPerson}
+        open={!!viewingPerson}
+        onOpenChange={(open) => !open && setViewingPerson(null)}
+      />
     </div>
   );
 }

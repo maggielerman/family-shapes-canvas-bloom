@@ -167,9 +167,20 @@ export default function Media() {
     if (!selectedMediaFile || !selectedOrgId) return;
 
     try {
-      // This would need a similar table structure for organization media
-      // For now, just show success message
-      toast.success('Organization linking will be implemented');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { error } = await supabase
+        .from('organization_media')
+        .insert({
+          organization_id: selectedOrgId,
+          media_file_id: selectedMediaFile.id,
+          added_by: user.id,
+        });
+
+      if (error) throw error;
+
+      toast.success('Media file linked to organization successfully');
       setLinkToOrgOpen(false);
       setSelectedMediaFile(null);
       setSelectedOrgId('');
