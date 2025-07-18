@@ -3,6 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TreePine, Plus, X, Users, Link, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +51,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
   const [manageTreesDialogOpen, setManageTreesDialogOpen] = useState(false);
   const [connectionsDialogOpen, setConnectionsDialogOpen] = useState(false);
   const [selectedTreeId, setSelectedTreeId] = useState<string>('');
+  const [treeToRemove, setTreeToRemove] = useState<{id: string, name: string} | null>(null);
 
   useEffect(() => {
     fetchPersonTrees();
@@ -189,16 +200,23 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
     }
   };
 
-  const removeFromTree = async (membershipId: string) => {
+  const confirmRemoveFromTree = (membershipId: string, treeName: string) => {
+    setTreeToRemove({ id: membershipId, name: treeName });
+  };
+
+  const removeFromTree = async () => {
+    if (!treeToRemove) return;
+
     try {
       const { error } = await supabase
         .from('family_tree_members')
         .delete()
-        .eq('id', membershipId);
+        .eq('id', treeToRemove.id);
 
       if (error) throw error;
 
       toast.success('Person removed from family tree');
+      setTreeToRemove(null);
       fetchPersonTrees();
     } catch (error) {
       console.error('Error removing person from tree:', error);
@@ -305,7 +323,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => removeFromTree(tree.membership_id!)}
+                              onClick={() => confirmRemoveFromTree(tree.membership_id!, tree.name)}
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -410,6 +428,25 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Confirmation Dialog for Tree Removal */}
+      <AlertDialog open={!!treeToRemove} onOpenChange={() => setTreeToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove from Family Tree</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this person from "{treeToRemove?.name}"? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={removeFromTree}>
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
