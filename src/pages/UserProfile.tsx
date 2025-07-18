@@ -1,16 +1,21 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/components/auth/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Camera, Mail, Phone, MapPin, Calendar, UserPlus } from "lucide-react";
 
 
 const UserProfile = () => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
@@ -22,20 +27,105 @@ const UserProfile = () => {
   });
   const { toast } = useToast();
 
-  // Check if profile is empty
-  const isProfileEmpty = !profileData.firstName && !profileData.lastName && !profileData.email;
+  // Load profile data on mount
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
 
-  const handleSave = () => {
-    setIsEditing(false);
-    toast({
-      title: "Profile updated!",
-      description: "Your profile information has been saved successfully.",
-    });
+  const loadProfile = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      
+      // Load from user_profiles table
+      const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw error;
+      }
+
+      if (profile) {
+        setProfileData({
+          firstName: profile.full_name?.split(' ')[0] || '',
+          lastName: profile.full_name?.split(' ').slice(1).join(' ') || '',
+          email: user.email || '',
+          phone: profile.phone || '',
+          location: profile.location || '',
+          bio: profile.bio || '',
+          memberSince: new Date(user.created_at).toLocaleDateString()
+        });
+      } else {
+        // Set default values from auth user
+        setProfileData(prev => ({
+          ...prev,
+          email: user.email || '',
+          memberSince: new Date(user.created_at).toLocaleDateString()
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if profile is empty
+  const isProfileEmpty = !profileData.firstName && !profileData.lastName;
+
+  const handleSave = async () => {
+    if (!user) return;
+    
+    try {
+      setSaving(true);
+      
+      const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
+      
+      // Upsert profile data
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: user.id,
+          full_name: fullName,
+          phone: profileData.phone,
+          location: profileData.location,
+          bio: profileData.bio,
+        });
+
+      if (error) throw error;
+
+      setIsEditing(false);
+      toast({
+        title: "Profile updated!",
+        description: "Your profile information has been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile data",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Reset form data if needed
+    // Reload profile data to reset any unsaved changes
+    loadProfile();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -44,6 +134,18 @@ const UserProfile = () => {
       [e.target.name]: e.target.value
     }));
   };
+
+  if (loading) {
+    return (
+      <div className="px-6 lg:px-12 py-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg">Loading profile...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Empty state when no profile data
   if (isProfileEmpty && !isEditing) {
@@ -117,14 +219,16 @@ const UserProfile = () => {
                 <div className="flex gap-3">
                   <Button 
                     onClick={handleSave}
+                    disabled={saving}
                     className="bg-coral-600 hover:bg-coral-700 text-white"
                   >
-                    Save Changes
+                    {saving ? 'Saving...' : 'Save Changes'}
                   </Button>
                   <Button 
                     onClick={handleCancel}
                     variant="outline"
                     className="border-gray-300"
+                    disabled={saving}
                   >
                     Cancel
                   </Button>
