@@ -77,17 +77,27 @@ export function OrganizationMembers({ organizationId, canManage, currentUserId }
           user_id,
           role,
           joined_at,
-          invited_by,
-          user_profiles!inner (
-            full_name,
-            avatar_url
-          )
+          invited_by
         `)
         .eq('organization_id', organizationId)
         .order('joined_at', { ascending: false });
 
       if (error) throw error;
-      setMembers(data || []);
+      
+      // Fetch user profiles separately to avoid join issues
+      const userIds = data?.map(m => m.user_id) || [];
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+      
+      // Combine the data
+      const membersWithProfiles = (data || []).map(member => ({
+        ...member,
+        user_profiles: profiles?.find(p => p.id === member.user_id) || { full_name: 'Unknown User', avatar_url: null }
+      }));
+      
+      setMembers(membersWithProfiles);
     } catch (error) {
       console.error('Error fetching members:', error);
       toast({

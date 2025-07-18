@@ -35,7 +35,6 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Users, 
   Plus, 
-  Users,
   Calendar,
   Eye,
   Settings,
@@ -315,7 +314,7 @@ export function OrganizationGroups({ organizationId, canManage }: OrganizationGr
         <CardContent>
           {groups.length === 0 ? (
             <div className="text-center py-8">
-              <UserGroup className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">No groups created yet</p>
               {canManage && (
                 <Button onClick={() => setCreateDialogOpen(true)}>

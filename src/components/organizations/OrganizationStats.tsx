@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { 
   Users, 
-  Users, 
   TreePine,
   Link as LinkIcon,
   TrendingUp,

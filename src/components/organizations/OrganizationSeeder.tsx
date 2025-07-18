@@ -14,7 +14,6 @@ import {
   Loader2,
   Users,
   Building2,
-  Users,
   Link as LinkIcon
 } from "lucide-react";
 import { seedOrganizations, clearSeededData } from "@/lib/organizationSeeds";
