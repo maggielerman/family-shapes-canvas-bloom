@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
 import { PersonCard } from "@/components/family-trees/PersonCard";
+import { PersonCardDialog } from "@/components/people/PersonCard";
+import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { FamilyTreeVisualization } from "@/components/family-trees/FamilyTreeVisualization";
 import { SharingSettingsDialog } from "@/components/family-trees/SharingSettingsDialog";
 import { FamilyTreeDocumentManager } from "@/components/family-trees/FamilyTreeDocumentManager";
@@ -28,13 +30,20 @@ interface Person {
   id: string;
   name: string;
   date_of_birth?: string | null;
+  birth_place?: string | null;
   gender?: string | null;
   profile_photo_url?: string | null;
   email?: string | null;
   phone?: string | null;
+  address?: string | null;
   status: string;
   notes?: string | null;
+  donor?: boolean;
+  used_ivf?: boolean;
+  used_iui?: boolean;
+  fertility_treatments?: any;
   created_at: string;
+  family_trees?: Array<{ id: string; name: string; }>;
 }
 
 export default function FamilyTreeDetail() {
@@ -47,6 +56,8 @@ export default function FamilyTreeDetail() {
   const [loading, setLoading] = useState(true);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [sharingDialogOpen, setSharingDialogOpen] = useState(false);
+  const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -80,9 +91,26 @@ export default function FamilyTreeDetail() {
     try {
       const { data, error } = await supabase
         .from('persons')
-        .select('*')
+        .select(`
+          id,
+          name,
+          date_of_birth,
+          birth_place,
+          gender,
+          profile_photo_url,
+          email,
+          phone,
+          address,
+          status,
+          notes,
+          donor,
+          used_ivf,
+          used_iui,
+          fertility_treatments,
+          created_at
+        `)
         .eq('family_tree_id', id)
-        .order('created_at', { ascending: false });
+        .order('name');
 
       if (error) throw error;
       setPersons(data || []);
@@ -234,7 +262,8 @@ export default function FamilyTreeDetail() {
                 <PersonCard 
                   key={person.id} 
                   person={person}
-                  onEdit={(p) => console.log('Edit person:', p)}
+                  onClick={() => setViewingPerson(person)}
+                  onEdit={(p) => setEditingPerson(p)}
                   showRemoveFromTree={true}
                   onRemoveFromTree={async (p) => {
                     try {
@@ -292,6 +321,28 @@ export default function FamilyTreeDetail() {
         familyTree={familyTree}
         onTreeUpdated={fetchFamilyTree}
       />
+
+      <PersonCardDialog
+        person={viewingPerson}
+        open={!!viewingPerson}
+        onOpenChange={(open) => !open && setViewingPerson(null)}
+        onEdit={() => {
+          setEditingPerson(viewingPerson);
+          setViewingPerson(null);
+        }}
+      />
+
+      {editingPerson && (
+        <EditPersonDialog
+          person={editingPerson}
+          open={!!editingPerson}
+          onOpenChange={(open) => !open && setEditingPerson(null)}
+          onPersonUpdated={() => {
+            fetchPersons();
+            setEditingPerson(null);
+          }}
+        />
+      )}
     </div>
   );
 }
