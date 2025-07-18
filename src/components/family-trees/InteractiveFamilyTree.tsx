@@ -95,18 +95,25 @@ export function InteractiveFamilyTree({
   const [nodes, setNodes] = useState<NodeData[]>([]);
   const [links, setLinks] = useState<LinkData[]>([]);
 
-  // Initialize D3 force simulation
+  // Initialize D3 force simulation with family tree specific forces
   useEffect(() => {
     if (!svgRef.current || persons.length === 0) return;
 
     const width = 800;
     const height = 600;
 
-    // Transform persons to nodes
-    const nodeData: NodeData[] = persons.map(person => ({
-      ...person,
-      expanded: person.id === expandedPersonId
-    }));
+    // Transform persons to nodes with generation-based positioning
+    const nodeData: NodeData[] = persons.map(person => {
+      // Calculate generation based on birth year or relationships
+      const birthYear = person.date_of_birth ? new Date(person.date_of_birth).getFullYear() : null;
+      const generation = birthYear ? Math.floor((2024 - birthYear) / 25) : 0;
+      
+      return {
+        ...person,
+        expanded: person.id === expandedPersonId,
+        generation
+      };
+    });
 
     // Transform connections to links
     const linkData: LinkData[] = connections.map(connection => {
@@ -119,17 +126,53 @@ export function InteractiveFamilyTree({
       };
     }).filter(link => link.source && link.target);
 
-    // Create force simulation
+    // Create force simulation optimized for family trees
     const sim = d3.forceSimulation(nodeData)
       .force("link", d3.forceLink<NodeData, LinkData>(linkData)
         .id(d => d.id)
-        .distance(120)
-        .strength(0.8))
-      .force("charge", d3.forceManyBody().strength(-500))
+        .distance(d => {
+          // Adjust distance based on relationship type
+          const link = d as LinkData;
+          switch (link.relationship_type) {
+            case 'parent':
+            case 'child':
+              return 150; // Longer distance for parent-child
+            case 'partner':
+              return 80;  // Shorter for partners
+            case 'sibling':
+            case 'half_sibling':
+              return 120; // Medium for siblings
+            default:
+              return 100;
+          }
+        })
+        .strength(0.9))
+      .force("charge", d3.forceManyBody()
+        .strength(d => {
+          // Stronger repulsion for nodes with more connections
+          const connections = linkData.filter(l => 
+            l.source === d || l.target === d
+          ).length;
+          return -300 - (connections * 50);
+        }))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(60))
-      .force("boundary", d3.forceX(width / 2).strength(0.1))
-      .force("boundaryY", d3.forceY(height / 2).strength(0.1));
+      .force("collision", d3.forceCollide().radius(70))
+      // Add generational forces to separate by age/generation
+      .force("generational", d3.forceY()
+        .y(d => {
+          const node = d as NodeData & { generation: number };
+          return height * 0.2 + (node.generation * 80);
+        })
+        .strength(0.3))
+      // Keep nodes within bounds
+      .force("boundary", () => {
+        nodeData.forEach(node => {
+          if (node.x && node.y) {
+            node.x = Math.max(50, Math.min(width - 50, node.x));
+            node.y = Math.max(50, Math.min(height - 50, node.y));
+          }
+        });
+      });
 
     setSimulation(sim);
     setNodes(nodeData);
