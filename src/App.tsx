@@ -42,6 +42,7 @@ const App = () => (
             <Route path="/connections" element={<FamilyTrees />} />
             <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
             <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />
+            <Route path="/invitation/:action/:token" element={<InvitationPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
