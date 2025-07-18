@@ -56,6 +56,7 @@ interface Connection {
   direction?: 'incoming' | 'outgoing';
   other_person_name?: string;
   other_person_id?: string;
+  metadata?: any; // Database JSONB field
 }
 
 interface PersonConnectionManagerProps {
@@ -195,6 +196,25 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     };
     return reciprocals[relationshipType];
   };
+  
+  // Helper function to determine reciprocal attributes
+  const getReciprocalAttributes = (relationshipType: string, attributes: string[]) => {
+    // Some attributes should be preserved in reciprocal relationships
+    const preservedAttributes = attributes.filter(attr => {
+      // Preserve biological/legal context and ART context
+      return ['biological', 'adopted', 'step', 'foster', 'legal', 'intended', 'ivf', 'iui', 'donor_conceived'].includes(attr);
+    });
+    
+    // For siblings, preserve specific sibling attributes
+    if (relationshipType === 'sibling') {
+      const siblingAttributes = attributes.filter(attr => 
+        ['full', 'half', 'donor_sibling', 'step_sibling'].includes(attr)
+      );
+      return [...preservedAttributes, ...siblingAttributes];
+    }
+    
+    return preservedAttributes;
+  };
 
   const handleCreateConnection = async () => {
     if (!newConnection.to_person_id || !newConnection.relationship_type) {
@@ -226,9 +246,12 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
 
       if (mainError) throw mainError;
 
-      // Create the reciprocal connection
+      // Create the reciprocal connection with appropriate attributes
       const reciprocalType = getReciprocalRelationship(newConnection.relationship_type);
       if (reciprocalType) {
+        // For reciprocal relationships, we need to determine appropriate attributes
+        const reciprocalAttributes = getReciprocalAttributes(newConnection.relationship_type, newConnection.attributes);
+        
         const { error: reciprocalError } = await supabase
           .from('connections')
           .insert({
@@ -237,7 +260,7 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
             relationship_type: reciprocalType,
             family_tree_id: person.family_tree_id,
             metadata: {
-              attributes: newConnection.attributes
+              attributes: reciprocalAttributes
             }
           });
 
@@ -301,7 +324,10 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
       const { error: mainError } = await supabase
         .from('connections')
         .update({
-          relationship_type: editingConnection.relationship_type
+          relationship_type: editingConnection.relationship_type,
+          metadata: {
+            attributes: (editingConnection.metadata as any)?.attributes || []
+          }
         })
         .eq('id', editingConnection.id);
 
@@ -318,10 +344,19 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
           .eq('to_person_id', editingConnection.direction === 'outgoing' ? editingConnection.from_person_id : editingConnection.to_person_id);
 
         if (!findError && reciprocalConnections && reciprocalConnections.length > 0) {
+          // Update reciprocal connection with appropriate attributes
+          const reciprocalAttributes = getReciprocalAttributes(
+            editingConnection.relationship_type, 
+            (editingConnection.metadata as any)?.attributes || []
+          );
+          
           const { error: reciprocalError } = await supabase
             .from('connections')
             .update({
-              relationship_type: reciprocalType
+              relationship_type: reciprocalType,
+              metadata: {
+                attributes: reciprocalAttributes
+              }
             })
             .eq('id', reciprocalConnections[0].id);
 
