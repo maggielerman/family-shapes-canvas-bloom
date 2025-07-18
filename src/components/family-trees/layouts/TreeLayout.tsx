@@ -44,8 +44,14 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
+    // Filter connections to only include those between persons in this family tree
+    const validPersonIds = new Set(persons.map(p => p.id));
+    const validConnections = connections.filter(c => 
+      validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
+    );
+
     // Create hierarchical data structure
-    const hierarchyData = createHierarchy(persons, connections);
+    const hierarchyData = createHierarchy(persons, validConnections);
     if (!hierarchyData) return;
 
     // Create the tree layout
@@ -86,7 +92,7 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
     // Add circles for nodes
     nodes.append('circle')
       .attr('r', 30)
-      .attr('fill', d => getPersonColor(d.data, connections, relationshipTypes))
+      .attr('fill', d => getPersonColor(d.data, validConnections, relationshipTypes))
       .attr('stroke', 'hsl(var(--border))')
       .attr('stroke-width', 2);
 
@@ -132,13 +138,8 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
 function createHierarchy(persons: Person[], connections: Connection[]): Person | null {
   if (persons.length === 0) return null;
 
-  // Create a set of valid person IDs for connection filtering
-  const validPersonIds = new Set(persons.map(p => p.id));
-  
-  // Filter out connections that reference non-existent persons
-  const validConnections = connections.filter(c => 
-    validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
-  );
+  // Connections are already filtered in the calling function
+  const validConnections = connections;
 
   // Find root person (someone who is not a child)
   const childIds = new Set(validConnections.map(c => c.to_person_id));

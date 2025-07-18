@@ -50,7 +50,13 @@ export function ReactD3TreeLayout({ persons, connections, relationshipTypes, wid
       return;
     }
 
-    const hierarchyData = createHierarchy(persons, connections);
+    // Filter connections to only include those between persons in this family tree
+    const validPersonIds = new Set(persons.map(p => p.id));
+    const validConnections = connections.filter(c => 
+      validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
+    );
+
+    const hierarchyData = createHierarchy(persons, validConnections);
     setTreeData(hierarchyData);
     
     // Center the tree
@@ -69,15 +75,22 @@ export function ReactD3TreeLayout({ persons, connections, relationshipTypes, wid
     }
   };
 
-  const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
-    <g onClick={() => handleNodeClick(nodeDatum)}>
-      <circle
-        r={25}
-        fill={getPersonColor(nodeDatum.attributes, persons, connections, relationshipTypes)}
-        stroke="hsl(var(--border))"
-        strokeWidth={2}
-        style={{ cursor: 'pointer' }}
-      />
+  const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
+    // Filter connections for this render
+    const validPersonIds = new Set(persons.map(p => p.id));
+    const validConnections = connections.filter(c => 
+      validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
+    );
+    
+    return (
+      <g onClick={() => handleNodeClick(nodeDatum)}>
+        <circle
+          r={25}
+          fill={getPersonColor(nodeDatum.attributes, persons, validConnections, relationshipTypes)}
+          stroke="hsl(var(--border))"
+          strokeWidth={2}
+          style={{ cursor: 'pointer' }}
+        />
       {nodeDatum.attributes?.profile_photo_url && (
         <image
           x={-20}
@@ -112,8 +125,9 @@ export function ReactD3TreeLayout({ persons, connections, relationshipTypes, wid
           {nodeDatum.__rd3t?.collapsed ? '+' : '−'}
         </text>
       )}
-    </g>
-  );
+      </g>
+    );
+  };
 
   if (!treeData) {
     return (

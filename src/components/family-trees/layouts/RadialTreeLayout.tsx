@@ -44,8 +44,14 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
+    // Filter connections to only include those between persons in this family tree
+    const validPersonIds = new Set(persons.map(p => p.id));
+    const validConnections = connections.filter(c => 
+      validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
+    );
+
     // Create hierarchical data structure
-    const hierarchyData = createHierarchy(persons, connections);
+    const hierarchyData = createHierarchy(persons, validConnections);
     if (!hierarchyData) return;
 
     const radius = Math.min(width, height) / 2 - 50;
@@ -92,7 +98,7 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
     // Add circles for nodes
     nodes.append('circle')
       .attr('r', 20)
-      .attr('fill', d => getPersonColor(d.data, connections, relationshipTypes))
+      .attr('fill', d => getPersonColor(d.data, validConnections, relationshipTypes))
       .attr('stroke', 'hsl(var(--border))')
       .attr('stroke-width', 2);
 
