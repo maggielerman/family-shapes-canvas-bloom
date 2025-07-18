@@ -15,9 +15,16 @@ interface Connection {
   relationship_type: string;
 }
 
+interface RelationshipType {
+  value: string;
+  label: string;
+  color: string;
+}
+
 interface ReactD3TreeLayoutProps {
   persons: Person[];
   connections: Connection[];
+  relationshipTypes: RelationshipType[];
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
@@ -33,7 +40,7 @@ interface TreeData {
   children?: TreeData[];
 }
 
-export function ReactD3TreeLayout({ persons, connections, width, height, onPersonClick }: ReactD3TreeLayoutProps) {
+export function ReactD3TreeLayout({ persons, connections, relationshipTypes, width, height, onPersonClick }: ReactD3TreeLayoutProps) {
   const [treeData, setTreeData] = useState<TreeData | null>(null);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
@@ -66,7 +73,7 @@ export function ReactD3TreeLayout({ persons, connections, width, height, onPerso
     <g onClick={() => handleNodeClick(nodeDatum)}>
       <circle
         r={25}
-        fill={getGenderColor(nodeDatum.attributes?.gender)}
+        fill={getPersonColor(nodeDatum.attributes, persons, connections, relationshipTypes)}
         stroke="hsl(var(--border))"
         strokeWidth={2}
         style={{ cursor: 'pointer' }}
@@ -225,10 +232,19 @@ function buildTree(person: Person, allPersons: Person[], connections: Connection
   };
 }
 
-function getGenderColor(gender?: string | null): string {
-  switch (gender?.toLowerCase()) {
-    case 'male': return 'hsl(var(--chart-1))';
-    case 'female': return 'hsl(var(--chart-2))';
-    default: return 'hsl(var(--chart-3))';
+function getPersonColor(attributes: any, persons: Person[], connections: Connection[], relationshipTypes: RelationshipType[]): string {
+  if (!attributes?.id) return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
+  
+  // Find the primary relationship for this person (first connection as "to_person")
+  const primaryConnection = connections.find(c => c.to_person_id === attributes.id);
+  
+  if (primaryConnection) {
+    const relationshipType = relationshipTypes.find(rt => rt.value === primaryConnection.relationship_type);
+    if (relationshipType) {
+      return relationshipType.color;
+    }
   }
+  
+  // Default to first relationship type color if no specific relationship found
+  return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
 }

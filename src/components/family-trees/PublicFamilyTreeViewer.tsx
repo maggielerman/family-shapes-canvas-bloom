@@ -18,7 +18,8 @@ import {
   Lock,
   Globe
 } from "lucide-react";
-import { InteractiveFamilyTree } from "./InteractiveFamilyTree";
+import { TreeLayout } from "./layouts/TreeLayout";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -71,6 +72,15 @@ export function PublicFamilyTreeViewer({
   const [connections, setConnections] = useState<PublicConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+
+  const relationshipTypes = [
+    { value: "parent", label: "Parent", color: "hsl(var(--chart-1))" },
+    { value: "child", label: "Child", color: "hsl(var(--chart-2))" },
+    { value: "partner", label: "Partner", color: "hsl(var(--chart-3))" },
+    { value: "sibling", label: "Sibling", color: "hsl(var(--chart-4))" },
+    { value: "donor", label: "Donor", color: "hsl(var(--chart-5))" },
+    { value: "half_sibling", label: "Half Sibling", color: "hsl(var(--chart-1))" },
+  ];
 
   useEffect(() => {
     if (familyTreeId) {
@@ -297,15 +307,13 @@ export function PublicFamilyTreeViewer({
                     </AlertDescription>
                   </Alert>
                 </div>
-                <InteractiveFamilyTree
-                  familyTreeId={familyTree.id}
+                <TreeLayout
                   persons={persons as any[]}
                   connections={connections as any[]}
-                  onPersonAdded={() => {}}
-                  onConnectionAdded={() => {}}
-                  onPersonUpdated={() => {}}
-                  onPersonDeleted={() => {}}
-                  readOnly={true}
+                  relationshipTypes={relationshipTypes}
+                  width={800}
+                  height={600}
+                  onPersonClick={() => {}}
                 />
               </CardContent>
             </Card>

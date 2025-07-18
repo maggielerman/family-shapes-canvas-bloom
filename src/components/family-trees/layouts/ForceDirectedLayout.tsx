@@ -15,9 +15,16 @@ interface Connection {
   relationship_type: string;
 }
 
+interface RelationshipType {
+  value: string;
+  label: string;
+  color: string;
+}
+
 interface ForceDirectedLayoutProps {
   persons: Person[];
   connections: Connection[];
+  relationshipTypes: RelationshipType[];
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
@@ -34,7 +41,7 @@ interface ForceLink extends d3.SimulationLinkDatum<ForceNode> {
   relationship_type: string;
 }
 
-export function ForceDirectedLayout({ persons, connections, width, height, onPersonClick }: ForceDirectedLayoutProps) {
+export function ForceDirectedLayout({ persons, connections, relationshipTypes, width, height, onPersonClick }: ForceDirectedLayoutProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -74,7 +81,7 @@ export function ForceDirectedLayout({ persons, connections, width, height, onPer
       .enter()
       .append('line')
       .attr('class', 'link')
-      .attr('stroke', d => getRelationshipColor(d.relationship_type))
+      .attr('stroke', d => getRelationshipColor(d.relationship_type, relationshipTypes))
       .attr('stroke-width', 3)
       .attr('stroke-opacity', 0.8);
 
@@ -118,7 +125,7 @@ export function ForceDirectedLayout({ persons, connections, width, height, onPer
     // Add circles for nodes
     node.append('circle')
       .attr('r', 30)
-      .attr('fill', d => getGenderColor(d.gender))
+      .attr('fill', d => getPersonColor(d, connections, relationshipTypes))
       .attr('stroke', 'hsl(var(--border))')
       .attr('stroke-width', 2);
 
@@ -180,21 +187,22 @@ export function ForceDirectedLayout({ persons, connections, width, height, onPer
   );
 }
 
-function getGenderColor(gender?: string | null): string {
-  switch (gender?.toLowerCase()) {
-    case 'male': return 'hsl(var(--chart-1))';
-    case 'female': return 'hsl(var(--chart-2))';
-    default: return 'hsl(var(--chart-3))';
+function getPersonColor(person: Person, connections: Connection[], relationshipTypes: RelationshipType[]): string {
+  // Find the primary relationship for this person (first connection as "to_person")
+  const primaryConnection = connections.find(c => c.to_person_id === person.id);
+  
+  if (primaryConnection) {
+    const relationshipType = relationshipTypes.find(rt => rt.value === primaryConnection.relationship_type);
+    if (relationshipType) {
+      return relationshipType.color;
+    }
   }
+  
+  // Default to first relationship type color if no specific relationship found
+  return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
 }
 
-function getRelationshipColor(relationship: string): string {
-  switch (relationship) {
-    case 'parent': return 'hsl(var(--chart-1))';
-    case 'child': return 'hsl(var(--chart-2))';
-    case 'partner': return 'hsl(var(--chart-3))';
-    case 'sibling': return 'hsl(var(--chart-4))';
-    case 'donor': return 'hsl(var(--chart-5))';
-    default: return 'hsl(var(--border))';
-  }
+function getRelationshipColor(relationship: string, relationshipTypes: RelationshipType[]): string {
+  const relationshipType = relationshipTypes.find(rt => rt.value === relationship);
+  return relationshipType?.color || 'hsl(var(--border))';
 }

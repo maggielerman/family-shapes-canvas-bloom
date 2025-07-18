@@ -15,9 +15,16 @@ interface Connection {
   relationship_type: string;
 }
 
+interface RelationshipType {
+  value: string;
+  label: string;
+  color: string;
+}
+
 interface RadialTreeLayoutProps {
   persons: Person[];
   connections: Connection[];
+  relationshipTypes: RelationshipType[];
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
@@ -28,7 +35,7 @@ interface RadialNode extends d3.HierarchyNode<Person> {
   y?: number;
 }
 
-export function RadialTreeLayout({ persons, connections, width, height, onPersonClick }: RadialTreeLayoutProps) {
+export function RadialTreeLayout({ persons, connections, relationshipTypes, width, height, onPersonClick }: RadialTreeLayoutProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -85,7 +92,7 @@ export function RadialTreeLayout({ persons, connections, width, height, onPerson
     // Add circles for nodes
     nodes.append('circle')
       .attr('r', 20)
-      .attr('fill', d => getGenderColor(d.data.gender))
+      .attr('fill', d => getPersonColor(d.data, connections, relationshipTypes))
       .attr('stroke', 'hsl(var(--border))')
       .attr('stroke-width', 2);
 
@@ -192,10 +199,17 @@ function buildTree(person: Person, allPersons: Person[], connections: Connection
   };
 }
 
-function getGenderColor(gender?: string | null): string {
-  switch (gender?.toLowerCase()) {
-    case 'male': return 'hsl(var(--chart-1))';
-    case 'female': return 'hsl(var(--chart-2))';
-    default: return 'hsl(var(--chart-3))';
+function getPersonColor(person: Person, connections: Connection[], relationshipTypes: RelationshipType[]): string {
+  // Find the primary relationship for this person (first connection as "to_person")
+  const primaryConnection = connections.find(c => c.to_person_id === person.id);
+  
+  if (primaryConnection) {
+    const relationshipType = relationshipTypes.find(rt => rt.value === primaryConnection.relationship_type);
+    if (relationshipType) {
+      return relationshipType.color;
+    }
   }
+  
+  // Default to first relationship type color if no specific relationship found
+  return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
 }

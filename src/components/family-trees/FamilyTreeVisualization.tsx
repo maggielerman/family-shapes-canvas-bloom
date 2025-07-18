@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers } from "lucide-react";
 import { AddPersonDialog } from "./AddPersonDialog";
 import { PersonCardDialog } from "@/components/people/PersonCard";
-import { InteractiveFamilyTree } from "./InteractiveFamilyTree";
+
 import { TreeLayout } from "./layouts/TreeLayout";
 import { RadialTreeLayout } from "./layouts/RadialTreeLayout";
 import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
@@ -175,12 +175,8 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </div>
         </div>
       ) : (
-        <Tabs defaultValue="interactive" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="interactive" className="flex items-center gap-1">
-              <Target className="w-3 h-3" />
-              Interactive
-            </TabsTrigger>
+        <Tabs defaultValue="tree" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="tree" className="flex items-center gap-1">
               <GitBranch className="w-3 h-3" />
               Tree
@@ -203,22 +199,11 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="interactive" className="mt-4">
-            <InteractiveFamilyTree
-              familyTreeId={familyTreeId}
-              persons={persons}
-              connections={connections}
-              onPersonAdded={onPersonAdded}
-              onConnectionAdded={fetchConnections}
-              onPersonUpdated={onPersonAdded}
-              onPersonDeleted={onPersonAdded}
-            />
-          </TabsContent>
-          
           <TabsContent value="tree" className="mt-4">
             <TreeLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
               width={800}
               height={600}
               onPersonClick={handlePersonClick}
@@ -229,6 +214,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <RadialTreeLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
               width={800}
               height={600}
               onPersonClick={handlePersonClick}
@@ -239,6 +225,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <ForceDirectedLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
               width={800}
               height={600}
               onPersonClick={handlePersonClick}
@@ -249,6 +236,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <ReactD3TreeLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
               width={800}
               height={600}
               onPersonClick={handlePersonClick}
@@ -259,6 +247,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <ClusterLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
               width={800}
               height={600}
               onPersonClick={handlePersonClick}
