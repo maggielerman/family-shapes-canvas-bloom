@@ -79,7 +79,9 @@ export function SharingSettingsDialog({
   const [newLinkSettings, setNewLinkSettings] = useState({
     access_level: 'view',
     max_uses: '',
-    expires_in_days: '30'
+    expires_in_days: '30',
+    emails: '',
+    message: ''
   });
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
@@ -160,16 +162,32 @@ export function SharingSettingsDialog({
 
       if (error) throw error;
 
+      // If emails are provided, send the sharing link
+      if (newLinkSettings.emails.trim()) {
+        const emails = newLinkSettings.emails
+          .split(',')
+          .map(email => email.trim())
+          .filter(email => email);
+
+        if (emails.length > 0) {
+          await sendSharingLink(data.id, emails, newLinkSettings.message);
+        }
+      }
+
       toast({
         title: "Success",
-        description: "Sharing link created successfully",
+        description: newLinkSettings.emails 
+          ? "Sharing link created and invitations sent successfully"
+          : "Sharing link created successfully",
       });
 
       fetchSharingLinks();
       setNewLinkSettings({
         access_level: 'view',
         max_uses: '',
-        expires_in_days: '30'
+        expires_in_days: '30',
+        emails: '',
+        message: ''
       });
     } catch (error) {
       console.error('Error creating sharing link:', error);
@@ -180,6 +198,44 @@ export function SharingSettingsDialog({
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendSharingLink = async (linkId: string, emails: string[], message?: string) => {
+    try {
+      const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('full_name')
+        .eq('id', familyTree.user_id)
+        .single();
+
+      const { data: result, error } = await supabase.functions.invoke('send-sharing-link', {
+        body: {
+          linkId,
+          emails,
+          message,
+          senderName: userProfile?.full_name
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to send invitations');
+      }
+      
+      if (result?.failed > 0) {
+        toast({
+          title: "Partially Sent",
+          description: `${result.sent} invitations sent, ${result.failed} failed`,
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error('Error sending sharing link:', error);
+      toast({
+        title: "Warning",
+        description: "Link created but failed to send some invitations",
+        variant: "default",
+      });
     }
   };
 
@@ -358,68 +414,106 @@ export function SharingSettingsDialog({
               {/* Create New Link */}
               <Card className="border-dashed">
                 <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div className="space-y-2">
-                      <Label className="text-xs">Access Level</Label>
-                      <Select
-                        value={newLinkSettings.access_level}
-                        onValueChange={(value) => 
-                          setNewLinkSettings(prev => ({ ...prev, access_level: value }))
-                        }
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="view">View Only</SelectItem>
-                          <SelectItem value="comment">View & Comment</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Access Level</Label>
+                        <Select
+                          value={newLinkSettings.access_level}
+                          onValueChange={(value) => 
+                            setNewLinkSettings(prev => ({ ...prev, access_level: value }))
+                          }
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="view">View Only</SelectItem>
+                            <SelectItem value="comment">View & Comment</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Max Uses (optional)</Label>
+                        <Input
+                          type="number"
+                          placeholder="Unlimited"
+                          value={newLinkSettings.max_uses}
+                          onChange={(e) => 
+                            setNewLinkSettings(prev => ({ ...prev, max_uses: e.target.value }))
+                          }
+                          className="h-8"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Expires In (days)</Label>
+                        <Select
+                          value={newLinkSettings.expires_in_days}
+                          onValueChange={(value) => 
+                            setNewLinkSettings(prev => ({ ...prev, expires_in_days: value }))
+                          }
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 day</SelectItem>
+                            <SelectItem value="7">1 week</SelectItem>
+                            <SelectItem value="30">1 month</SelectItem>
+                            <SelectItem value="90">3 months</SelectItem>
+                            <SelectItem value="never">Never</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs">Max Uses (optional)</Label>
+                      <Label className="text-xs">Email Addresses (comma separated)</Label>
                       <Input
-                        type="number"
-                        placeholder="Unlimited"
-                        value={newLinkSettings.max_uses}
+                        placeholder="user1@example.com, user2@example.com"
+                        value={newLinkSettings.emails}
                         onChange={(e) => 
-                          setNewLinkSettings(prev => ({ ...prev, max_uses: e.target.value }))
+                          setNewLinkSettings(prev => ({ ...prev, emails: e.target.value }))
                         }
                         className="h-8"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs">Expires In (days)</Label>
-                      <Select
-                        value={newLinkSettings.expires_in_days}
-                        onValueChange={(value) => 
-                          setNewLinkSettings(prev => ({ ...prev, expires_in_days: value }))
+                      <Label className="text-xs">Personal Message (optional)</Label>
+                      <Textarea
+                        placeholder="Add a personal message to include with the invitation..."
+                        value={newLinkSettings.message}
+                        onChange={(e) => 
+                          setNewLinkSettings(prev => ({ ...prev, message: e.target.value }))
                         }
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 day</SelectItem>
-                          <SelectItem value="7">1 week</SelectItem>
-                          <SelectItem value="30">1 month</SelectItem>
-                          <SelectItem value="90">3 months</SelectItem>
-                          <SelectItem value="never">Never</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        className="h-16 resize-none"
+                      />
                     </div>
 
-                    <Button
-                      onClick={createSharingLink}
-                      disabled={loading}
-                      size="sm"
-                      className="h-8"
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Create Link
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={createSharingLink}
+                        disabled={loading}
+                        size="sm"
+                        className="h-8"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        {newLinkSettings.emails ? 'Create & Send Link' : 'Create Link'}
+                      </Button>
+                      {newLinkSettings.emails && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setNewLinkSettings(prev => ({ ...prev, emails: '', message: '' }))}
+                          size="sm"
+                          className="h-8"
+                        >
+                          Clear Emails
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
