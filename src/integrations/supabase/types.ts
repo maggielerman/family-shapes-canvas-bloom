@@ -273,6 +273,98 @@ export type Database = {
           },
         ]
       }
+      family_tree_folders: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          family_tree_id: string
+          id: string
+          name: string
+          parent_folder_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          family_tree_id: string
+          id?: string
+          name: string
+          parent_folder_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          family_tree_id?: string
+          id?: string
+          name?: string
+          parent_folder_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_tree_folders_parent_folder_id_fkey"
+            columns: ["parent_folder_id"]
+            isOneToOne: false
+            referencedRelation: "family_tree_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_tree_media: {
+        Row: {
+          added_by: string
+          created_at: string
+          description: string | null
+          family_tree_id: string
+          folder_id: string | null
+          id: string
+          media_file_id: string
+          sort_order: number | null
+          tags: string[] | null
+        }
+        Insert: {
+          added_by: string
+          created_at?: string
+          description?: string | null
+          family_tree_id: string
+          folder_id?: string | null
+          id?: string
+          media_file_id: string
+          sort_order?: number | null
+          tags?: string[] | null
+        }
+        Update: {
+          added_by?: string
+          created_at?: string
+          description?: string | null
+          family_tree_id?: string
+          folder_id?: string | null
+          id?: string
+          media_file_id?: string
+          sort_order?: number | null
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_tree_media_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "family_tree_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_tree_media_media_file_id_fkey"
+            columns: ["media_file_id"]
+            isOneToOne: false
+            referencedRelation: "media_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_trees: {
         Row: {
           created_at: string
