@@ -601,6 +601,7 @@ export type Database = {
           expires_at: string | null
           group_id: string
           id: string
+          invited_emails: string[] | null
           is_active: boolean | null
           link_token: string
           max_uses: number | null
@@ -615,6 +616,7 @@ export type Database = {
           expires_at?: string | null
           group_id: string
           id?: string
+          invited_emails?: string[] | null
           is_active?: boolean | null
           link_token?: string
           max_uses?: number | null
@@ -629,6 +631,7 @@ export type Database = {
           expires_at?: string | null
           group_id?: string
           id?: string
+          invited_emails?: string[] | null
           is_active?: boolean | null
           link_token?: string
           max_uses?: number | null
