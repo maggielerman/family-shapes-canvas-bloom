@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Heart, Baby, Dna, TreePine, Target, Zap, Network, Layers } from "lucide-react";
+import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers } from "lucide-react";
 import { AddPersonDialog } from "./AddPersonDialog";
 import { ConnectionCreator } from "./ConnectionCreator";
 import { TreeLayout } from "./layouts/TreeLayout";
@@ -190,7 +190,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
               Interactive
             </TabsTrigger>
             <TabsTrigger value="tree" className="flex items-center gap-1">
-              <TreePine className="w-3 h-3" />
+              <GitBranch className="w-3 h-3" />
               Tree
             </TabsTrigger>
             <TabsTrigger value="radial" className="flex items-center gap-1">
