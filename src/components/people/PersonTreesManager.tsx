@@ -29,7 +29,6 @@ interface FamilyTree {
   description?: string;
   visibility: string;
   membership_id?: string;
-  is_primary?: boolean;
   role?: string;
 }
 
@@ -65,19 +64,10 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
         .from('family_tree_members')
         .select(`
           id,
-          family_tree_id,
-          is_primary,
           role,
-          created_at,
-          family_tree:family_trees(
-            id,
-            name,
-            description,
-            visibility
-          )
+          family_tree:family_trees(id, name, description, visibility)
         `)
-        .eq('person_id', personId)
-        .order('is_primary', { ascending: false });
+        .eq('person_id', personId);
 
       if (error) throw error;
       
@@ -88,7 +78,6 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
         description: membership.family_tree.description,
         visibility: membership.family_tree.visibility,
         membership_id: membership.id,
-        is_primary: membership.is_primary,
         role: membership.role
       }));
       
@@ -186,7 +175,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
           family_tree_id: selectedTreeId,
           person_id: personId,
           added_by: userData.user.id,
-          is_primary: personTrees.length === 0 // Mark as primary if it's their first tree
+          role: 'member'
         });
 
       if (error) throw error;
@@ -304,9 +293,6 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
                             <div>
                               <div className="flex items-center gap-2">
                                 <h4 className="font-medium">{tree.name}</h4>
-                                {tree.is_primary && (
-                                  <Badge variant="secondary" className="text-xs">Primary</Badge>
-                                )}
                               </div>
                               {tree.description && (
                                 <p className="text-sm text-muted-foreground">{tree.description}</p>
@@ -350,9 +336,6 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{tree.name}</h4>
-                      {tree.is_primary && (
-                        <Badge variant="secondary" className="text-xs">Primary</Badge>
-                      )}
                     </div>
                     {tree.description && (
                       <p className="text-sm text-muted-foreground">{tree.description}</p>
@@ -396,8 +379,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
                   person={{
                     id: personId,
                     name: 'Person', // This will be updated by fetching the person name
-                    family_tree_id: personTrees.length > 0 ? personTrees[0].id : null
-                  }} 
+                  }}
                   onConnectionUpdated={() => {
                     fetchConnections();
                   }}

@@ -94,7 +94,7 @@ export function AddExistingPersonDialog({
           family_tree_id: familyTreeId,
           person_id: personId,
           added_by: userData.user.id,
-          is_primary: false
+          role: 'member'
         });
 
       if (error) throw error;

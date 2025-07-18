@@ -96,7 +96,6 @@ export default function FamilyTreeDetail() {
         .from('family_tree_members')
         .select(`
           person_id,
-          is_primary,
           role,
           person:persons(
             id,
@@ -118,16 +117,14 @@ export default function FamilyTreeDetail() {
             created_at
           )
         `)
-        .eq('family_tree_id', id)
-        .order('is_primary', { ascending: false });
+        .eq('family_tree_id', id);
 
       if (error) throw error;
       
       // Transform the data to match our Person interface
       const personsData = (data || []).map(membership => ({
         ...membership.person,
-        membership_role: membership.role,
-        is_primary: membership.is_primary
+        membership_role: membership.role
       }));
       
       setPersons(personsData || []);
@@ -167,7 +164,7 @@ export default function FamilyTreeDetail() {
           family_tree_id: id,
           person_id: newPerson.id,
           added_by: userData.user.id,
-          is_primary: false
+          role: 'member'
         });
 
       if (membershipError) throw membershipError;

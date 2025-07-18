@@ -44,7 +44,6 @@ interface Person {
   name: string;
   gender?: string | null;
   profile_photo_url?: string | null;
-  family_tree_id?: string | null;
 }
 
 interface Connection {
@@ -143,7 +142,7 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     try {
       const { data, error } = await supabase
         .from('persons')
-        .select('id, name, gender, profile_photo_url, family_tree_id')
+        .select('id, name, gender, profile_photo_url')
         .neq('id', person.id);
 
       if (error) throw error;
@@ -238,7 +237,6 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
           from_person_id: person.id,
           to_person_id: newConnection.to_person_id,
           relationship_type: newConnection.relationship_type,
-          family_tree_id: person.family_tree_id,
           metadata: {
             attributes: newConnection.attributes
           }
@@ -257,9 +255,8 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
           .insert({
             from_person_id: newConnection.to_person_id,
             to_person_id: person.id,
-            relationship_type: reciprocalType,
-            family_tree_id: person.family_tree_id,
-            metadata: {
+          relationship_type: reciprocalType,
+          metadata: {
               attributes: reciprocalAttributes
             }
           });
@@ -269,33 +266,10 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
         }
       }
 
-      // Ensure both people are in the family tree (if person has a family_tree_id)
-      if (person.family_tree_id) {
-        // Check if the "to_person" is already in this family tree
-        const { data: existingMembership } = await supabase
-          .from('family_tree_members')
-          .select('id')
-          .eq('family_tree_id', person.family_tree_id)
-          .eq('person_id', newConnection.to_person_id)
-          .single();
-
-        // If not in the tree, add them
-        if (!existingMembership) {
-          const { error: membershipError } = await supabase
-            .from('family_tree_members')
-            .insert({
-              family_tree_id: person.family_tree_id,
-              person_id: newConnection.to_person_id,
-              added_by: userData.user.id,
-              is_primary: false,
-              role: 'member'
-            });
-
-          if (membershipError) {
-            console.error('Error adding person to family tree:', membershipError);
-          }
-        }
-      }
+      // Note: Since we removed family_tree_id from persons, 
+      // we need to find which tree this person belongs to
+      // For now, we'll skip automatic tree membership addition
+      // This functionality would need to be redesigned
 
       toast({
         title: "Success",

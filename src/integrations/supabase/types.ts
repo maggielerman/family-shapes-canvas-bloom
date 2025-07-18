@@ -392,7 +392,6 @@ export type Database = {
           created_at: string
           family_tree_id: string
           id: string
-          is_primary: boolean | null
           person_id: string
           role: string | null
           updated_at: string
@@ -402,7 +401,6 @@ export type Database = {
           created_at?: string
           family_tree_id: string
           id?: string
-          is_primary?: boolean | null
           person_id: string
           role?: string | null
           updated_at?: string
@@ -412,7 +410,6 @@ export type Database = {
           created_at?: string
           family_tree_id?: string
           id?: string
-          is_primary?: boolean | null
           person_id?: string
           role?: string | null
           updated_at?: string
@@ -933,7 +930,6 @@ export type Database = {
           death_place: string | null
           donor: boolean | null
           email: string | null
-          family_tree_id: string | null
           fertility_treatments: Json | null
           gender: string | null
           id: string
@@ -961,7 +957,6 @@ export type Database = {
           death_place?: string | null
           donor?: boolean | null
           email?: string | null
-          family_tree_id?: string | null
           fertility_treatments?: Json | null
           gender?: string | null
           id?: string
@@ -989,7 +984,6 @@ export type Database = {
           death_place?: string | null
           donor?: boolean | null
           email?: string | null
-          family_tree_id?: string | null
           fertility_treatments?: Json | null
           gender?: string | null
           id?: string
@@ -1009,13 +1003,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "persons_family_tree_id_fkey"
-            columns: ["family_tree_id"]
-            isOneToOne: false
-            referencedRelation: "family_trees"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "persons_organization_id_fkey"
             columns: ["organization_id"]
@@ -1215,7 +1202,6 @@ export type Database = {
           death_place: string | null
           donor: boolean | null
           email: string | null
-          family_tree_id: string | null
           family_trees: Json | null
           fertility_treatments: Json | null
           gender: string | null
@@ -1236,13 +1222,6 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "persons_family_tree_id_fkey"
-            columns: ["family_tree_id"]
-            isOneToOne: false
-            referencedRelation: "family_trees"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "persons_organization_id_fkey"
             columns: ["organization_id"]

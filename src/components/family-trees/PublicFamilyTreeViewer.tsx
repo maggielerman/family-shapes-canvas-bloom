@@ -164,23 +164,25 @@ export function PublicFamilyTreeViewer({
       if (treeError) throw treeError;
       setFamilyTree(treeData);
 
-      // Fetch persons (with limited sensitive data)
-      const { data: personsData, error: personsError } = await supabase
-        .from('persons')
+      // Fetch family tree members via junction table
+      const { data: membersData, error: membersError } = await supabase
+        .from('family_tree_members')
         .select(`
-          id,
-          name,
-          date_of_birth,
-          birth_place,
-          gender,
-          profile_photo_url,
-          status,
-          notes
+          person:persons(
+            id,
+            name,
+            date_of_birth,
+            birth_place,
+            gender,
+            profile_photo_url,
+            status,
+            notes
+          )
         `)
         .eq('family_tree_id', familyTreeId);
 
-      if (personsError) throw personsError;
-      setPersons(personsData || []);
+      if (membersError) throw membersError;
+      setPersons((membersData || []).map(member => member.person));
 
       // Fetch connections
       const { data: connectionsData, error: connectionsError } = await supabase
