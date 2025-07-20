@@ -14,7 +14,6 @@ import {
   TreePine,
   Users,
   Share2,
-  UserPlus,
   Menu,
   X,
   Image
@@ -50,7 +49,6 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
     { icon: Users, label: "People", path: "/people" },
     { icon: TreePine, label: "Family Trees", path: "/family-trees" },
     { icon: Image, label: "Media", path: "/media" },
-    { icon: Users, label: "Connections", path: "/connections" },
     { icon: Share2, label: "Share", path: "/share" },
     { icon: Building2, label: "Organizations", path: "/organizations" },
   ];

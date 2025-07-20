@@ -21,6 +21,7 @@ import FamilyTreeDetail from "./pages/FamilyTreeDetail";
 import OrganizationInvitePage from "./pages/OrganizationInvitePage";
 import PublicFamilyTree from "./pages/PublicFamilyTree";
 import Media from "./pages/Media";
+import Share from "./pages/Share";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,9 +51,9 @@ const App = () => (
             <Route path="/family-trees" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
             <Route path="/family-trees/:id" element={<SidebarLayout><FamilyTreeDetail /></SidebarLayout>} />
             <Route path="/media" element={<SidebarLayout><Media /></SidebarLayout>} />
+            <Route path="/share" element={<SidebarLayout><Share /></SidebarLayout>} />
             <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
             <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDetails /></SidebarLayout>} />
-            <Route path="/connections" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
