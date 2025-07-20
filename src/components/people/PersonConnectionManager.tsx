@@ -114,21 +114,46 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
 
       if (incomingError) throw incomingError;
 
-      // Combine both types of connections with appropriate formatting
-      const allConnections = [
-        ...(outgoingConnections || []).map(conn => ({
-          ...conn,
-          direction: 'outgoing' as const,
-          other_person_name: conn.to_person?.name || 'Unknown',
-          other_person_id: conn.to_person_id
-        })),
-        ...(incomingConnections || []).map(conn => ({
-          ...conn,
-          direction: 'incoming' as const,
-          other_person_name: conn.from_person?.name || 'Unknown',
-          other_person_id: conn.from_person_id
-        }))
-      ];
+      // Combine both types of connections and deduplicate reciprocal relationships
+      const outgoing = (outgoingConnections || []).map(conn => ({
+        ...conn,
+        direction: 'outgoing' as const,
+        other_person_name: conn.to_person?.name || 'Unknown',
+        other_person_id: conn.to_person_id
+      }));
+      
+      const incoming = (incomingConnections || []).map(conn => ({
+        ...conn,
+        direction: 'incoming' as const,
+        other_person_name: conn.from_person?.name || 'Unknown',
+        other_person_id: conn.from_person_id
+      }));
+
+      // For each outgoing connection, check if there's a corresponding incoming one
+      // If so, only show the outgoing one to avoid duplicates
+      const uniqueConnections = [];
+      
+      for (const outConn of outgoing) {
+        // Always show outgoing connections (they represent the primary relationship)
+        uniqueConnections.push(outConn);
+      }
+      
+      for (const inConn of incoming) {
+        // Only show incoming connections if there's no corresponding outgoing one
+        const hasCorrespondingOutgoing = outgoing.some(outConn => 
+          outConn.to_person_id === inConn.from_person_id &&
+          ((outConn.relationship_type === 'sibling' && inConn.relationship_type === 'sibling') ||
+           (outConn.relationship_type === 'partner' && inConn.relationship_type === 'partner') ||
+           (outConn.relationship_type === 'parent' && inConn.relationship_type === 'child') ||
+           (outConn.relationship_type === 'child' && inConn.relationship_type === 'parent'))
+        );
+        
+        if (!hasCorrespondingOutgoing) {
+          uniqueConnections.push(inConn);
+        }
+      }
+
+      const allConnections = uniqueConnections;
 
       setConnections(allConnections);
     } catch (error) {
@@ -266,10 +291,34 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
         }
       }
 
-      // Note: Since we removed family_tree_id from persons, 
-      // we need to find which tree this person belongs to
-      // For now, we'll skip automatic tree membership addition
-      // This functionality would need to be redesigned
+      // Get all family trees where this person is a member
+      const { data: treeMembers, error: treeError } = await supabase
+        .from('family_tree_members')
+        .select('family_tree_id')
+        .eq('person_id', person.id);
+
+      if (!treeError && treeMembers && treeMembers.length > 0) {
+        // Update both connections with the family tree ID from the first tree
+        const familyTreeId = treeMembers[0].family_tree_id;
+        
+        // Update main connection
+        await supabase
+          .from('connections')
+          .update({ family_tree_id: familyTreeId })
+          .eq('from_person_id', person.id)
+          .eq('to_person_id', newConnection.to_person_id)
+          .eq('relationship_type', newConnection.relationship_type);
+
+        // Update reciprocal connection
+        if (reciprocalType) {
+          await supabase
+            .from('connections')
+            .update({ family_tree_id: familyTreeId })
+            .eq('from_person_id', newConnection.to_person_id)
+            .eq('to_person_id', person.id)
+            .eq('relationship_type', reciprocalType);
+        }
+      }
 
       toast({
         title: "Success",
