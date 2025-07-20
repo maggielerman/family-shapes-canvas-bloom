@@ -23,6 +23,7 @@ import PublicFamilyTree from "./pages/PublicFamilyTree";
 import Media from "./pages/Media";
 import Share from "./pages/Share";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,9 @@ const App = () => (
             <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />
             <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />
             <Route path="/invitation/:action/:token" element={<InvitationPage />} />
+            
+            {/* Admin routes */}
+            <Route path="/admin" element={<Admin />} />
             
             {/* Protected routes with sidebar layout */}
             <Route path="/dashboard" element={<SidebarLayout><Dashboard /></SidebarLayout>} />
