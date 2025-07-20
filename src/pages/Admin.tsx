@@ -22,7 +22,27 @@ export default function Admin() {
           total: 15,
           passed: 13,
           failed: 2,
-          duration: 2.3
+          duration: 2.3,
+          failedTests: [
+            {
+              name: 'should handle invalid family tree data',
+              file: 'src/test/integration/data-integrity.test.ts',
+              error: 'Expected family tree to be valid, but received invalid structure',
+              stack: `Error: Expected family tree to be valid, but received invalid structure
+    at Object.<anonymous> (src/test/integration/data-integrity.test.ts:45:7)
+    at TestScheduler.scheduleTests (node_modules/vitest/dist/node.js:123:45)
+    at runTest (node_modules/vitest/dist/node.js:456:12)`
+            },
+            {
+              name: 'should validate person relationships correctly',
+              file: 'src/test/relationship-hierarchies.test.ts',
+              error: 'AssertionError: expected false to be true',
+              stack: `AssertionError: expected false to be true
+    at Object.<anonymous> (src/test/relationship-hierarchies.test.ts:78:3)
+    at processTicksAndRejections (internal/process/task_queues.js:95:5)
+    at TestScheduler.scheduleTests (node_modules/vitest/dist/node.js:123:45)`
+            }
+          ]
         });
         setIsRunning(false);
       }, 3000);
