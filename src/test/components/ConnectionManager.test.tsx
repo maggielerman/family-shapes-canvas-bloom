@@ -111,9 +111,9 @@ describe('ConnectionManager', () => {
         relationship_type: 'parent'
       };
       
-      const hasAllFields = incompleteConnection.from_person_id && 
-                          incompleteConnection.to_person_id && 
-                          incompleteConnection.relationship_type;
+      const hasAllFields = Boolean(incompleteConnection.from_person_id && 
+                                  incompleteConnection.to_person_id && 
+                                  incompleteConnection.relationship_type);
       
       expect(hasAllFields).toBe(false);
     });
