@@ -1,6 +1,6 @@
 import { render, RenderOptions } from '@testing-library/react'
 import { ReactElement } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import React from 'react'
 
 // Test data factories
 export const createMockPerson = (overrides = {}) => ({
@@ -58,11 +58,7 @@ export const createMockFamilyTree = (overrides = {}) => ({
 
 // Custom render with providers
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <BrowserRouter>
-      {children}
-    </BrowserRouter>
-  )
+  return React.createElement('div', null, children)
 }
 
 const customRender = (

@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import { vi } from 'vitest'
 
 // Mock Supabase client
 vi.mock('@/integrations/supabase/client', () => ({
@@ -32,4 +33,5 @@ vi.mock('react-router-dom', () => ({
   useParams: () => ({ id: 'test-tree-id' }),
   useNavigate: () => vi.fn(),
   useSearchParams: () => [new URLSearchParams()],
+  BrowserRouter: ({ children }: { children: React.ReactNode }) => children,
 }))
