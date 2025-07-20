@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, XCircle, Clock, FileText } from 'lucide-react';
+import { discoverTestFiles, type TestFileInfo } from '@/utils/test-discovery';
 
 interface TestFile {
   name: string;
@@ -19,66 +20,32 @@ interface TestRunnerProps {
 }
 
 export function TestRunner({ isRunning }: TestRunnerProps) {
-  const [testFiles] = useState<TestFile[]>([
-    {
-      name: 'simple-test.tsx',
-      path: 'src/test/components/simple-test.tsx',
-      status: 'pending',
-      tests: 1,
-      passed: 0,
-      failed: 0
-    },
-    {
-      name: 'ConnectionManager.test.tsx',
-      path: 'src/test/components/ConnectionManager.test.tsx',
-      status: 'pending',
-      tests: 12,
-      passed: 0,
-      failed: 0
-    },
-    {
-      name: 'relationship-hierarchies.test.ts',
-      path: 'src/test/relationship-hierarchies.test.ts',
-      status: 'pending',
-      tests: 8,
-      passed: 0,
-      failed: 0
-    },
-    {
-      name: 'relationship-hierarchies-comprehensive.test.ts',
-      path: 'src/test/integration/relationship-hierarchies-comprehensive.test.ts',
-      status: 'pending',
-      tests: 15,
-      passed: 0,
-      failed: 0
-    },
-    {
-      name: 'family-tree-visualization.test.tsx',
-      path: 'src/test/integration/family-tree-visualization.test.tsx',
-      status: 'pending',
-      tests: 8,
-      passed: 0,
-      failed: 0
-    },
-    {
-      name: 'connection-issues.test.ts',
-      path: 'src/test/debugging/connection-issues.test.ts',
-      status: 'pending',
-      tests: 6,
-      passed: 0,
-      failed: 0
-    },
-    {
-      name: 'data-integrity.test.ts',
-      path: 'src/test/integration/data-integrity.test.ts',
-      status: 'pending',
-      tests: 6,
-      passed: 0,
-      failed: 0
-    }
-  ]);
-
+  const [testFiles, setTestFiles] = useState<TestFile[]>([]);
   const [progress, setProgress] = useState(0);
+
+  // Load test files dynamically on component mount
+  useEffect(() => {
+    const loadTestFiles = async () => {
+      try {
+        const discoveredFiles = await discoverTestFiles();
+        const initialTestFiles: TestFile[] = discoveredFiles.map(file => ({
+          name: file.name,
+          path: file.relativePath,
+          status: 'pending' as const,
+          tests: file.estimatedTests,
+          passed: 0,
+          failed: 0
+        }));
+        setTestFiles(initialTestFiles);
+      } catch (error) {
+        console.error('Failed to discover test files:', error);
+        // Fallback to empty array if discovery fails
+        setTestFiles([]);
+      }
+    };
+
+    loadTestFiles();
+  }, []);
 
   useEffect(() => {
     if (isRunning) {
