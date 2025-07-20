@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createMockPerson, createMockConnection } from './utils/test-helpers'
+import { createMockPerson, createMockConnection, createMockFamilyTree } from './utils/test-helpers'
 
 // Test relationship hierarchy logic
 describe('Relationship Hierarchies', () => {
