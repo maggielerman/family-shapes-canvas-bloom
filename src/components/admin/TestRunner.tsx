@@ -25,26 +25,22 @@ export function TestRunner({ isRunning }: TestRunnerProps) {
 
   // Load test files dynamically on component mount
   useEffect(() => {
-    const loadTestFiles = async () => {
-      try {
-        const discoveredFiles = await discoverTestFiles();
-        const initialTestFiles: TestFile[] = discoveredFiles.map(file => ({
-          name: file.name,
-          path: file.relativePath,
-          status: 'pending' as const,
-          tests: file.estimatedTests,
-          passed: 0,
-          failed: 0
-        }));
-        setTestFiles(initialTestFiles);
-      } catch (error) {
-        console.error('Failed to discover test files:', error);
-        // Fallback to empty array if discovery fails
-        setTestFiles([]);
-      }
-    };
-
-    loadTestFiles();
+    try {
+      const discoveredFiles = discoverTestFiles();
+      const initialTestFiles: TestFile[] = discoveredFiles.map(file => ({
+        name: file.name,
+        path: file.relativePath,
+        status: 'pending' as const,
+        tests: file.estimatedTests,
+        passed: 0,
+        failed: 0
+      }));
+      setTestFiles(initialTestFiles);
+    } catch (error) {
+      console.error('Failed to discover test files:', error);
+      // Fallback to empty array if discovery fails
+      setTestFiles([]);
+    }
   }, []);
 
   useEffect(() => {
