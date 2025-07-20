@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
+      console.log('User authenticated, redirecting to dashboard');
       navigate("/dashboard");
     }
   }, [user, navigate]);
@@ -40,28 +42,45 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log('Signing in user:', signInData.email);
 
-    const { error } = await signIn(signInData.email, signInData.password);
+    try {
+      const { error } = await signIn(signInData.email, signInData.password);
 
-    if (error) {
+      if (error) {
+        console.error('Sign in error:', error);
+        toast({
+          title: "Sign in failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have been signed in successfully.",
+        });
+      }
+    } catch (err) {
+      console.error('Sign in exception:', err);
       toast({
         title: "Sign in failed",
-        description: error.message,
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully.",
-      });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    console.log('Signing up user:', {
+      email: signUpData.email,
+      accountType,
+      name: accountType === 'individual' ? signUpData.fullName : signUpData.organizationName
+    });
 
     if (signUpData.password !== signUpData.confirmPassword) {
       toast({
@@ -83,26 +102,57 @@ const Auth = () => {
       return;
     }
 
-    const { error } = await signUp(
-      signUpData.email, 
-      signUpData.password,
-      signUpData.fullName || signUpData.organizationName
-    );
-
-    if (error) {
+    const displayName = accountType === 'individual' ? signUpData.fullName : signUpData.organizationName;
+    
+    if (!displayName.trim()) {
       toast({
-        title: "Sign up failed",
-        description: error.message,
+        title: "Name required",
+        description: `Please enter a ${accountType === 'individual' ? 'full name' : 'organization name'}.`,
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Account created!",
-        description: "Please check your email to verify your account.",
-      });
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(false);
+    try {
+      const { error } = await signUp(
+        signUpData.email, 
+        signUpData.password,
+        displayName
+      );
+
+      if (error) {
+        console.error('Sign up error:', error);
+        toast({
+          title: "Sign up failed",
+          description: error.message || "Failed to create account",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account.",
+        });
+        
+        // Clear form after successful signup
+        setSignUpData({
+          email: "",
+          password: "",
+          confirmPassword: "",
+          fullName: "",
+          organizationName: ""
+        });
+      }
+    } catch (err) {
+      console.error('Sign up exception:', err);
+      toast({
+        title: "Sign up failed",
+        description: "An unexpected error occurred during registration",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,6 +263,7 @@ const Auth = () => {
                         variant={accountType === 'individual' ? 'default' : 'outline'}
                         onClick={() => setAccountType('individual')}
                         className="h-12 flex items-center gap-2"
+                        disabled={isLoading}
                       >
                         <User className="h-4 w-4" />
                         Individual
@@ -222,6 +273,7 @@ const Auth = () => {
                         variant={accountType === 'organization' ? 'default' : 'outline'}
                         onClick={() => setAccountType('organization')}
                         className="h-12 flex items-center gap-2"
+                        disabled={isLoading}
                       >
                         <Building2 className="h-4 w-4" />
                         Organization
@@ -278,6 +330,7 @@ const Auth = () => {
                           type="button"
                           className="absolute inset-y-0 right-0 pr-3 flex items-center"
                           onClick={() => setShowPassword(!showPassword)}
+                          disabled={isLoading}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4 text-muted-foreground" />
