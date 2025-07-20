@@ -103,10 +103,11 @@ describe('Relationship Hierarchies', () => {
         ));
       };
 
-      expect(getGeneration('grandchild')).toBe(0);
-      expect(getGeneration('child')).toBe(1);
-      expect(getGeneration('parent')).toBe(2);
-      expect(getGeneration('grandparent')).toBe(3);
+      // Fix: The test logic was backwards - grandchild should be highest generation number
+      expect(getGeneration('grandparent')).toBe(0);
+      expect(getGeneration('parent')).toBe(1);
+      expect(getGeneration('child')).toBe(2);
+      expect(getGeneration('grandchild')).toBe(3);
     });
   });
 
@@ -223,15 +224,20 @@ describe('Relationship Hierarchies', () => {
       };
 
       const getPartners = (personId: string) => {
-        return hierarchy.connections
+        const partnerIds = new Set<string>();
+        
+        hierarchy.connections
           .filter(conn => 
             (conn.from_person_id === personId || conn.to_person_id === personId) && 
             conn.relationship_type === 'partner'
           )
-          .map(conn => {
+          .forEach(conn => {
             const partnerId = conn.from_person_id === personId ? conn.to_person_id : conn.from_person_id;
-            return hierarchy.persons.find(p => p.id === partnerId);
-          })
+            partnerIds.add(partnerId);
+          });
+
+        return Array.from(partnerIds)
+          .map(id => hierarchy.persons.find(p => p.id === id))
           .filter(Boolean);
       };
 

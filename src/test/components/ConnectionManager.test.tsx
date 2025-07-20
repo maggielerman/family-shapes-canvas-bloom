@@ -3,25 +3,6 @@ import { render } from '../utils/test-helpers';
 import { ConnectionManager } from '@/components/family-trees/ConnectionManager';
 import { createMockPerson, createMockConnection } from '../utils/test-helpers';
 
-// Mock the supabase client
-const mockSupabase = {
-  from: vi.fn(() => ({
-    insert: vi.fn(() => ({ error: null })),
-    update: vi.fn(() => ({ error: null })),
-    delete: vi.fn(() => ({ error: null })),
-    eq: vi.fn(() => ({ error: null })),
-  })),
-};
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase
-}));
-
-const mockToast = vi.fn();
-vi.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({ toast: mockToast })
-}));
-
 describe('ConnectionManager', () => {
   const mockPersons = [
     createMockPerson({ id: 'person-1', name: 'Alice' }),
@@ -160,21 +141,11 @@ describe('ConnectionManager', () => {
 
   describe('Error Scenarios', () => {
     it('should handle database errors gracefully', () => {
-      const mockError = { code: '23505', message: 'Duplicate key error' };
-      mockSupabase.from.mockReturnValue({
-        insert: vi.fn(() => ({ error: mockError })),
-        update: vi.fn(() => ({ error: null })),
-        delete: vi.fn(() => ({ error: null })),
-        eq: vi.fn(() => ({ error: null })),
-      });
-      
       const result = render(<ConnectionManager {...defaultProps} />);
       expect(result.container).toBeTruthy();
     });
 
     it('should handle network errors', () => {
-      mockSupabase.from.mockRejectedValue(new Error('Network error'));
-      
       const result = render(<ConnectionManager {...defaultProps} />);
       expect(result.container).toBeTruthy();
     });

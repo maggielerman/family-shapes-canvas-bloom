@@ -222,9 +222,13 @@ describe('Relationship Hierarchies', () => {
 
     it('should handle date validation edge cases', () => {
       const formatDate = (dateString: string | null) => {
-        if (!dateString) return 'Unknown'
+        if (!dateString || dateString === '') return 'Unknown'
         try {
-          return new Date(dateString).toLocaleDateString()
+          const date = new Date(dateString)
+          if (isNaN(date.getTime())) {
+            return 'Invalid date'
+          }
+          return date.toLocaleDateString()
         } catch {
           return 'Invalid date'
         }

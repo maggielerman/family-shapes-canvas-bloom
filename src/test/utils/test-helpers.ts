@@ -1,6 +1,7 @@
 import { render, RenderOptions } from '@testing-library/react'
 import { ReactElement } from 'react'
 import React from 'react'
+import { vi } from 'vitest'
 
 // Test data factories
 export const createMockPerson = (overrides = {}) => ({
@@ -53,6 +54,25 @@ export const createMockFamilyTree = (overrides = {}) => ({
   group_id: null,
   tree_data: {},
   settings: {},
+  ...overrides,
+})
+
+// Enhanced mock utilities
+export const createMockSupabaseResponse = (data: any = null, error: any = null) => ({
+  data,
+  error,
+})
+
+export const createMockSupabaseQuery = (overrides = {}) => ({
+  select: vi.fn(() => ({
+    eq: vi.fn(() => createMockSupabaseResponse()),
+    order: vi.fn(() => createMockSupabaseResponse()),
+    single: vi.fn(() => createMockSupabaseResponse()),
+    ...overrides,
+  })),
+  insert: vi.fn(() => createMockSupabaseResponse()),
+  update: vi.fn(() => createMockSupabaseResponse()),
+  delete: vi.fn(() => createMockSupabaseResponse()),
   ...overrides,
 })
 
