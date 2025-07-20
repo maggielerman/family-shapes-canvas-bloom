@@ -29,10 +29,42 @@ export function TestRunner({ isRunning }: TestRunnerProps) {
       failed: 0
     },
     {
+      name: 'ConnectionManager.test.tsx',
+      path: 'src/test/components/ConnectionManager.test.tsx',
+      status: 'pending',
+      tests: 12,
+      passed: 0,
+      failed: 0
+    },
+    {
       name: 'relationship-hierarchies.test.ts',
       path: 'src/test/relationship-hierarchies.test.ts',
       status: 'pending',
       tests: 8,
+      passed: 0,
+      failed: 0
+    },
+    {
+      name: 'relationship-hierarchies-comprehensive.test.ts',
+      path: 'src/test/integration/relationship-hierarchies-comprehensive.test.ts',
+      status: 'pending',
+      tests: 15,
+      passed: 0,
+      failed: 0
+    },
+    {
+      name: 'family-tree-visualization.test.tsx',
+      path: 'src/test/integration/family-tree-visualization.test.tsx',
+      status: 'pending',
+      tests: 8,
+      passed: 0,
+      failed: 0
+    },
+    {
+      name: 'connection-issues.test.ts',
+      path: 'src/test/debugging/connection-issues.test.ts',
+      status: 'pending',
+      tests: 6,
       passed: 0,
       failed: 0
     },
