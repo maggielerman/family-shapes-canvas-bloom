@@ -119,6 +119,22 @@ export function ConnectionManager({
       return;
     }
 
+    // Check if this exact connection already exists
+    const existingConnection = connections.find(conn => 
+      conn.from_person_id === newConnection.from_person_id &&
+      conn.to_person_id === newConnection.to_person_id &&
+      conn.relationship_type === newConnection.relationship_type
+    );
+
+    if (existingConnection) {
+      toast({
+        title: "Connection Already Exists",
+        description: `${getPersonName(newConnection.from_person_id)} is already connected to ${getPersonName(newConnection.to_person_id)} as ${relationshipTypes.find(r => r.value === newConnection.relationship_type)?.label}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('connections')
@@ -129,7 +145,18 @@ export function ConnectionManager({
           family_tree_id: familyTreeId
         });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific database constraint errors
+        if (error.code === '23505') {
+          toast({
+            title: "Duplicate Connection",
+            description: "This connection already exists. You cannot create the same relationship twice.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Success",
