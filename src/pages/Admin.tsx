@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/components/auth/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TestRunner } from '@/components/admin/TestRunner';
@@ -10,14 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Play, Square, RefreshCw, FileText } from 'lucide-react';
 
 export default function Admin() {
-  const { user } = useAuth();
   const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState(null);
-
-  // Simple admin check - allowing any authenticated user for now
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
 
   const runTests = async () => {
     setIsRunning(true);
