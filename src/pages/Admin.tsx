@@ -14,8 +14,8 @@ export default function Admin() {
   const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState(null);
 
-  // Simple admin check - in production you'd check actual roles
-  if (!user || !user.email?.includes('admin')) {
+  // Simple admin check - allowing any authenticated user for now
+  if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
