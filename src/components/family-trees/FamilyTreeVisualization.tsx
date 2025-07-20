@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers } from "lucide-react";
 import { AddPersonDialog } from "./AddPersonDialog";
 import { PersonCardDialog } from "@/components/people/PersonCard";
-import { ConnectionManager } from "./ConnectionManager";
+import { PersonConnectionManager } from "@/components/people/PersonConnectionManager";
 
 import { TreeLayout } from "./layouts/TreeLayout";
 import { RadialTreeLayout } from "./layouts/RadialTreeLayout";
@@ -162,12 +162,15 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
       </div>
 
       {/* Connection Manager */}
-      <ConnectionManager
-        familyTreeId={familyTreeId}
-        connections={connections}
-        persons={persons}
-        onConnectionUpdated={fetchConnections}
-      />
+      {persons.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Manage Connections</h3>
+          <PersonConnectionManager
+            person={persons[0]}
+            onConnectionUpdated={fetchConnections}
+          />
+        </div>
+      )}
 
       {/* Legend */}
       <Card>
