@@ -26,6 +26,11 @@ export const discoverTestFiles = (): TestFileInfo[] => {
     return [];
   }
 
+  // Only run this if we're in the browser and have access to import.meta.glob
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
   try {
     const testFiles = import.meta.glob('/src/test/**/*.{test,spec}.{ts,tsx}', { eager: false });
     const discovered: TestFileInfo[] = [];

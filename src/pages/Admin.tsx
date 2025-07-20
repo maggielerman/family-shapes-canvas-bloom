@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TestRunner } from '@/components/admin/TestRunner';
@@ -6,24 +6,42 @@ import { TestResults } from '@/components/admin/TestResults';
 import { TestCoverage } from '@/components/admin/TestCoverage';
 import { Button } from '@/components/ui/button';
 import { Play, Square, RefreshCw, FileText } from 'lucide-react';
+import { discoverTestFiles, getTotalEstimatedTests } from '@/utils/test-discovery';
 
 export default function Admin() {
   const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState(null);
+  const [totalTests, setTotalTests] = useState(15); // Default fallback
+
+  useEffect(() => {
+    // Get dynamic test count
+    try {
+      const discoveredFiles = discoverTestFiles();
+      const dynamicTotal = getTotalEstimatedTests(discoveredFiles);
+      if (dynamicTotal > 0) {
+        setTotalTests(dynamicTotal);
+      }
+    } catch (error) {
+      console.warn('Failed to get dynamic test count, using fallback:', error);
+    }
+  }, []);
 
   const runTests = async () => {
     setIsRunning(true);
     try {
       // This will integrate with Vitest API
       console.log('Running tests...');
-      // Mock results for now
+      // Mock results for now - using dynamic total
       setTimeout(() => {
+        const passed = Math.max(totalTests - 2, 0);
+        const failed = Math.min(2, totalTests);
+        
         setTestResults({
-          total: 15,
-          passed: 13,
-          failed: 2,
+          total: totalTests,
+          passed: passed,
+          failed: failed,
           duration: 2.3,
-          failedTests: [
+          failedTests: failed > 0 ? [
             {
               name: 'should handle invalid family tree data',
               file: 'src/test/integration/data-integrity.test.ts',
@@ -42,7 +60,7 @@ export default function Admin() {
     at processTicksAndRejections (internal/process/task_queues.js:95:5)
     at TestScheduler.scheduleTests (node_modules/vitest/dist/node.js:123:45)`
             }
-          ]
+          ].slice(0, failed) : []
         });
         setIsRunning(false);
       }, 3000);
