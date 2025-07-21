@@ -25,6 +25,9 @@ import { OrganizationInviteDialog } from "./OrganizationInviteDialog";
 import { OrganizationMembers } from "./OrganizationMembers";
 import { OrganizationStats } from "./OrganizationStats";
 import { OrganizationGroups } from "./OrganizationGroups";
+import DonorDatabase from "./DonorDatabase";
+import SiblingGroups from "./SiblingGroups";
+import OrganizationSettings from "./OrganizationSettings";
 
 interface Organization {
   id: string;
@@ -232,9 +235,12 @@ export function OrganizationDashboard() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="donors">Donor Database</TabsTrigger>
+          <TabsTrigger value="siblings">Sibling Groups</TabsTrigger>
           <TabsTrigger value="groups">Groups</TabsTrigger>
           <TabsTrigger value="trees">Family Trees</TabsTrigger>
           {canManage && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
+          {isOwner && <TabsTrigger value="settings">Settings</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview">
@@ -246,6 +252,20 @@ export function OrganizationDashboard() {
             organizationId={organization.id} 
             canManage={canManage}
             currentUserId={user?.id}
+          />
+        </TabsContent>
+
+        <TabsContent value="donors">
+          <DonorDatabase 
+            organizationId={organization.id} 
+            canManage={canManage}
+          />
+        </TabsContent>
+
+        <TabsContent value="siblings">
+          <SiblingGroups 
+            organizationId={organization.id} 
+            canManage={canManage}
           />
         </TabsContent>
 
@@ -295,6 +315,17 @@ export function OrganizationDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+        )}
+
+        {isOwner && (
+          <TabsContent value="settings">
+            <OrganizationSettings 
+              organizationId={organization.id}
+              organization={organization}
+              isOwner={isOwner}
+              onUpdate={fetchOrganizationData}
+            />
           </TabsContent>
         )}
       </Tabs>

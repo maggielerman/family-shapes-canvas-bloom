@@ -11,20 +11,20 @@ export interface Organization {
   name: string;
   slug: string;
   subdomain: string;
-  type: OrganizationType;
+  type: string; // Using string to match database, but we'll have OrganizationType for validation
   description?: string | null;
   
-  // Visibility and access
-  visibility: 'public' | 'private';
-  plan: 'free' | 'basic' | 'premium' | 'enterprise';
+  // Domain and visibility
+  domain?: string | null;
+  visibility?: string | null; // 'public' | 'private' but stored as string in DB
+  plan?: string | null; // 'free' | 'basic' | 'premium' | 'enterprise' but stored as string in DB
   
   // Ownership and metadata
   owner_id: string;
-  settings?: OrganizationSettings | null;
-  metadata?: any | null; // JSONB field
+  settings?: any | null; // JSONB field
   
   // Timestamps
-  created_at: string;
+  created_at?: string | null;
   updated_at?: string | null;
   
   // Virtual fields (not in database, but used in UI)
@@ -90,35 +90,37 @@ export interface SiblingNotificationSettings {
 
 export interface OrganizationMembership {
   id: string;
-  organization_id: string;
-  user_id: string;
-  role: OrganizationRole;
-  status: 'active' | 'suspended' | 'inactive';
-  permissions?: string[] | null; // Custom permissions array
-  joined_at: string;
-  last_active?: string | null;
+  organization_id?: string | null;
+  user_id?: string | null;
+  role?: string | null; // Using string to match database
+  invited_by?: string | null;
+  joined_at?: string | null;
   
-  // Virtual fields
+  // Virtual fields (not in database, but used in UI)
   user_name?: string;
   user_email?: string;
   user_profile?: any;
+  status?: 'active' | 'suspended' | 'inactive'; // UI-only field
+  permissions?: string[] | null; // UI-only field
+  last_active?: string | null; // UI-only field
 }
 
 export interface OrganizationInvitation {
   id: string;
-  organization_id: string;
-  inviter_id: string;
+  organization_id?: string | null;
+  inviter_id?: string | null;
   invitee_email: string;
-  role: OrganizationRole;
-  status: 'pending' | 'accepted' | 'declined' | 'expired';
-  message?: string | null;
+  role?: string | null; // Using string to match database
+  status?: string | null; // 'pending' | 'accepted' | 'declined' | 'expired' but stored as string
+  token: string;
   expires_at?: string | null;
-  created_at: string;
-  responded_at?: string | null;
+  created_at?: string | null;
   
-  // Virtual fields
+  // Virtual fields (not in database, but used in UI)
   organization_name?: string;
   inviter_name?: string;
+  message?: string | null; // UI-only field
+  responded_at?: string | null; // UI-only field
 }
 
 export interface OrganizationDonorDatabase {
