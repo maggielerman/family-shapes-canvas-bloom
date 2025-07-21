@@ -106,12 +106,11 @@ export default function People() {
       // Get counts for each person
       const personsWithCounts = await Promise.all(
         (data || []).map(async (person) => {
-          // Count family trees this person is in
+          // Count family trees this person is in using the family_tree_members junction table
           const { count: treeCount } = await supabase
-            .from('persons')
+            .from('family_tree_members')
             .select('*', { count: 'exact', head: true })
-            .eq('id', person.id)
-            .not('family_tree_id', 'is', null);
+            .eq('person_id', person.id);
 
           // Count connections
           const { count: connectionCount } = await supabase

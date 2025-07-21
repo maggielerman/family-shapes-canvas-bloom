@@ -72,7 +72,11 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not specified';
-    return new Date(dateString).toLocaleDateString('en-US', {
+    // Parse the date string and create a date object in local timezone
+    // to avoid timezone conversion issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -82,7 +86,10 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
   const getAge = (birthDate: string | null) => {
     if (!birthDate) return null;
     const today = new Date();
-    const birth = new Date(birthDate);
+    // Parse the birth date string and create a date object in local timezone
+    // to avoid timezone conversion issues
+    const [year, month, day] = birthDate.split('-').map(Number);
+    const birth = new Date(year, month - 1, day); // month is 0-indexed
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
