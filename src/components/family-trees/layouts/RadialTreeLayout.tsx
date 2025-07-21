@@ -201,12 +201,15 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
     const regularGenerations = uniqueGenerations.filter(g => !g.isDonor);
     const donors = uniqueGenerations.filter(g => g.isDonor);
 
+    let legendIndex = 0;
+    
+    // Add regular generations
     legend.selectAll('.legend-item')
-      .data(uniqueGenerations.slice(0, 6)) // Show first 6 generations
+      .data(regularGenerations.slice(0, 5)) // Show first 5 generations
       .enter()
       .append('g')
       .attr('class', 'legend-item')
-      .attr('transform', (d, i) => `translate(0, ${i * 20})`)
+      .attr('transform', (d, i) => `translate(0, ${(legendIndex + i) * 20})`)
       .each(function(d) {
         const item = d3.select(this);
         
@@ -224,6 +227,37 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
           .attr('fill', 'hsl(var(--foreground))')
           .text(`Generation ${d.generation}`);
       });
+
+    legendIndex += Math.min(regularGenerations.length, 5);
+
+    // Add donor legend item if there are donors
+    if (donors.length > 0) {
+      const donorLegend = legend.append('g')
+        .attr('class', 'legend-item donor-legend')
+        .attr('transform', `translate(0, ${legendIndex * 20})`);
+      
+      donorLegend.append('circle')
+        .attr('r', 10)
+        .attr('fill', '#9333ea')
+        .attr('stroke', '#9333ea')
+        .attr('stroke-width', 3)
+        .attr('opacity', 0.8);
+      
+      donorLegend.append('text')
+        .attr('x', -5)
+        .attr('y', 5)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '10px')
+        .attr('fill', 'white')
+        .text('🧬');
+      
+      donorLegend.append('text')
+        .attr('x', 18)
+        .attr('y', 4)
+        .attr('font-size', '12px')
+        .attr('fill', 'hsl(var(--foreground))')
+        .text(`Donors (${donors.length})`);
+    }
 
   }, [persons, connections, width, height, onPersonClick]);
 
