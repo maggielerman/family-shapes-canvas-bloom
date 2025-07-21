@@ -17,7 +17,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TreePine, Plus, X, Users, Link, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { PersonConnectionManager } from './PersonConnectionManager';
+import { ConnectionManager } from '@/components/connections/ConnectionManager';
+import { ConnectionDisplay } from '@/components/connections/ConnectionDisplay';
+import { Person } from '@/types/person';
+import { ConnectionWithDetails } from '@/types/connection';
 
 interface PersonTreesManagerProps {
   personId: string;
@@ -32,20 +35,13 @@ interface FamilyTree {
   role?: string;
 }
 
-interface Connection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-  to_person: {
-    name: string;
-  };
-}
+
 
 export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
   const [personTrees, setPersonTrees] = useState<FamilyTree[]>([]);
   const [availableTrees, setAvailableTrees] = useState<FamilyTree[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const [connections, setConnections] = useState<ConnectionWithDetails[]>([]);
+  const [availablePersons, setAvailablePersons] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [manageTreesDialogOpen, setManageTreesDialogOpen] = useState(false);
   const [connectionsDialogOpen, setConnectionsDialogOpen] = useState(false);
@@ -56,6 +52,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
     fetchPersonTrees();
     fetchAvailableTrees();
     fetchConnections();
+    fetchAvailablePersons();
   }, [personId]);
 
   const fetchPersonTrees = async () => {
@@ -106,6 +103,24 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
     }
   };
 
+  const fetchAvailablePersons = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data, error } = await supabase
+        .from('persons')
+        .select('*')
+        .eq('user_id', userData.user.id)
+        .order('name');
+
+      if (error) throw error;
+      setAvailablePersons((data || []) as Person[]);
+    } catch (error) {
+      console.error('Error fetching available persons:', error);
+    }
+  };
+
   const fetchConnections = async () => {
     try {
       // Fetch connections where this person is the "from_person"
@@ -143,14 +158,20 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
           from_person_id: conn.from_person_id,
           to_person_id: conn.to_person_id,
           relationship_type: conn.relationship_type,
-          to_person: conn.to_person
+          to_person: conn.to_person,
+          direction: 'outgoing' as const,
+          other_person_name: conn.to_person?.name || 'Unknown',
+          other_person_id: conn.to_person_id
         })),
         ...(toConnections || []).map(conn => ({
           id: conn.id,
           from_person_id: conn.from_person_id,
           to_person_id: conn.to_person_id,
           relationship_type: conn.relationship_type,
-          to_person: conn.from_person // Show the other person in the relationship
+          to_person: conn.from_person, // Show the other person in the relationship
+          direction: 'incoming' as const,
+          other_person_name: conn.from_person?.name || 'Unknown',
+          other_person_id: conn.from_person_id
         }))
       ];
 
@@ -357,58 +378,38 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
       </Card>
 
       {/* Connections Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
-              <Link className="h-5 w-5 mr-2" />
-              Connections
-            </CardTitle>
-            <Dialog open={connectionsDialogOpen} onOpenChange={setConnectionsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Manage Connections
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Manage Connections</DialogTitle>
-                </DialogHeader>
-                <PersonConnectionManager 
-                  person={{
-                    id: personId,
-                    name: 'Person', // This will be updated by fetching the person name
-                  }}
-                  onConnectionUpdated={() => {
-                    fetchConnections();
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {connections.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>No family connections</p>
-              <p className="text-xs">Connections are created in the tree view</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {connections.map((connection) => (
-                <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <h4 className="font-medium">{connection.to_person.name}</h4>
-                    <Badge variant="secondary">{connection.relationship_type}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Connections</h3>
+        <Dialog open={connectionsDialogOpen} onOpenChange={setConnectionsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Manage Connections
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Manage Connections</DialogTitle>
+            </DialogHeader>
+            <ConnectionManager 
+              personId={personId}
+              persons={availablePersons}
+              onConnectionUpdated={() => {
+                fetchConnections();
+              }}
+              title="Manage Connections"
+              subtitle="Create and manage relationships for this person"
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+      
+      <ConnectionDisplay 
+        connections={connections}
+        persons={availablePersons}
+        title="Family Connections"
+        subtitle="Relationships for this person"
+      />
 
       {/* Confirmation Dialog for Tree Removal */}
       <AlertDialog open={!!treeToRemove} onOpenChange={() => setTreeToRemove(null)}>

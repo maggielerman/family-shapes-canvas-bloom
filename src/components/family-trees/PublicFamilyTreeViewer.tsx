@@ -143,7 +143,7 @@ export function PublicFamilyTreeViewer({
       console.error('Access check failed:', error);
       toast({
         title: "Access Denied",
-        description: error.message || "You don't have permission to view this family tree",
+        description: (error instanceof Error ? error.message : String(error)) || "You don't have permission to view this family tree",
         variant: "destructive",
       });
       setHasAccess(false);

@@ -59,6 +59,30 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- XYFlow (for interactive family tree visualization)
+- Supabase (for database and authentication)
+
+## Features
+
+### Interactive Family Tree Builder
+The application now includes an interactive family tree builder powered by XYFlow that allows users to:
+
+- **Drag and Drop**: Reposition family members by dragging nodes around the canvas
+- **Visual Connections**: See relationships between family members with color-coded connection lines
+- **Real-time Updates**: Add new family members and connections with immediate visual feedback
+- **Multiple Layouts**: Choose from different visualization layouts including:
+  - Interactive XYFlow builder (default)
+  - Traditional tree layout
+  - Radial layout
+  - Force-directed layout
+  - D3 tree layout
+  - Cluster layout
+
+### Database Integration
+- Uses Supabase for data persistence
+- Supports complex family relationships (parent, child, sibling, partner, donor, etc.)
+- Handles family tree memberships and connections
+- Secure authentication and authorization
 
 ## How can I deploy this project?
 
