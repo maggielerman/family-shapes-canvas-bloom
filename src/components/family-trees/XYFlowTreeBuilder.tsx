@@ -30,6 +30,12 @@ import { useToast } from '@/hooks/use-toast';
 import { PersonNode } from './PersonNode';
 import { Person } from '@/types/person';
 import { ConnectionUtils } from '@/types/connection';
+import { 
+  calculateGenerations, 
+  getGenerationalConnections, 
+  isGenerationalConnection,
+  GenerationInfo 
+} from '@/utils/generationUtils';
 
 interface PersonConnection {
   id: string;
@@ -45,8 +51,6 @@ interface XYFlowTreeBuilderProps {
   onPersonAdded: () => void;
 }
 
-
-
 const nodeTypes = {
   personNode: PersonNode,
 };
@@ -55,6 +59,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [connections, setConnections] = useState<PersonConnection[]>([]);
+  const [generationMap, setGenerationMap] = useState<Map<string, GenerationInfo>>(new Map());
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -63,16 +68,34 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   const reactFlowRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Convert persons to nodes
+  // Calculate generations whenever persons or connections change
   useEffect(() => {
-    const personNodes: Node[] = persons.map((person, index) => ({
-      id: person.id,
-      type: 'personNode',
-      position: { x: 100 + (index * 200), y: 100 + (index * 100) },
-      data: { person },
-    }));
+    if (persons.length > 0 && connections.length > 0) {
+      const generations = calculateGenerations(persons, connections);
+      setGenerationMap(generations);
+    } else {
+      setGenerationMap(new Map());
+    }
+  }, [persons, connections]);
+
+  // Convert persons to nodes with generation coloring
+  useEffect(() => {
+    const personNodes: Node[] = persons.map((person, index) => {
+      const generationInfo = generationMap.get(person.id);
+      
+      return {
+        id: person.id,
+        type: 'personNode',
+        position: { x: 100 + (index * 200), y: 100 + (index * 100) },
+        data: { 
+          person,
+          generationColor: generationInfo?.color,
+          generation: generationInfo?.generation
+        },
+      };
+    });
     setNodes(personNodes);
-  }, [persons, setNodes]);
+  }, [persons, generationMap, setNodes]);
 
   // Fetch connections and convert to edges
   useEffect(() => {
@@ -80,10 +103,14 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   }, [familyTreeId]);
 
   useEffect(() => {
-          const deduplicatedConnections = connections; // ConnectionUtils.deduplicate expects full Connection type, but we're working with PersonConnection
+    // Filter connections to only show generational connections (parent-child)
+    // Sibling connections are hidden from the visual tree but remain in connection manager
+    const generationalConnections = getGenerationalConnections(connections);
+    const deduplicatedConnections = generationalConnections;
+    
     const connectionEdges: Edge[] = deduplicatedConnections.map((connection) => {
       const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
-              const isBidirectional = ConnectionUtils.isBidirectional(connection.relationship_type as any);
+      const isBidirectional = ConnectionUtils.isBidirectional(connection.relationship_type as any);
       
       return {
         id: connection.id,
@@ -146,24 +173,24 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
           }, 100);
         }
         
-              } catch (error) {
-          if (!isCancelled) {
-            console.error('Layout application error:', error);
-            toast({
-              title: "Layout Error",
-              description: error.message === 'Layout timeout' 
-                ? "Layout took too long. Try a different layout or fewer nodes."
-                : "Failed to apply layout. Please try again.",
-              variant: "destructive",
-            });
-            // Fallback to manual layout on error
-            setCurrentLayout('manual');
-          }
-        } finally {
-          if (!isCancelled) {
-            setIsLayoutLoading(false);
-          }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Layout application error:', error);
+          toast({
+            title: "Layout Error",
+            description: error.message === 'Layout timeout' 
+              ? "Layout took too long. Try a different layout or fewer nodes."
+              : "Failed to apply layout. Please try again.",
+            variant: "destructive",
+          });
+          // Fallback to manual layout on error
+          setCurrentLayout('manual');
         }
+      } finally {
+        if (!isCancelled) {
+          setIsLayoutLoading(false);
+        }
+      }
     };
 
     applyLayout();
@@ -293,6 +320,11 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     [setEdges]
   );
 
+  // Count visible connections (generational only)
+  const visibleConnections = getGenerationalConnections(connections);
+  const totalConnections = connections.length;
+  const hiddenSiblingConnections = totalConnections - visibleConnections.length;
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -315,7 +347,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
         </div>
         
         <div className="text-sm text-muted-foreground">
-          Interactive family tree builder - drag nodes to reposition, double-click to edit
+          Generation-based coloring • Lines show parent-child relationships
         </div>
       </div>
 
@@ -335,7 +367,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
         persons={persons}
         onConnectionUpdated={fetchConnections}
         title="Connections"
-        subtitle="Manage relationships between family members"
+        subtitle="Manage all relationships (sibling connections shown here but hidden from tree lines)"
       />
 
       {/* XYFlow Canvas */}
@@ -372,7 +404,10 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
             <Background />
             <Panel position="top-right" className="bg-background/80 backdrop-blur-sm rounded-lg p-2">
               <div className="text-xs text-muted-foreground">
-                {persons.length} people • {connections.length} connections
+                {persons.length} people • {visibleConnections.length} generational connections
+                {hiddenSiblingConnections > 0 && (
+                  <span className="block">{hiddenSiblingConnections} sibling connections (color-coded)</span>
+                )}
                 {isLayoutLoading && (
                   <span className="ml-2 text-blue-500">• Applying layout...</span>
                 )}

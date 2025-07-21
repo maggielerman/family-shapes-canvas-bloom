@@ -16,6 +16,12 @@ import { XYFlowTreeBuilder } from "./XYFlowTreeBuilder";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Person } from "@/types/person";
+import { 
+  calculateGenerations, 
+  getGenerationalConnections, 
+  getSiblingConnections,
+  getGenerationStats 
+} from "@/utils/generationUtils";
 
 interface Connection {
   id: string;
@@ -128,6 +134,14 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
     setViewingPerson(person);
   };
 
+  // Calculate generation statistics
+  const generationMap = persons.length > 0 && connections.length > 0 
+    ? calculateGenerations(persons, connections) 
+    : new Map();
+  const generationStats = getGenerationStats(generationMap);
+  const generationalConnections = getGenerationalConnections(connections);
+  const siblingConnections = getSiblingConnections(connections);
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -140,7 +154,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
         </div>
         
         <div className="text-sm text-muted-foreground">
-          Multiple visualization layouts available below
+          Generation-based visualization • {generationStats.totalGenerations} generations
         </div>
       </div>
 
@@ -151,29 +165,39 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
         onConnectionUpdated={fetchConnections}
       />
 
-      {/* Legend */}
+      {/* Generation & Connection Stats */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
-            <Heart className="w-4 h-4" />
-            Relationship Types
+            <Layers className="w-4 h-4" />
+            Family Tree Overview
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {relationshipTypes.map(type => {
-              const Icon = type.icon;
-              return (
-                <div key={type.value} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted text-xs">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: type.color }}
-                  ></div>
-                  <Icon className="w-3 h-3" />
-                  <span>{type.label}</span>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <div className="text-muted-foreground">Total People</div>
+              <div className="font-semibold">{persons.length}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Generations</div>
+              <div className="font-semibold">{generationStats.totalGenerations}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Parent-Child Lines</div>
+              <div className="font-semibold">{generationalConnections.length}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Sibling Groups</div>
+              <div className="font-semibold text-muted-foreground">
+                {siblingConnections.length} 
+                <span className="text-xs block">color coded</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 text-xs text-muted-foreground">
+            <strong>How to read:</strong> Each generation has a unique color. 
+            Lines connect parents to children. Siblings share the same generation color but aren't connected by lines.
           </div>
         </CardContent>
       </Card>

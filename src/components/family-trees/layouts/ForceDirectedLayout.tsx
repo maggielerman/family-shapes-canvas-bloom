@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
+import { 
+  calculateGenerations, 
+  getGenerationalConnections, 
+  GenerationInfo 
+} from '@/utils/generationUtils';
 
 interface Person {
   id: string;
@@ -33,6 +38,8 @@ interface ForceDirectedLayoutProps {
 interface ForceNode extends d3.SimulationNodeDatum, Person {
   x?: number;
   y?: number;
+  generation?: number;
+  generationColor?: string;
 }
 
 interface ForceLink extends d3.SimulationLinkDatum<ForceNode> {
@@ -58,9 +65,23 @@ export function ForceDirectedLayout({ persons, connections, relationshipTypes, w
       validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
     );
 
+    // Calculate generations for color coding
+    const generationMap = calculateGenerations(persons, validConnections);
+
+    // Use only generational connections for visible links
+    const generationalConnections = getGenerationalConnections(validConnections);
+
     // Prepare data for force simulation
-    const nodes: ForceNode[] = persons.map(p => ({ ...p }));
-    const links: ForceLink[] = validConnections.map(c => ({
+    const nodes: ForceNode[] = persons.map(p => {
+      const generationInfo = generationMap.get(p.id);
+      return { 
+        ...p, 
+        generation: generationInfo?.generation,
+        generationColor: generationInfo?.color
+      };
+    });
+    
+    const links: ForceLink[] = generationalConnections.map(c => ({
       source: c.from_person_id,
       target: c.to_person_id,
       relationship_type: c.relationship_type
@@ -75,37 +96,23 @@ export function ForceDirectedLayout({ persons, connections, relationshipTypes, w
 
     const g = svg.append('g');
 
-    // Create links
+    // Create links (only for generational connections)
     const link = g.selectAll('.link')
       .data(links)
       .enter()
       .append('line')
       .attr('class', 'link')
-      .attr('stroke', d => getRelationshipColor(d.relationship_type, relationshipTypes))
-      .attr('stroke-width', 3)
-      .attr('stroke-opacity', 0.8);
+      .attr('stroke', 'hsl(var(--border))')
+      .attr('stroke-width', 2)
+      .attr('stroke-opacity', 0.6);
 
-    // Create link labels
-    const linkLabels = g.selectAll('.link-label')
-      .data(links)
-      .enter()
-      .append('text')
-      .attr('class', 'link-label')
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '10px')
-      .attr('fill', 'hsl(var(--muted-foreground))')
-      .text(d => d.relationship_type);
-
-    // Create nodes
+    // Create nodes with generation-based coloring
     const node = g.selectAll('.node')
       .data(nodes)
       .enter()
       .append('g')
       .attr('class', 'node')
       .style('cursor', 'pointer')
-      .on('click', (event, d) => {
-        onPersonClick?.(d);
-      })
       .call(d3.drag<SVGGElement, ForceNode>()
         .on('start', (event, d) => {
           if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -120,32 +127,46 @@ export function ForceDirectedLayout({ persons, connections, relationshipTypes, w
           if (!event.active) simulation.alphaTarget(0);
           d.fx = null;
           d.fy = null;
-        }));
+        })
+      )
+      .on('click', (event, d) => {
+        onPersonClick?.(d);
+      });
 
-    // Add circles for nodes
+    // Add circles for nodes with generation colors
     node.append('circle')
-      .attr('r', 30)
-      .attr('fill', d => getPersonColor(d, connections, relationshipTypes))
-      .attr('stroke', 'hsl(var(--border))')
-      .attr('stroke-width', 2);
+      .attr('r', 25)
+      .attr('fill', d => d.generationColor || 'hsl(var(--chart-1))')
+      .attr('stroke', d => d.generationColor || 'hsl(var(--border))')
+      .attr('stroke-width', 3)
+      .attr('opacity', 0.8);
 
     // Add profile images if available
     node.filter(d => d.profile_photo_url)
       .append('image')
-      .attr('x', -25)
-      .attr('y', -25)
-      .attr('width', 50)
-      .attr('height', 50)
+      .attr('x', -20)
+      .attr('y', -20)
+      .attr('width', 40)
+      .attr('height', 40)
       .attr('href', d => d.profile_photo_url!)
-      .attr('clip-path', 'circle(25px)');
+      .attr('clip-path', 'circle(20px)');
 
     // Add names
     node.append('text')
-      .attr('dy', 45)
+      .attr('dy', 35)
       .attr('text-anchor', 'middle')
       .attr('font-size', '12px')
       .attr('fill', 'hsl(var(--foreground))')
       .text(d => d.name);
+
+    // Add generation labels
+    node.append('text')
+      .attr('dy', -30)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '10px')
+      .attr('fill', d => d.generationColor || 'hsl(var(--muted-foreground))')
+      .attr('font-weight', 'bold')
+      .text(d => d.generation !== undefined ? `Gen ${d.generation}` : '');
 
     // Update positions on simulation tick
     simulation.on('tick', () => {
@@ -155,11 +176,8 @@ export function ForceDirectedLayout({ persons, connections, relationshipTypes, w
         .attr('x2', d => (d.target as ForceNode).x!)
         .attr('y2', d => (d.target as ForceNode).y!);
 
-      linkLabels
-        .attr('x', d => ((d.source as ForceNode).x! + (d.target as ForceNode).x!) / 2)
-        .attr('y', d => ((d.source as ForceNode).y! + (d.target as ForceNode).y!) / 2);
-
-      node.attr('transform', d => `translate(${d.x},${d.y})`);
+      node
+        .attr('transform', d => `translate(${d.x},${d.y})`);
     });
 
     // Add zoom and pan
@@ -170,6 +188,46 @@ export function ForceDirectedLayout({ persons, connections, relationshipTypes, w
       });
 
     svg.call(zoom);
+
+    // Add legend for generation colors
+    const legend = svg.append('g')
+      .attr('class', 'legend')
+      .attr('transform', 'translate(20, 20)');
+
+    const uniqueGenerations = Array.from(generationMap.values())
+      .sort((a, b) => a.generation - b.generation)
+      .filter((gen, index, arr) => 
+        index === arr.findIndex(g => g.generation === gen.generation)
+      );
+
+    legend.selectAll('.legend-item')
+      .data(uniqueGenerations.slice(0, 6)) // Show first 6 generations
+      .enter()
+      .append('g')
+      .attr('class', 'legend-item')
+      .attr('transform', (d, i) => `translate(0, ${i * 20})`)
+      .each(function(d) {
+        const item = d3.select(this);
+        
+        item.append('circle')
+          .attr('r', 8)
+          .attr('fill', d.color)
+          .attr('stroke', d.color)
+          .attr('stroke-width', 2)
+          .attr('opacity', 0.8);
+        
+        item.append('text')
+          .attr('x', 15)
+          .attr('y', 4)
+          .attr('font-size', '12px')
+          .attr('fill', 'hsl(var(--foreground))')
+          .text(`Generation ${d.generation}`);
+      });
+
+    // Stop simulation after some time to improve performance
+    setTimeout(() => {
+      simulation.stop();
+    }, 5000);
 
     return () => {
       simulation.stop();
@@ -185,24 +243,4 @@ export function ForceDirectedLayout({ persons, connections, relationshipTypes, w
       className="border rounded-lg bg-background"
     />
   );
-}
-
-function getPersonColor(person: Person, connections: Connection[], relationshipTypes: RelationshipType[]): string {
-  // Find the primary relationship for this person (first connection as "to_person")
-  const primaryConnection = connections.find(c => c.to_person_id === person.id);
-  
-  if (primaryConnection) {
-    const relationshipType = relationshipTypes.find(rt => rt.value === primaryConnection.relationship_type);
-    if (relationshipType) {
-      return relationshipType.color;
-    }
-  }
-  
-  // Default to first relationship type color if no specific relationship found
-  return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
-}
-
-function getRelationshipColor(relationship: string, relationshipTypes: RelationshipType[]): string {
-  const relationshipType = relationshipTypes.find(rt => rt.value === relationship);
-  return relationshipType?.color || 'hsl(var(--border))';
 }
