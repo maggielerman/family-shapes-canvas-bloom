@@ -151,7 +151,7 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
       const allConnections = uniqueConnections;
 
       setConnections(allConnections);
-      fetchExternalPersonNames(allConnections.map(c => c.id));
+      fetchExternalPersonNames(allConnections);
     } catch (error) {
       console.error('Error fetching connections:', error);
     } finally {
@@ -184,10 +184,10 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     return externalPersonNames[personId] || 'Unknown';
   };
 
-  const fetchExternalPersonNames = async (connectionIds: string[]) => {
+  const fetchExternalPersonNames = async (connections: Connection[]) => {
     const externalPersonIds = new Set<string>();
     
-    // Collect all external person IDs
+    // Collect all external person IDs from the passed connections
     connections.forEach(conn => {
       if (!availablePersons.find(p => p.id === conn.from_person_id)) {
         externalPersonIds.add(conn.from_person_id);
