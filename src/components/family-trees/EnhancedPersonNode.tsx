@@ -320,7 +320,13 @@ export const EnhancedPersonNode = memo(({
                 {person.date_of_birth && (
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3 h-3 text-muted-foreground" />
-                    <span>{new Date(person.date_of_birth).toLocaleDateString()}</span>
+                    <span>{(() => {
+                      // Parse the date string and create a date object in local timezone
+                      // to avoid timezone conversion issues
+                      const [year, month, day] = person.date_of_birth.split('-').map(Number);
+                      const date = new Date(year, month - 1, day); // month is 0-indexed
+                      return date.toLocaleDateString();
+                    })()}</span>
                   </div>
                 )}
                 {person.gender && (
@@ -370,7 +376,13 @@ export const EnhancedPersonNode = memo(({
             </div>
             {person.date_of_birth && (
               <div className="text-xs text-muted-foreground">
-                {new Date(person.date_of_birth).getFullYear()}
+                {(() => {
+                  // Parse the date string and create a date object in local timezone
+                  // to avoid timezone conversion issues
+                  const [year, month, day] = person.date_of_birth.split('-').map(Number);
+                  const date = new Date(year, month - 1, day); // month is 0-indexed
+                  return date.getFullYear();
+                })()}
               </div>
             )}
           </div>

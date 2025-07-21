@@ -47,7 +47,11 @@ export function PersonCard({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    // Parse the date string and create a date object in local timezone
+    // to avoid timezone conversion issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
+    return date.toLocaleDateString();
   };
 
   const getStatusColor = (status: string) => {
@@ -63,7 +67,10 @@ export function PersonCard({
 
   const calculateAge = (birthDate: string) => {
     const today = new Date();
-    const birth = new Date(birthDate);
+    // Parse the birth date string and create a date object in local timezone
+    // to avoid timezone conversion issues
+    const [year, month, day] = birthDate.split('-').map(Number);
+    const birth = new Date(year, month - 1, day); // month is 0-indexed
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
     

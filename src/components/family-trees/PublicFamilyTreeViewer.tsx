@@ -206,7 +206,11 @@ export function PublicFamilyTreeViewer({
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Unknown';
     try {
-      return new Date(dateString).toLocaleDateString();
+      // Parse the date string and create a date object in local timezone
+      // to avoid timezone conversion issues
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month is 0-indexed
+      return date.toLocaleDateString();
     } catch {
       return 'Invalid date';
     }
