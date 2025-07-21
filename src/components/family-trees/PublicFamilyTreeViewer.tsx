@@ -79,7 +79,7 @@ export function PublicFamilyTreeViewer({
     { value: "partner", label: "Partner", color: "hsl(var(--chart-3))" },
     { value: "sibling", label: "Sibling", color: "hsl(var(--chart-4))" },
     { value: "donor", label: "Donor", color: "hsl(var(--chart-5))" },
-    { value: "gestational_carrier", label: "Gestational Carrier", color: "hsl(var(--chart-1))" },
+    { value: "gestational_carrier", label: "Gestational Carrier", color: "hsl(var(--chart-6))" },
   ];
 
   useEffect(() => {

@@ -38,11 +38,12 @@
     --radius: 0.75rem;
 
     /* Chart colors for data visualization */
-    --chart-1: 220 70% 50%;
-    --chart-2: 340 75% 55%;
-    --chart-3: 45 93% 47%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 160 60% 45%;
+    --chart-1: 220 70% 50%;  /* Blue - Parent */
+    --chart-2: 340 75% 55%;  /* Pink - Child */
+    --chart-3: 45 93% 47%;   /* Yellow - Partner */
+    --chart-4: 280 65% 60%;  /* Purple - Sibling */
+    --chart-5: 160 60% 45%;  /* Green - Donor */
+    --chart-6: 200 70% 50%;  /* Cyan - Gestational Carrier */
 
     --sidebar-background: 32 25% 98%;
     --sidebar-foreground: 32 15% 20%;
@@ -84,11 +85,12 @@
     --ring: 32 25% 75%;
 
     /* Chart colors for data visualization (dark mode) */
-    --chart-1: 220 70% 60%;
-    --chart-2: 340 75% 65%;
-    --chart-3: 45 93% 57%;
-    --chart-4: 280 65% 70%;
-    --chart-5: 160 60% 55%;
+    --chart-1: 220 70% 60%;  /* Blue - Parent */
+    --chart-2: 340 75% 65%;  /* Pink - Child */
+    --chart-3: 45 93% 57%;   /* Yellow - Partner */
+    --chart-4: 280 65% 70%;  /* Purple - Sibling */
+    --chart-5: 160 60% 55%;  /* Green - Donor */
+    --chart-6: 200 70% 60%;  /* Cyan - Gestational Carrier */
     
     --sidebar-background: 32 25% 8%;
     --sidebar-foreground: 32 25% 90%;

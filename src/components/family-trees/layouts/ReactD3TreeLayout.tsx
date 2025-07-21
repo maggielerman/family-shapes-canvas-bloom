@@ -6,6 +6,7 @@ interface Person {
   name: string;
   gender?: string | null;
   profile_photo_url?: string | null;
+  donor?: boolean;
 }
 
 interface Connection {
@@ -36,6 +37,7 @@ interface TreeData {
     id: string;
     gender?: string | null;
     profile_photo_url?: string | null;
+    donor?: boolean;
   };
   children?: TreeData[];
 }
@@ -196,7 +198,8 @@ function createHierarchy(persons: Person[], connections: Connection[]): TreeData
         attributes: {
           id: p.id,
           gender: p.gender,
-          profile_photo_url: p.profile_photo_url
+          profile_photo_url: p.profile_photo_url,
+          donor: p.donor
         },
         children: undefined
       }))
@@ -217,14 +220,15 @@ function collectConnectedIds(node: TreeData, connectedIds: Set<string>) {
 
 function buildTree(person: Person, allPersons: Person[], connections: Connection[], visited: Set<string>): TreeData {
   if (visited.has(person.id)) {
-    return {
-      name: person.name,
-      attributes: {
-        id: person.id,
-        gender: person.gender,
-        profile_photo_url: person.profile_photo_url
-      }
-    };
+      return {
+    name: person.name,
+    attributes: {
+      id: person.id,
+      gender: person.gender,
+      profile_photo_url: person.profile_photo_url,
+      donor: person.donor
+    }
+  };
   }
   
   visited.add(person.id);
@@ -240,14 +244,19 @@ function buildTree(person: Person, allPersons: Person[], connections: Connection
     attributes: {
       id: person.id,
       gender: person.gender,
-      profile_photo_url: person.profile_photo_url
+      profile_photo_url: person.profile_photo_url,
+      donor: person.donor
     },
     children: children.length > 0 ? children : undefined
   };
 }
 
 function getPersonColor(attributes: any, persons: Person[], connections: Connection[], relationshipTypes: RelationshipType[]): string {
-  if (!attributes?.id) return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
+  if (!attributes?.id) return 'hsl(var(--chart-1))';
+  
+  // Find the person
+  const person = persons.find(p => p.id === attributes.id);
+  if (!person) return 'hsl(var(--chart-1))';
   
   // Find the primary relationship for this person (first connection as "to_person")
   const primaryConnection = connections.find(c => c.to_person_id === attributes.id);
@@ -259,6 +268,14 @@ function getPersonColor(attributes: any, persons: Person[], connections: Connect
     }
   }
   
-  // Default to first relationship type color if no specific relationship found
-  return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
+  // If no relationship found, check if person is a donor
+  if (person.donor) {
+    const donorType = relationshipTypes.find(rt => rt.value === 'donor');
+    if (donorType) {
+      return donorType.color;
+    }
+  }
+  
+  // Default to parent color if no specific relationship found
+  return 'hsl(var(--chart-1))';
 }

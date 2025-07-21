@@ -24,6 +24,7 @@ interface PersonNodeProps {
   onDrop?: () => void;
   onPositionChange?: (position: { x: number; y: number }) => void;
   onClick?: () => void;
+  relationshipType?: string; // New prop for relationship-based coloring
 }
 
 const relationshipTypes = [
@@ -32,7 +33,7 @@ const relationshipTypes = [
   { value: "partner", label: "Partner", icon: Heart, color: "hsl(var(--chart-3))" },
   { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))" },
   { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))" },
-  { value: "gestational_carrier", label: "Gestational Carrier", icon: Baby, color: "hsl(var(--chart-1))" },
+  { value: "gestational_carrier", label: "Gestational Carrier", icon: Baby, color: "hsl(var(--chart-6))" },
 ];
 
 export const PersonNode = memo(({
@@ -48,11 +49,22 @@ export const PersonNode = memo(({
   onDrop,
   onPositionChange,
   onClick,
+  relationshipType,
 }: PersonNodeProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const getNodeColor = (gender?: string | null) => {
-    switch (gender?.toLowerCase()) {
+  
+  const getNodeColor = () => {
+    // If relationship type is provided, use relationship-based coloring
+    if (relationshipType) {
+      const relationship = relationshipTypes.find(rt => rt.value === relationshipType);
+      if (relationship) {
+        return relationship.color;
+      }
+    }
+    
+    // Fallback to gender-based coloring for backward compatibility
+    switch (person.gender?.toLowerCase()) {
       case 'male': return "hsl(var(--chart-1))";
       case 'female': return "hsl(var(--chart-2))";
       default: return "hsl(var(--chart-3))";
@@ -117,7 +129,7 @@ export const PersonNode = memo(({
         className={`relative w-20 h-20 rounded-full border-2 transition-all ${
           isDragged ? 'border-primary border-4' : 'border-border'
         } ${isHovered && isConnecting ? 'border-primary border-4 animate-pulse' : ''}`}
-        style={{ backgroundColor: getNodeColor(person.gender) }}
+        style={{ backgroundColor: getNodeColor() }}
         draggable={isConnecting}
         onDragStart={isConnecting ? (e) => {
           e.dataTransfer.effectAllowed = 'move';

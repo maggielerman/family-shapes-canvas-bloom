@@ -6,6 +6,7 @@ interface Person {
   name: string;
   gender?: string | null;
   profile_photo_url?: string | null;
+  donor?: boolean;
 }
 
 interface Connection {
@@ -198,8 +199,16 @@ function getPersonColor(person: Person, connections: Connection[], relationshipT
     }
   }
   
-  // Default to first relationship type color if no specific relationship found
-  return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
+  // If no relationship found, check if person is a donor
+  if (person.donor) {
+    const donorType = relationshipTypes.find(rt => rt.value === 'donor');
+    if (donorType) {
+      return donorType.color;
+    }
+  }
+  
+  // Default to parent color if no specific relationship found
+  return 'hsl(var(--chart-1))';
 }
 
 function getRelationshipColor(relationship: string, relationshipTypes: RelationshipType[]): string {

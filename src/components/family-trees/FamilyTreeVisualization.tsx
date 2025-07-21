@@ -6,6 +6,7 @@ import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers 
 import { AddPersonDialog } from "./AddPersonDialog";
 import { PersonCardDialog } from "@/components/people/PersonCard";
 import { ConnectionManager } from "./ConnectionManager";
+import { RelationshipLegend } from "./RelationshipLegend";
 
 import { TreeLayout } from "./layouts/TreeLayout";
 import { RadialTreeLayout } from "./layouts/RadialTreeLayout";
@@ -60,7 +61,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
     { value: "partner", label: "Partner", icon: Heart, color: "hsl(var(--chart-3))" },
     { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))" },
     { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))" },
-    { value: "gestational_carrier", label: "Gestational Carrier", icon: Baby, color: "hsl(var(--chart-1))" },
+    { value: "gestational_carrier", label: "Gestational Carrier", icon: Baby, color: "hsl(var(--chart-6))" },
   ];
 
   useEffect(() => {
@@ -212,7 +213,9 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </div>
         </div>
       ) : (
-        <Tabs defaultValue="tree" className="w-full">
+        <div className="space-y-4">
+          <RelationshipLegend />
+          <Tabs defaultValue="tree" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="tree" className="flex items-center gap-1">
               <GitBranch className="w-3 h-3" />
@@ -291,6 +294,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             />
           </TabsContent>
         </Tabs>
+        </div>
       )}
 
       <AddPersonDialog
