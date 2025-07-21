@@ -145,7 +145,7 @@ export class XYFlowLayoutService {
 
       return { nodes: updatedNodes, edges };
     } catch (error) {
-      console.error('ELK layout error:', error instanceof Error ? error.message : String(error));
+      console.error('ELK layout error:', error);
       return { nodes, edges };
     }
   }
