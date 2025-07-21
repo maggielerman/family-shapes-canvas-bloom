@@ -37,6 +37,7 @@ import { PersonTreesManager } from './PersonTreesManager';
 import { MarkAsSelfDialog } from './MarkAsSelfDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { formatDate, calculateAge } from '@/utils/dateUtils';
 
 interface PersonCardProps {
   person: {
@@ -70,13 +71,9 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const formatDate = (dateString: string | null) => {
+  const formatDateLocal = (dateString: string | null) => {
     if (!dateString) return 'Not specified';
-    // Parse the date string and create a date object in local timezone
-    // to avoid timezone conversion issues
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // month is 0-indexed
-    return date.toLocaleDateString('en-US', {
+    return formatDate(dateString, {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -85,17 +82,7 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
 
   const getAge = (birthDate: string | null) => {
     if (!birthDate) return null;
-    const today = new Date();
-    // Parse the birth date string and create a date object in local timezone
-    // to avoid timezone conversion issues
-    const [year, month, day] = birthDate.split('-').map(Number);
-    const birth = new Date(year, month - 1, day); // month is 0-indexed
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    return age;
+    return calculateAge(birthDate);
   };
 
   const getFertilityInfo = () => {
@@ -236,7 +223,7 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                 <div className="flex items-center text-sm">
                   <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span className="text-muted-foreground">Born:</span>
-                  <span className="ml-2">{formatDate(person.date_of_birth)}</span>
+                                          <span className="ml-2">{formatDateLocal(person.date_of_birth)}</span>
                   {person.date_of_birth && getAge(person.date_of_birth) && (
                     <span className="ml-2 text-muted-foreground">
                       (Age {getAge(person.date_of_birth)})
