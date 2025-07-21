@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { 
   calculateGenerations, 
   getGenerationalConnections, 
+  getDonorConnections,
   GenerationInfo 
 } from '@/utils/generationUtils';
 
@@ -60,6 +61,9 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
 
     // Use only generational connections for tree structure
     const generationalConnections = getGenerationalConnections(validConnections);
+    
+    // Get donor connections for special handling
+    const donorConnections = getDonorConnections(validConnections);
 
     // Create hierarchical data structure using only generational connections
     const hierarchyData = createHierarchy(persons, generationalConnections);
@@ -88,6 +92,35 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
       .attr('stroke', 'hsl(var(--border))')
       .attr('stroke-width', 2);
 
+    // Create donor links (dashed lines to show biological contribution)
+    if (donorConnections.length > 0) {
+      // Create a map of person positions for donor connections
+      const personPositions = new Map<string, { x: number; y: number }>();
+      root.descendants().forEach(d => {
+        personPositions.set(d.data.id, { x: d.x!, y: d.y! });
+      });
+
+      donorConnections
+        .filter(conn => {
+          const donorPos = personPositions.get(conn.from_person_id);
+          const childPos = personPositions.get(conn.to_person_id);
+          return donorPos && childPos;
+        })
+        .forEach(conn => {
+          const donorPos = personPositions.get(conn.from_person_id)!;
+          const childPos = personPositions.get(conn.to_person_id)!;
+          
+          g.append('path')
+            .attr('class', 'donor-link')
+            .attr('d', `M${donorPos.x},${donorPos.y} L${childPos.x},${childPos.y}`)
+            .attr('fill', 'none')
+            .attr('stroke', '#9333ea')
+            .attr('stroke-width', 2)
+            .attr('stroke-dasharray', '5,5')
+            .attr('opacity', 0.7);
+        });
+    }
+
     // Create nodes with generation-based coloring
     const nodes = g.selectAll('.node')
       .data(root.descendants())
@@ -102,7 +135,10 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
 
     // Add circles for nodes with generation colors
     nodes.append('circle')
-      .attr('r', 30)
+      .attr('r', d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.isDonor ? 35 : 30; // Slightly larger for donors
+      })
       .attr('fill', d => {
         const generationInfo = generationMap.get(d.data.id);
         return generationInfo?.color || 'hsl(var(--chart-1))';
@@ -111,8 +147,23 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
         const generationInfo = generationMap.get(d.data.id);
         return generationInfo?.color || 'hsl(var(--border))';
       })
-      .attr('stroke-width', 3)
+      .attr('stroke-width', d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.isDonor ? 4 : 3; // Thicker border for donors
+      })
       .attr('opacity', 0.8);
+
+    // Add special donor indicator (DNA icon)
+    nodes.filter(d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.isDonor;
+      })
+      .append('text')
+      .attr('dy', 6)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '16px')
+      .attr('fill', 'white')
+      .text('🧬'); // DNA emoji to indicate donor
 
     // Add profile images if available
     nodes.filter(d => d.data.profile_photo_url)
@@ -156,7 +207,7 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
 
     svg.call(zoom);
 
-    // Add legend for generation colors
+    // Add legend for generation colors and donors
     const legend = svg.append('g')
       .attr('class', 'legend')
       .attr('transform', 'translate(20, 20)');
@@ -164,15 +215,22 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
     const uniqueGenerations = Array.from(generationMap.values())
       .sort((a, b) => a.generation - b.generation)
       .filter((gen, index, arr) => 
-        index === arr.findIndex(g => g.generation === gen.generation)
+        index === arr.findIndex(g => g.generation === gen.generation && g.isDonor === gen.isDonor)
       );
 
+    // Separate donors and regular generations
+    const regularGenerations = uniqueGenerations.filter(g => !g.isDonor);
+    const donors = uniqueGenerations.filter(g => g.isDonor);
+
+    let legendIndex = 0;
+    
+    // Add regular generations
     legend.selectAll('.legend-item')
-      .data(uniqueGenerations.slice(0, 6)) // Show first 6 generations
+      .data(regularGenerations.slice(0, 5)) // Show first 5 generations
       .enter()
       .append('g')
       .attr('class', 'legend-item')
-      .attr('transform', (d, i) => `translate(0, ${i * 20})`)
+      .attr('transform', (d, i) => `translate(0, ${(legendIndex + i) * 20})`)
       .each(function(d) {
         const item = d3.select(this);
         
@@ -190,6 +248,37 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
           .attr('fill', 'hsl(var(--foreground))')
           .text(`Generation ${d.generation}`);
       });
+
+    legendIndex += Math.min(regularGenerations.length, 5);
+
+    // Add donor legend item if there are donors
+    if (donors.length > 0) {
+      const donorLegend = legend.append('g')
+        .attr('class', 'legend-item donor-legend')
+        .attr('transform', `translate(0, ${legendIndex * 20})`);
+      
+      donorLegend.append('circle')
+        .attr('r', 10)
+        .attr('fill', '#9333ea')
+        .attr('stroke', '#9333ea')
+        .attr('stroke-width', 3)
+        .attr('opacity', 0.8);
+      
+      donorLegend.append('text')
+        .attr('x', -5)
+        .attr('y', 5)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '10px')
+        .attr('fill', 'white')
+        .text('🧬');
+      
+      donorLegend.append('text')
+        .attr('x', 18)
+        .attr('y', 4)
+        .attr('font-size', '12px')
+        .attr('fill', 'hsl(var(--foreground))')
+        .text(`Donors (${donors.length})`);
+    }
 
   }, [persons, connections, width, height, onPersonClick]);
 

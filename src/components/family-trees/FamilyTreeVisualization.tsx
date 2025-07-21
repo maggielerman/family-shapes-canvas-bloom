@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers } from "lucide-react";
 import { AddPersonDialog } from "./AddPersonDialog";
+import { AddDonorDialog } from "./AddDonorDialog";
 import { PersonCardDialog } from "@/components/people/PersonCard";
 import { ConnectionManager } from "@/components/connections/ConnectionManager";
 
@@ -16,10 +17,13 @@ import { XYFlowTreeBuilder } from "./XYFlowTreeBuilder";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Person } from "@/types/person";
+import { DonorService } from "@/services/donorService";
+import { CreateDonorData } from "@/types/donor";
 import { 
   calculateGenerations, 
   getGenerationalConnections, 
   getSiblingConnections,
+  getDonorConnections,
   getGenerationStats 
 } from "@/utils/generationUtils";
 
@@ -40,6 +44,7 @@ interface FamilyTreeVisualizationProps {
 export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }: FamilyTreeVisualizationProps) {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
+  const [addDonorDialogOpen, setAddDonorDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const { toast } = useToast();
 
@@ -134,6 +139,49 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
     setViewingPerson(person);
   };
 
+  const handleAddDonor = async (donorData: CreateDonorData) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('No user found');
+
+      // Create person data for the donor
+      const personData = {
+        name: donorData.donor_number ? `Donor ${donorData.donor_number}` : 'Unknown Donor',
+        donor: true,
+        notes: donorData.notes || '',
+        user_id: userData.user.id,
+      };
+
+      // Create both person and donor records
+      const { person, donor } = await DonorService.createPersonAsDonor(personData, donorData);
+
+      // Add the donor to this family tree
+      const { error: memberError } = await supabase
+        .from('family_tree_members')
+        .insert({
+          family_tree_id: familyTreeId,
+          person_id: person.id,
+        });
+
+      if (memberError) throw memberError;
+
+      toast({
+        title: "Success",
+        description: "Donor added successfully",
+      });
+
+      setAddDonorDialogOpen(false);
+      onPersonAdded(); // Refresh the persons list
+    } catch (error) {
+      console.error('Error adding donor:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add donor",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Calculate generation statistics
   const generationMap = persons.length > 0 && connections.length > 0 
     ? calculateGenerations(persons, connections) 
@@ -141,6 +189,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const generationStats = getGenerationStats(generationMap);
   const generationalConnections = getGenerationalConnections(connections);
   const siblingConnections = getSiblingConnections(connections);
+  const donorConnections = getDonorConnections(connections);
 
   return (
     <div className="space-y-6">
@@ -151,10 +200,15 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <Plus className="w-4 h-4 mr-2" />
             Add Person
           </Button>
+          <Button variant="outline" onClick={() => setAddDonorDialogOpen(true)}>
+            <Dna className="w-4 h-4 mr-2" />
+            Add Donor
+          </Button>
         </div>
         
         <div className="text-sm text-muted-foreground">
           Generation-based visualization • {generationStats.totalGenerations} generations
+          {generationStats.donorCount > 0 && ` • ${generationStats.donorCount} donors`}
         </div>
       </div>
 
@@ -174,7 +228,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <div>
               <div className="text-muted-foreground">Total People</div>
               <div className="font-semibold">{persons.length}</div>
@@ -182,6 +236,13 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <div>
               <div className="text-muted-foreground">Generations</div>
               <div className="font-semibold">{generationStats.totalGenerations}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Donors</div>
+              <div className="font-semibold" style={{color: '#9333ea'}}>
+                {generationStats.donorCount}
+                <span className="text-xs block text-muted-foreground">special color</span>
+              </div>
             </div>
             <div>
               <div className="text-muted-foreground">Parent-Child Lines</div>
@@ -198,6 +259,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           <div className="mt-4 text-xs text-muted-foreground">
             <strong>How to read:</strong> Each generation has a unique color. 
             Lines connect parents to children. Siblings share the same generation color but aren't connected by lines.
+            Donors appear at the same level as recipient parents but with a special purple color.
           </div>
         </CardContent>
       </Card>
@@ -315,6 +377,12 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
         open={addPersonDialogOpen}
         onOpenChange={setAddPersonDialogOpen}
         onSubmit={handleAddPerson}
+      />
+
+      <AddDonorDialog
+        open={addDonorDialogOpen}
+        onOpenChange={setAddDonorDialogOpen}
+        onSubmit={handleAddDonor}
       />
 
       <PersonCardDialog

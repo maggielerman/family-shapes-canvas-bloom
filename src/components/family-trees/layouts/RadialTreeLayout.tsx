@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { 
   calculateGenerations, 
   getGenerationalConnections, 
+  getDonorConnections,
   GenerationInfo 
 } from '@/utils/generationUtils';
 
@@ -60,6 +61,9 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
 
     // Use only generational connections for tree structure
     const generationalConnections = getGenerationalConnections(validConnections);
+    
+    // Get donor connections for special handling
+    const donorConnections = getDonorConnections(validConnections);
 
     // Create hierarchical data structure using only generational connections
     const hierarchyData = createHierarchy(persons, generationalConnections);
@@ -107,7 +111,10 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
 
     // Add circles for nodes with generation colors
     nodes.append('circle')
-      .attr('r', 25)
+      .attr('r', d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.isDonor ? 30 : 25; // Slightly larger for donors
+      })
       .attr('fill', d => {
         const generationInfo = generationMap.get(d.data.id);
         return generationInfo?.color || 'hsl(var(--chart-1))';
@@ -116,8 +123,23 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
         const generationInfo = generationMap.get(d.data.id);
         return generationInfo?.color || 'hsl(var(--border))';
       })
-      .attr('stroke-width', 3)
+      .attr('stroke-width', d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.isDonor ? 4 : 3; // Thicker border for donors
+      })
       .attr('opacity', 0.8);
+
+    // Add special donor indicator (DNA icon)
+    nodes.filter(d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.isDonor;
+      })
+      .append('text')
+      .attr('dy', 4)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '14px')
+      .attr('fill', 'white')
+      .text('🧬'); // DNA emoji to indicate donor
 
     // Add profile images if available
     nodes.filter(d => d.data.profile_photo_url)
@@ -164,7 +186,7 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
 
     svg.call(zoom);
 
-    // Add legend for generation colors
+    // Add legend for generation colors and donors
     const legend = svg.append('g')
       .attr('class', 'legend')
       .attr('transform', 'translate(20, 20)');
@@ -172,8 +194,12 @@ export function RadialTreeLayout({ persons, connections, relationshipTypes, widt
     const uniqueGenerations = Array.from(generationMap.values())
       .sort((a, b) => a.generation - b.generation)
       .filter((gen, index, arr) => 
-        index === arr.findIndex(g => g.generation === gen.generation)
+        index === arr.findIndex(g => g.generation === gen.generation && g.isDonor === gen.isDonor)
       );
+
+    // Separate donors and regular generations
+    const regularGenerations = uniqueGenerations.filter(g => !g.isDonor);
+    const donors = uniqueGenerations.filter(g => g.isDonor);
 
     legend.selectAll('.legend-item')
       .data(uniqueGenerations.slice(0, 6)) // Show first 6 generations

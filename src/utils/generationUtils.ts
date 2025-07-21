@@ -2,12 +2,14 @@ export interface GenerationInfo {
   generation: number;
   color: string;
   depth: number;
+  isDonor?: boolean; // New flag to identify donors
 }
 
 export interface PersonWithGeneration {
   id: string;
   name: string;
   generation?: number;
+  isDonor?: boolean; // New flag to identify donors
   [key: string]: any;
 }
 
@@ -36,9 +38,27 @@ const GENERATION_COLORS = [
 ];
 
 /**
+ * Special color for donors - distinguishable but harmonious
+ */
+const DONOR_COLOR = '#9333ea'; // Purple variant to distinguish donors
+
+/**
+ * Check if a person is a donor based on connections
+ */
+function isDonorPerson(personId: string, connections: ConnectionForGeneration[]): boolean {
+  return connections.some(c => 
+    c.from_person_id === personId && c.relationship_type === 'donor'
+  );
+}
+
+/**
  * Calculate the generation level for each person in the family tree
  * Generation 0 = oldest generation (root ancestors)
  * Higher numbers = younger generations
+ * 
+ * Special handling for donors:
+ * - Donors are placed at the same generation as the recipient parent
+ * - They are marked with a special flag and color
  */
 export function calculateGenerations(
   persons: PersonWithGeneration[],
@@ -47,18 +67,25 @@ export function calculateGenerations(
   const generationMap = new Map<string, GenerationInfo>();
   const visited = new Set<string>();
 
-  // Find root persons (those who are not children of anyone)
+  // Identify donor relationships upfront
+  const donorConnections = connections.filter(c => c.relationship_type === 'donor');
+  const donorPersonIds = new Set(donorConnections.map(c => c.from_person_id));
+
+  // Find root persons (those who are not children of anyone, excluding donors)
   const childIds = new Set(
     connections
-      .filter(c => c.relationship_type === 'parent')
+      .filter(c => c.relationship_type === 'parent' || c.relationship_type === 'biological_parent')
       .map(c => c.to_person_id)
   );
   
-  const rootPersons = persons.filter(p => !childIds.has(p.id));
+  const rootPersons = persons.filter(p => !childIds.has(p.id) && !donorPersonIds.has(p.id));
 
-  // If no clear root found, use persons with the most parent connections
+  // If no clear root found, use persons with the most parent connections (excluding donors)
   if (rootPersons.length === 0 && persons.length > 0) {
-    rootPersons.push(persons[0]);
+    const nonDonorPersons = persons.filter(p => !donorPersonIds.has(p.id));
+    if (nonDonorPersons.length > 0) {
+      rootPersons.push(nonDonorPersons[0]);
+    }
   }
 
   // Calculate generations starting from root persons
@@ -69,26 +96,58 @@ export function calculateGenerations(
 
     visited.add(personId);
 
-    // Find parent connections for this person
-    const parentConnections = connections.filter(
-      c => c.to_person_id === personId && c.relationship_type === 'parent'
-    );
+    // Check if this person is a donor
+    const isDonor = donorPersonIds.has(personId);
 
     let generation = currentGeneration;
 
-    if (parentConnections.length > 0) {
-      // If this person has parents, their generation is max parent generation + 1
-      const parentGenerations = parentConnections.map(c => 
-        calculateGenerationForPerson(c.from_person_id, currentGeneration)
+    if (isDonor) {
+      // For donors, find the generation of their recipient children's other parent
+      const donorChildren = connections
+        .filter(c => c.from_person_id === personId && c.relationship_type === 'donor')
+        .map(c => c.to_person_id);
+
+      if (donorChildren.length > 0) {
+        // Find the recipient parent(s) for the donor's children
+        const recipientParents = connections
+          .filter(c => 
+            donorChildren.includes(c.to_person_id) && 
+            c.relationship_type === 'parent' && 
+            c.from_person_id !== personId
+          )
+          .map(c => c.from_person_id);
+
+        if (recipientParents.length > 0) {
+          // Calculate generation of recipient parents and use the same generation
+          const recipientGenerations = recipientParents.map(parentId => 
+            calculateGenerationForPerson(parentId, currentGeneration)
+          );
+          generation = Math.min(...recipientGenerations); // Use the minimum to place at same level
+        }
+      }
+    } else {
+      // For non-donors, find parent connections (excluding donor relationships)
+      const parentConnections = connections.filter(
+        c => c.to_person_id === personId && 
+        (c.relationship_type === 'parent' || c.relationship_type === 'biological_parent') &&
+        c.relationship_type !== 'donor'
       );
-      generation = Math.max(...parentGenerations) + 1;
+
+      if (parentConnections.length > 0) {
+        // If this person has parents, their generation is max parent generation + 1
+        const parentGenerations = parentConnections.map(c => 
+          calculateGenerationForPerson(c.from_person_id, currentGeneration)
+        );
+        generation = Math.max(...parentGenerations) + 1;
+      }
     }
 
     // Store the generation info
     generationMap.set(personId, {
       generation,
-      color: getGenerationColor(generation),
-      depth: generation
+      color: isDonor ? DONOR_COLOR : getGenerationColor(generation),
+      depth: generation,
+      isDonor
     });
 
     return generation;
@@ -121,12 +180,27 @@ export function getGenerationColor(generation: number): string {
 }
 
 /**
+ * Get donor color
+ */
+export function getDonorColor(): string {
+  return DONOR_COLOR;
+}
+
+/**
  * Check if a connection represents a generational relationship (parent-child)
  * vs a lateral relationship (sibling, partner, etc.)
+ * Note: donor relationships are NOT generational for tree structure purposes
  */
 export function isGenerationalConnection(relationshipType: string): boolean {
   const generationalTypes = ['parent', 'child', 'biological_parent', 'social_parent'];
   return generationalTypes.includes(relationshipType);
+}
+
+/**
+ * Check if a connection represents a donor relationship
+ */
+export function isDonorConnection(relationshipType: string): boolean {
+  return relationshipType === 'donor';
 }
 
 /**
@@ -139,9 +213,17 @@ export function isSiblingConnection(relationshipType: string): boolean {
 
 /**
  * Get connections that should be displayed as lines (generational connections)
+ * Excludes donor connections as they are handled separately
  */
 export function getGenerationalConnections(connections: ConnectionForGeneration[]): ConnectionForGeneration[] {
   return connections.filter(c => isGenerationalConnection(c.relationship_type));
+}
+
+/**
+ * Get donor connections that need special handling in visualization
+ */
+export function getDonorConnections(connections: ConnectionForGeneration[]): ConnectionForGeneration[] {
+  return connections.filter(c => isDonorConnection(c.relationship_type));
 }
 
 /**
@@ -152,21 +234,26 @@ export function getSiblingConnections(connections: ConnectionForGeneration[]): C
 }
 
 /**
- * Get generation statistics
+ * Get generation statistics including donor information
  */
 export function getGenerationStats(generationMap: Map<string, GenerationInfo>) {
   const stats = {
     totalGenerations: 0,
     generationCounts: new Map<number, number>(),
+    donorCount: 0,
     minGeneration: Infinity,
     maxGeneration: -Infinity
   };
 
   generationMap.forEach((info, personId) => {
-    const gen = info.generation;
-    stats.generationCounts.set(gen, (stats.generationCounts.get(gen) || 0) + 1);
-    stats.minGeneration = Math.min(stats.minGeneration, gen);
-    stats.maxGeneration = Math.max(stats.maxGeneration, gen);
+    if (info.isDonor) {
+      stats.donorCount++;
+    } else {
+      const gen = info.generation;
+      stats.generationCounts.set(gen, (stats.generationCounts.get(gen) || 0) + 1);
+      stats.minGeneration = Math.min(stats.minGeneration, gen);
+      stats.maxGeneration = Math.max(stats.maxGeneration, gen);
+    }
   });
 
   stats.totalGenerations = stats.maxGeneration - stats.minGeneration + 1;
@@ -175,12 +262,21 @@ export function getGenerationStats(generationMap: Map<string, GenerationInfo>) {
 }
 
 /**
- * Get the generation colors palette for legend display
+ * Get the generation colors palette for legend display including donor color
  */
 export function getGenerationColorPalette() {
-  return GENERATION_COLORS.map((color, index) => ({
-    generation: index,
-    color,
-    label: `Generation ${index}`
-  }));
+  return [
+    ...GENERATION_COLORS.map((color, index) => ({
+      generation: index,
+      color,
+      label: `Generation ${index}`,
+      isDonor: false
+    })),
+    {
+      generation: -1, // Special marker for donors
+      color: DONOR_COLOR,
+      label: 'Donor',
+      isDonor: true
+    }
+  ];
 }
