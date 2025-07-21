@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { formatDate } from '@/utils/dateUtils';
 
 interface AddExistingPersonDialogProps {
   open: boolean;
@@ -114,17 +115,9 @@ export function AddExistingPersonDialog({
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDateLocal = (dateString?: string) => {
     if (!dateString) return null;
-    // Parse the date string and create a date object in local timezone
-    // to avoid timezone conversion issues
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // month is 0-indexed
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return formatDate(dateString);
   };
 
   return (
@@ -190,7 +183,7 @@ export function AddExistingPersonDialog({
                           </Badge>
                           {person.date_of_birth && (
                             <span className="text-xs text-muted-foreground">
-                              Born {formatDate(person.date_of_birth)}
+                              Born {formatDateLocal(person.date_of_birth)}
                             </span>
                           )}
                         </div>
