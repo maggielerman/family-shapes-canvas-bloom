@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { ConnectionManager } from '@/components/connections/ConnectionManager';
 import { ConnectionDisplay } from '@/components/connections/ConnectionDisplay';
 import { Person } from '@/types/person';
+import { ConnectionWithDetails } from '@/types/connection';
 
 interface PersonTreesManagerProps {
   personId: string;
@@ -34,23 +35,12 @@ interface FamilyTree {
   role?: string;
 }
 
-interface Connection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-  to_person: {
-    name: string;
-  };
-  direction?: 'incoming' | 'outgoing';
-  other_person_name?: string;
-  other_person_id?: string;
-}
+
 
 export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
   const [personTrees, setPersonTrees] = useState<FamilyTree[]>([]);
   const [availableTrees, setAvailableTrees] = useState<FamilyTree[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const [connections, setConnections] = useState<ConnectionWithDetails[]>([]);
   const [availablePersons, setAvailablePersons] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [manageTreesDialogOpen, setManageTreesDialogOpen] = useState(false);
@@ -415,7 +405,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
       </div>
       
       <ConnectionDisplay 
-        connections={connections as any}
+        connections={connections}
         persons={availablePersons}
         title="Family Connections"
         subtitle="Relationships for this person"
