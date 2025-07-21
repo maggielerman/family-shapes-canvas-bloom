@@ -29,6 +29,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PersonNode } from './PersonNode';
 import { Person } from '@/types/person';
+import { deduplicateConnections, isBidirectionalRelationship } from './utils/relationshipUtils';
 
 interface PersonConnection {
   id: string;
@@ -79,8 +80,11 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   }, [familyTreeId]);
 
   useEffect(() => {
-    const connectionEdges: Edge[] = connections.map((connection) => {
+    const deduplicatedConnections = deduplicateConnections(connections);
+    const connectionEdges: Edge[] = deduplicatedConnections.map((connection) => {
       const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
+      const isBidirectional = isBidirectionalRelationship(connection.relationship_type);
+      
       return {
         id: connection.id,
         source: connection.from_person_id,
@@ -91,7 +95,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
           stroke: relationshipType?.color || '#6b7280',
           strokeWidth: 2,
         },
-        markerEnd: {
+        markerEnd: isBidirectional ? undefined : {
           type: MarkerType.ArrowClosed,
           width: 20,
           height: 20,

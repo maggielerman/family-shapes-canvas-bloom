@@ -8,6 +8,13 @@ import { relationshipTypes } from './XYFlowLegend';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Person } from '@/types/person';
+import { 
+  connectionExists, 
+  getCanonicalDirection, 
+  deduplicateConnections, 
+  getConnectionDisplayText,
+  isBidirectionalRelationship 
+} from './utils/relationshipUtils';
 
 interface Connection {
   id: string;
@@ -58,14 +65,8 @@ export function XYFlowConnectionManager({
       return;
     }
 
-    // Check if connection already exists
-    const existingConnection = connections.find(
-      conn => 
-        (conn.from_person_id === fromPersonId && conn.to_person_id === toPersonId) ||
-        (conn.from_person_id === toPersonId && conn.to_person_id === fromPersonId)
-    );
-
-    if (existingConnection) {
+    // Check if connection already exists using the new utility
+    if (connectionExists(connections, fromPersonId, toPersonId, relationshipType)) {
       toast({
         title: "Error",
         description: "Connection already exists between these people",
@@ -80,11 +81,14 @@ export function XYFlowConnectionManager({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('No user found');
 
+      // Get canonical direction for the relationship
+      const { from_person_id, to_person_id } = getCanonicalDirection(fromPersonId, toPersonId, relationshipType);
+
       const { error } = await supabase
         .from('connections')
         .insert({
-          from_person_id: fromPersonId,
-          to_person_id: toPersonId,
+          from_person_id,
+          to_person_id,
           relationship_type: relationshipType,
           family_tree_id: familyTreeId,
         });
@@ -252,7 +256,7 @@ export function XYFlowConnectionManager({
           </div>
         ) : (
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {connections.map(connection => {
+            {deduplicateConnections(connections).map(connection => {
               const relationship = relationshipTypes.find(rt => rt.value === connection.relationship_type);
               const Icon = relationship?.icon || GitBranch;
               
@@ -268,12 +272,25 @@ export function XYFlowConnectionManager({
                     ></div>
                     <Icon className="w-4 h-4 text-muted-foreground" />
                     <div className="text-sm">
-                      <span className="font-medium">{getPersonName(connection.from_person_id)}</span>
-                      <span className="text-muted-foreground mx-2">→</span>
-                      <span className="font-medium">{getPersonName(connection.to_person_id)}</span>
-                      <span className="text-muted-foreground ml-2">
-                        ({getRelationshipLabel(connection.relationship_type)})
-                      </span>
+                      {isBidirectionalRelationship(connection.relationship_type) ? (
+                        <span>
+                          <span className="font-medium">{getPersonName(connection.from_person_id)}</span>
+                          <span className="text-muted-foreground mx-2">↔</span>
+                          <span className="font-medium">{getPersonName(connection.to_person_id)}</span>
+                          <span className="text-muted-foreground ml-2">
+                            ({getRelationshipLabel(connection.relationship_type)})
+                          </span>
+                        </span>
+                      ) : (
+                        <span>
+                          <span className="font-medium">{getPersonName(connection.from_person_id)}</span>
+                          <span className="text-muted-foreground mx-2">→</span>
+                          <span className="font-medium">{getPersonName(connection.to_person_id)}</span>
+                          <span className="text-muted-foreground ml-2">
+                            ({getRelationshipLabel(connection.relationship_type)})
+                          </span>
+                        </span>
+                      )}
                     </div>
                   </div>
                   <Button
