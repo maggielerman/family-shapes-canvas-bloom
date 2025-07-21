@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TreePine, Plus, X, Users, Link, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { PersonConnectionManager } from './PersonConnectionManager';
+import { ConnectionManager } from '@/components/connections/ConnectionManager';
 
 interface PersonTreesManagerProps {
   personId: string;
@@ -375,14 +375,14 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
                 <DialogHeader>
                   <DialogTitle>Manage Connections</DialogTitle>
                 </DialogHeader>
-                <PersonConnectionManager 
-                  person={{
-                    id: personId,
-                    name: 'Person', // This will be updated by fetching the person name
-                  }}
+                <ConnectionManager 
+                  personId={personId}
+                  persons={[]} // We'll need to fetch available persons
                   onConnectionUpdated={() => {
                     fetchConnections();
                   }}
+                  title="Manage Connections"
+                  subtitle="Create and manage relationships for this person"
                 />
               </DialogContent>
             </Dialog>

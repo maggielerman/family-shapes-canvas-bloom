@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '../utils/test-helpers';
-import { ConnectionManager } from '@/components/family-trees/ConnectionManager';
+import { ConnectionManager } from '@/components/connections/ConnectionManager';
 import { createMockPerson, createMockConnection } from '../utils/test-helpers';
 
 describe('ConnectionManager', () => {
@@ -27,7 +27,6 @@ describe('ConnectionManager', () => {
 
   const defaultProps = {
     familyTreeId: 'tree-1',
-    connections: mockConnections,
     persons: mockPersons,
     onConnectionUpdated: vi.fn(),
   };
@@ -42,8 +41,8 @@ describe('ConnectionManager', () => {
       expect(result.container).toBeTruthy();
     });
 
-    it('should render with empty connections', () => {
-      const result = render(<ConnectionManager {...defaultProps} connections={[]} />);
+    it('should render with empty persons list', () => {
+      const result = render(<ConnectionManager {...defaultProps} persons={[]} />);
       expect(result.container).toBeTruthy();
     });
 
@@ -87,7 +86,7 @@ describe('ConnectionManager', () => {
         }),
       ];
       
-      const result = render(<ConnectionManager {...defaultProps} connections={connectionsWithMissingPerson} />);
+      const result = render(<ConnectionManager {...defaultProps} />);
       expect(result.container).toBeTruthy();
     });
   });

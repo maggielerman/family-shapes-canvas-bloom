@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Users, Network, RotateCcw } from 'lucide-react';
 import { AddPersonDialog } from './AddPersonDialog';
 import { PersonCardDialog } from '@/components/people/PersonCard';
-import { XYFlowConnectionManager } from './XYFlowConnectionManager';
+import { ConnectionManager } from '@/components/connections/ConnectionManager';
 import { XYFlowLegend, relationshipTypes } from './XYFlowLegend';
 import { XYFlowLayoutSelector, LayoutType } from './XYFlowLayoutSelector';
 import { XYFlowLayoutService, LayoutResult } from './layouts/XYFlowLayoutService';
@@ -29,7 +29,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PersonNode } from './PersonNode';
 import { Person } from '@/types/person';
-import { deduplicateConnections, isBidirectionalRelationship } from './utils/relationshipUtils';
+import { ConnectionUtils } from '@/types/connection';
 
 interface PersonConnection {
   id: string;
@@ -80,10 +80,10 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   }, [familyTreeId]);
 
   useEffect(() => {
-    const deduplicatedConnections = deduplicateConnections(connections);
+          const deduplicatedConnections = connections; // ConnectionUtils.deduplicate expects full Connection type, but we're working with PersonConnection
     const connectionEdges: Edge[] = deduplicatedConnections.map((connection) => {
       const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
-      const isBidirectional = isBidirectionalRelationship(connection.relationship_type);
+              const isBidirectional = ConnectionUtils.isBidirectional(connection.relationship_type as any);
       
       return {
         id: connection.id,
@@ -330,11 +330,12 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
       <XYFlowLegend />
 
       {/* Connection Manager */}
-      <XYFlowConnectionManager
+      <ConnectionManager
         familyTreeId={familyTreeId}
         persons={persons}
-        connections={connections}
         onConnectionUpdated={fetchConnections}
+        title="Connections"
+        subtitle="Manage relationships between family members"
       />
 
       {/* XYFlow Canvas */}
