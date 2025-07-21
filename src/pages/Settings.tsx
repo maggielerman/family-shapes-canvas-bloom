@@ -234,18 +234,6 @@ const Settings = () => {
           </CardContent>
         </Card>
       </div>
-
-              {hasChanges && (
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleReset}>
-              Reset
-            </Button>
-            <Button onClick={handleSave} disabled={updateSettings.isPending}>
-              <Save className="w-4 h-4 mr-2" />
-              {updateSettings.isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        )}
     </div>
   );
 };
