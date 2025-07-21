@@ -15,6 +15,7 @@ import {
   applyEdgeChanges,
   MarkerType,
   Panel,
+  ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
@@ -28,22 +29,14 @@ import { XYFlowLayoutService, LayoutResult } from './layouts/XYFlowLayoutService
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PersonNode } from './PersonNode';
-import { Person } from '@/types/person';
-import { ConnectionUtils } from '@/types/connection';
+import { Person, CreatePersonData } from '@/types/person';
+import { ConnectionUtils, Connection as ConnectionType, RelationshipType } from '@/types/connection';
 import { 
   calculateGenerations, 
   getGenerationalConnections, 
   isGenerationalConnection,
   GenerationInfo 
 } from '@/utils/generationUtils';
-
-interface PersonConnection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-  family_tree_id?: string | null;
-}
 
 interface XYFlowTreeBuilderProps {
   familyTreeId: string;
@@ -58,14 +51,14 @@ const nodeTypes = {
 export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFlowTreeBuilderProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [connections, setConnections] = useState<PersonConnection[]>([]);
+  const [connections, setConnections] = useState<ConnectionType[]>([]);
   const [generationMap, setGenerationMap] = useState<Map<string, GenerationInfo>>(new Map());
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [currentLayout, setCurrentLayout] = useState<LayoutType>('manual');
   const [isLayoutLoading, setIsLayoutLoading] = useState(false);
-  const reactFlowRef = useRef<any>(null);
+  const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const { toast } = useToast();
 
   // Calculate generations whenever persons or connections change
@@ -106,11 +99,11 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     // Filter connections to only show generational connections (parent-child)
     // Sibling connections are hidden from the visual tree but remain in connection manager
     const generationalConnections = getGenerationalConnections(connections);
-    const deduplicatedConnections = generationalConnections;
+    const deduplicatedConnections = ConnectionUtils.deduplicate(generationalConnections);
     
     const connectionEdges: Edge[] = deduplicatedConnections.map((connection) => {
       const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
-      const isBidirectional = ConnectionUtils.isBidirectional(connection.relationship_type as any);
+      const isBidirectional = ConnectionUtils.isBidirectional(connection.relationship_type as RelationshipType);
       
       return {
         id: connection.id,
@@ -178,7 +171,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
           console.error('Layout application error:', error);
           toast({
             title: "Layout Error",
-            description: error.message === 'Layout timeout' 
+            description: (error instanceof Error && error.message === 'Layout timeout') 
               ? "Layout took too long. Try a different layout or fewer nodes."
               : "Failed to apply layout. Please try again.",
             variant: "destructive",
@@ -242,7 +235,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     }
   };
 
-  const handleAddPerson = async (personData: any) => {
+  const handleAddPerson = async (personData: CreatePersonData) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('No user found');

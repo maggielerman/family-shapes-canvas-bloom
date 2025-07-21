@@ -219,7 +219,7 @@ export function SharingSettingsDialog({
       });
 
       if (error) {
-        throw new Error(error.message || 'Failed to send invitations');
+        throw new Error((error instanceof Error ? error.message : String(error)) || 'Failed to send invitations');
       }
       
       if (result?.failed > 0) {
