@@ -386,6 +386,8 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
       const { error: mainError } = await supabase
         .from('connections')
         .update({
+          from_person_id: fromId,
+          to_person_id: toId,
           relationship_type: relType,
           metadata: { attributes }
         })
@@ -403,6 +405,8 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
           await supabase
             .from('connections')
             .update({
+              from_person_id: toId,
+              to_person_id: fromId,
               relationship_type: relType,
               metadata: { attributes }
             })
