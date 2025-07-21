@@ -9,22 +9,13 @@ import { Search, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDate } from '@/utils/dateUtils';
+import { Person } from '@/types/person';
 
 interface AddExistingPersonDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   familyTreeId: string;
   onPersonAdded: () => void;
-}
-
-interface Person {
-  id: string;
-  name: string;
-  date_of_birth?: string;
-  gender?: string;
-  profile_photo_url?: string;
-  status: string;
-  email?: string;
 }
 
 export function AddExistingPersonDialog({
@@ -52,7 +43,7 @@ export function AddExistingPersonDialog({
 
       let query = supabase
         .from('persons')
-        .select('id, name, date_of_birth, gender, profile_photo_url, status, email')
+        .select('id, name, date_of_birth, gender, profile_photo_url, status, email, created_at')
         .eq('user_id', userData.user.id)
         .order('name');
 
@@ -75,7 +66,13 @@ export function AddExistingPersonDialog({
       const { data, error } = await query;
 
       if (error) throw error;
-      setPersons(data || []);
+      // Transform the data to include required fields
+      const transformedData = (data || []).map(person => ({
+        ...person,
+        created_at: person.created_at || new Date().toISOString(),
+        status: person.status || 'living'
+      }));
+      setPersons(transformedData);
     } catch (error) {
       console.error('Error searching persons:', error);
     } finally {

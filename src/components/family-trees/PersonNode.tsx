@@ -4,30 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { formatDateShort, calculateAge } from '@/utils/dateUtils';
-
-interface Person {
-  id: string;
-  name: string;
-  date_of_birth?: string | null;
-  birth_place?: string | null;
-  gender?: string | null;
-  profile_photo_url?: string | null;
-  status: string;
-  family_tree_id?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  notes?: string | null;
-  donor?: boolean;
-  used_ivf?: boolean;
-  used_iui?: boolean;
-  fertility_treatments?: any;
-}
+import { Person, PersonUtils } from '@/types/person';
 
 export const PersonNode = memo(({ data }: NodeProps) => {
   const person = data.person as Person;
   const age = person.date_of_birth ? calculateAge(person.date_of_birth) : null;
-  const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const initials = PersonUtils.getInitials(person);
 
   return (
     <Card className="w-48 shadow-lg border-2 hover:border-primary/50 transition-colors">
@@ -64,7 +46,7 @@ export const PersonNode = memo(({ data }: NodeProps) => {
             </Badge>
           )}
           
-          {person.donor && (
+          {PersonUtils.isDonor(person) && (
             <Badge variant="outline" className="text-xs">
               Donor
             </Badge>

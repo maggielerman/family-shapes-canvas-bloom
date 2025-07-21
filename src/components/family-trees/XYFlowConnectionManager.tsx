@@ -7,25 +7,7 @@ import { Plus, GitBranch } from 'lucide-react';
 import { relationshipTypes } from './XYFlowLegend';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface Person {
-  id: string;
-  name: string;
-  date_of_birth?: string | null;
-  birth_place?: string | null;
-  gender?: string | null;
-  profile_photo_url?: string | null;
-  status: string;
-  family_tree_id?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  notes?: string | null;
-  donor?: boolean;
-  used_ivf?: boolean;
-  used_iui?: boolean;
-  fertility_treatments?: any;
-}
+import { Person } from '@/types/person';
 
 interface Connection {
   id: string;

@@ -16,6 +16,7 @@ import { SharingSettingsDialog } from "@/components/family-trees/SharingSettings
 import { FamilyTreeDocumentManager } from "@/components/family-trees/FamilyTreeDocumentManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Person } from "@/types/person";
 
 interface FamilyTree {
   id: string;
@@ -25,26 +26,6 @@ interface FamilyTree {
   created_at: string;
   updated_at: string;
   user_id: string;
-}
-
-interface Person {
-  id: string;
-  name: string;
-  date_of_birth?: string | null;
-  birth_place?: string | null;
-  gender?: string | null;
-  profile_photo_url?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  status: string;
-  notes?: string | null;
-  donor?: boolean;
-  used_ivf?: boolean;
-  used_iui?: boolean;
-  fertility_treatments?: any;
-  created_at: string;
-  family_trees?: Array<{ id: string; name: string; }>;
 }
 
 export default function FamilyTreeDetail() {

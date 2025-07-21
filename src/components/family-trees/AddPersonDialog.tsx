@@ -20,26 +20,22 @@ import {
 } from "@/components/ui/select";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { supabase } from "@/integrations/supabase/client";
+import { CreatePersonData } from "@/types/person";
+import { AddDonorDialog } from "./AddDonorDialog";
+import { CreateDonorData } from "@/types/donor";
 
 interface AddPersonDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: {
-    name: string;
-    date_of_birth?: string;
-    gender?: string;
-    email?: string;
-    phone?: string;
-    notes?: string;
-    status: string;
-    profile_photo_url?: string;
-  }) => void;
+  onSubmit: (data: CreatePersonData) => void;
+  onDonorSubmit?: (personData: CreatePersonData, donorData: CreateDonorData) => void;
 }
 
 export function AddPersonDialog({
   open,
   onOpenChange,
   onSubmit,
+  onDonorSubmit,
 }: AddPersonDialogProps) {
   const [name, setName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -50,6 +46,9 @@ export function AddPersonDialog({
   const [status, setStatus] = useState("living");
   const [uploadedPhoto, setUploadedPhoto] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDonor, setIsDonor] = useState(false);
+  const [donorDialogOpen, setDonorDialogOpen] = useState(false);
+  const [pendingPersonData, setPendingPersonData] = useState<CreatePersonData | null>(null);
 
   const handleImageUploaded = (uploadedFile: any) => {
     setUploadedPhoto(uploadedFile);
@@ -67,28 +66,55 @@ export function AddPersonDialog({
     e.preventDefault();
     if (!name.trim()) return;
 
+    const personData: CreatePersonData = {
+      name: name.trim(),
+      date_of_birth: dateOfBirth || undefined,
+      gender: gender || undefined,
+      email: email.trim() || undefined,
+      phone: phone.trim() || undefined,
+      notes: notes.trim() || undefined,
+      status,
+      profile_photo_url: getPhotoUrl(),
+    };
+
+    if (isDonor && onDonorSubmit) {
+      // Store person data and open donor dialog
+      setPendingPersonData(personData);
+      setDonorDialogOpen(true);
+    } else {
+      setIsSubmitting(true);
+      try {
+        await onSubmit(personData);
+        
+        // Reset form
+        resetForm();
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setName("");
+    setDateOfBirth("");
+    setGender("");
+    setEmail("");
+    setPhone("");
+    setNotes("");
+    setStatus("living");
+    setUploadedPhoto(null);
+    setIsDonor(false);
+  };
+
+  const handleDonorSubmit = async (donorData: CreateDonorData) => {
+    if (!pendingPersonData || !onDonorSubmit) return;
+
     setIsSubmitting(true);
     try {
-      await onSubmit({
-        name: name.trim(),
-        date_of_birth: dateOfBirth || undefined,
-        gender: gender || undefined,
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
-        notes: notes.trim() || undefined,
-        status,
-        profile_photo_url: getPhotoUrl(),
-      });
-      
-      // Reset form
-      setName("");
-      setDateOfBirth("");
-      setGender("");
-      setEmail("");
-      setPhone("");
-      setNotes("");
-      setStatus("living");
-      setUploadedPhoto(null);
+      await onDonorSubmit(pendingPersonData, donorData);
+      setDonorDialogOpen(false);
+      setPendingPersonData(null);
+      resetForm();
     } finally {
       setIsSubmitting(false);
     }
@@ -200,6 +226,18 @@ export function AddPersonDialog({
                 rows={3}
               />
             </div>
+
+            {/* Donor Checkbox */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_donor"
+                checked={isDonor}
+                onChange={(e) => setIsDonor(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="is_donor">This person is a donor</Label>
+            </div>
           </div>
           
           <DialogFooter>
@@ -217,6 +255,14 @@ export function AddPersonDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Donor Dialog */}
+      <AddDonorDialog
+        open={donorDialogOpen}
+        onOpenChange={setDonorDialogOpen}
+        onSubmit={handleDonorSubmit}
+        isSubmitting={isSubmitting}
+      />
     </Dialog>
   );
 }
