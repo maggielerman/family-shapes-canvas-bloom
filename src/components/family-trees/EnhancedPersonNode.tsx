@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { formatDateShort, getYearFromDate } from '@/utils/dateUtils';
 
 interface Person {
   id: string;
@@ -320,13 +321,7 @@ export const EnhancedPersonNode = memo(({
                 {person.date_of_birth && (
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3 h-3 text-muted-foreground" />
-                    <span>{(() => {
-                      // Parse the date string and create a date object in local timezone
-                      // to avoid timezone conversion issues
-                      const [year, month, day] = person.date_of_birth.split('-').map(Number);
-                      const date = new Date(year, month - 1, day); // month is 0-indexed
-                      return date.toLocaleDateString();
-                    })()}</span>
+                    <span>{formatDateShort(person.date_of_birth)}</span>
                   </div>
                 )}
                 {person.gender && (
@@ -376,13 +371,7 @@ export const EnhancedPersonNode = memo(({
             </div>
             {person.date_of_birth && (
               <div className="text-xs text-muted-foreground">
-                {(() => {
-                  // Parse the date string and create a date object in local timezone
-                  // to avoid timezone conversion issues
-                  const [year, month, day] = person.date_of_birth.split('-').map(Number);
-                  const date = new Date(year, month - 1, day); // month is 0-indexed
-                  return date.getFullYear();
-                })()}
+                {getYearFromDate(person.date_of_birth) || 'Invalid date'}
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatDateShort, calculateAge } from "@/utils/dateUtils";
 
 interface Person {
   id: string;
@@ -47,11 +48,7 @@ export function PersonCard({
   };
 
   const formatDate = (dateString: string) => {
-    // Parse the date string and create a date object in local timezone
-    // to avoid timezone conversion issues
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // month is 0-indexed
-    return date.toLocaleDateString();
+    return formatDateShort(dateString);
   };
 
   const getStatusColor = (status: string) => {
@@ -65,20 +62,9 @@ export function PersonCard({
     }
   };
 
-  const calculateAge = (birthDate: string) => {
-    const today = new Date();
-    // Parse the birth date string and create a date object in local timezone
-    // to avoid timezone conversion issues
-    const [year, month, day] = birthDate.split('-').map(Number);
-    const birth = new Date(year, month - 1, day); // month is 0-indexed
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    
-    return age;
+  const calculateAgeLocal = (birthDate: string) => {
+    const age = calculateAge(birthDate);
+    return age !== null ? age : 'Unknown';
   };
 
   return (
@@ -99,7 +85,7 @@ export function PersonCard({
               <h3 className="font-semibold">{person.name}</h3>
               {person.date_of_birth && (
                 <p className="text-sm text-muted-foreground">
-                  Age {calculateAge(person.date_of_birth)}
+                  Age {calculateAgeLocal(person.date_of_birth)}
                 </p>
               )}
             </div>
