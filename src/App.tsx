@@ -24,6 +24,7 @@ import Media from "./pages/Media";
 import Share from "./pages/Share";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/share" element={<SidebarLayout><Share /></SidebarLayout>} />
             <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
             <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDetails /></SidebarLayout>} />
+            <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
