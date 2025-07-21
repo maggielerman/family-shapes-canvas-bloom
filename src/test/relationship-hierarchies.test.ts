@@ -277,6 +277,27 @@ describe('Relationship Hierarchies', () => {
     })
   })
 
+  describe('External Connections Pattern', () => {
+    it('should detect and count connections to persons not in the current tree', () => {
+      const persons = [
+        createMockPerson({ id: 'p1', name: 'Alice' }),
+        createMockPerson({ id: 'p2', name: 'Bob' }),
+      ];
+      const connections = [
+        createMockConnection({ from_person_id: 'p1', to_person_id: 'p2', relationship_type: 'parent' }), // in-tree
+        createMockConnection({ from_person_id: 'p1', to_person_id: 'p3', relationship_type: 'parent' }), // external
+        createMockConnection({ from_person_id: 'p4', to_person_id: 'p2', relationship_type: 'parent' }), // external
+      ];
+      const personIds = new Set(persons.map(p => p.id));
+      const inTreeConnections = connections.filter(c => personIds.has(c.from_person_id) && personIds.has(c.to_person_id));
+      const externalConnections = connections.filter(c => !personIds.has(c.from_person_id) || !personIds.has(c.to_person_id));
+      expect(inTreeConnections).toHaveLength(1);
+      expect(externalConnections).toHaveLength(2);
+      expect(externalConnections.some(c => c.from_person_id === 'p1' && c.to_person_id === 'p3')).toBe(true);
+      expect(externalConnections.some(c => c.from_person_id === 'p4' && c.to_person_id === 'p2')).toBe(true);
+    });
+  });
+
   describe('Relationship Type Validation', () => {
     it('should validate relationship types', () => {
       const validRelationshipTypes = [

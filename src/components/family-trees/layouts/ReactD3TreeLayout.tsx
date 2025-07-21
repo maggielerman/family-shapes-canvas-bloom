@@ -52,8 +52,11 @@ export function ReactD3TreeLayout({ persons, connections, relationshipTypes, wid
 
     // Filter connections to only include those between persons in this family tree
     const validPersonIds = new Set(persons.map(p => p.id));
+    // Only use 'parent' relationships for hierarchy, filter out duplicates
     const validConnections = connections.filter(c => 
-      validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
+      validPersonIds.has(c.from_person_id) &&
+      validPersonIds.has(c.to_person_id) &&
+      c.relationship_type === 'parent'
     );
 
     const hierarchyData = createHierarchy(persons, validConnections);

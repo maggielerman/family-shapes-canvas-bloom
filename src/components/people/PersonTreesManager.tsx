@@ -18,6 +18,7 @@ import { TreePine, Plus, X, Users, Link, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PersonConnectionManager } from './PersonConnectionManager';
+import { getDisplayLabel, type Connection } from '@/lib/relationship-utils';
 
 interface PersonTreesManagerProps {
   personId: string;
@@ -32,20 +33,13 @@ interface FamilyTree {
   role?: string;
 }
 
-interface Connection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-  to_person: {
-    name: string;
-  };
-}
+
 
 export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
   const [personTrees, setPersonTrees] = useState<FamilyTree[]>([]);
   const [availableTrees, setAvailableTrees] = useState<FamilyTree[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [personName, setPersonName] = useState<string>('Person');
   const [loading, setLoading] = useState(true);
   const [manageTreesDialogOpen, setManageTreesDialogOpen] = useState(false);
   const [connectionsDialogOpen, setConnectionsDialogOpen] = useState(false);
@@ -56,6 +50,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
     fetchPersonTrees();
     fetchAvailableTrees();
     fetchConnections();
+    fetchPersonName();
   }, [personId]);
 
   const fetchPersonTrees = async () => {
@@ -136,29 +131,71 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
 
       if (toError) throw toError;
 
-      // Combine and format connections
-      const allConnections = [
-        ...(fromConnections || []).map(conn => ({
-          id: conn.id,
-          from_person_id: conn.from_person_id,
-          to_person_id: conn.to_person_id,
-          relationship_type: conn.relationship_type,
-          to_person: conn.to_person
-        })),
-        ...(toConnections || []).map(conn => ({
-          id: conn.id,
-          from_person_id: conn.from_person_id,
-          to_person_id: conn.to_person_id,
-          relationship_type: conn.relationship_type,
-          to_person: conn.from_person // Show the other person in the relationship
-        }))
-      ];
+      // Format connections with direction information
+      const outgoing = (fromConnections || []).map(conn => ({
+        id: conn.id,
+        from_person_id: conn.from_person_id,
+        to_person_id: conn.to_person_id,
+        relationship_type: conn.relationship_type,
+        direction: 'outgoing' as const,
+        other_person_name: conn.to_person?.name || 'Unknown',
+        other_person_id: conn.to_person_id
+      }));
+      
+      const incoming = (toConnections || []).map(conn => ({
+        id: conn.id,
+        from_person_id: conn.from_person_id,
+        to_person_id: conn.to_person_id,
+        relationship_type: conn.relationship_type,
+        direction: 'incoming' as const,
+        other_person_name: conn.from_person?.name || 'Unknown',
+        other_person_id: conn.from_person_id
+      }));
 
-      setConnections(allConnections);
+      // Deduplicate connections to avoid showing the same relationship twice
+      const uniqueConnections = [];
+      
+      // Always show outgoing connections (they represent the primary relationship)
+      for (const outConn of outgoing) {
+        uniqueConnections.push(outConn);
+      }
+      
+      // Only show incoming connections if there's no corresponding outgoing one
+      for (const inConn of incoming) {
+        const hasCorrespondingOutgoing = outgoing.some(outConn => 
+          outConn.to_person_id === inConn.from_person_id &&
+          ((outConn.relationship_type === 'sibling' && inConn.relationship_type === 'sibling') ||
+           (outConn.relationship_type === 'partner' && inConn.relationship_type === 'partner') ||
+           (outConn.relationship_type === 'parent' && inConn.relationship_type === 'child') ||
+           (outConn.relationship_type === 'child' && inConn.relationship_type === 'parent'))
+        );
+        
+        if (!hasCorrespondingOutgoing) {
+          uniqueConnections.push(inConn);
+        }
+      }
+
+      setConnections(uniqueConnections);
     } catch (error) {
       console.error('Error fetching connections:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPersonName = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('persons')
+        .select('name')
+        .eq('id', personId)
+        .single();
+
+      if (error) throw error;
+      setPersonName(data?.name || 'Person');
+    } catch (error) {
+      console.error('Error fetching person name:', error);
+      setPersonName('Person');
     }
   };
 
@@ -222,6 +259,10 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const getConnectionDisplayLabel = (connection: Connection) => {
+    return getDisplayLabel(connection);
   };
 
   if (loading) {
@@ -378,7 +419,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
                 <PersonConnectionManager 
                   person={{
                     id: personId,
-                    name: 'Person', // This will be updated by fetching the person name
+                    name: personName,
                   }}
                   onConnectionUpdated={() => {
                     fetchConnections();
@@ -400,8 +441,8 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
               {connections.map((connection) => (
                 <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <h4 className="font-medium">{connection.to_person.name}</h4>
-                    <Badge variant="secondary">{connection.relationship_type}</Badge>
+                    <h4 className="font-medium">{connection.other_person_name}</h4>
+                    <Badge variant="secondary">{getConnectionDisplayLabel(connection)}</Badge>
                   </div>
                 </div>
               ))}

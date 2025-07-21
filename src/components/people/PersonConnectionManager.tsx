@@ -38,24 +38,23 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RelationshipAttributeSelector } from '@/components/family-trees/RelationshipAttributeSelector';
+import { 
+  getConnectionDisplayText, 
+  getDisplayLabel, 
+  getRelationshipIcon, 
+  getRelationshipColor, 
+  getReciprocalRelationship, 
+  getReciprocalAttributes,
+  relationshipTypes,
+  type Connection,
+  type RelationshipDisplayInfo
+} from '@/lib/relationship-utils';
 
 interface Person {
   id: string;
   name: string;
   gender?: string | null;
   profile_photo_url?: string | null;
-}
-
-interface Connection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-  family_tree_id?: string | null;
-  direction?: 'incoming' | 'outgoing';
-  other_person_name?: string;
-  other_person_id?: string;
-  metadata?: any; // Database JSONB field
 }
 
 interface PersonConnectionManagerProps {
@@ -67,23 +66,19 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
   const { toast } = useToast();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [availablePersons, setAvailablePersons] = useState<Person[]>([]);
+  const [externalPersonNames, setExternalPersonNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [isAddingConnection, setIsAddingConnection] = useState(false);
   const [editingConnection, setEditingConnection] = useState<Connection | null>(null);
+  const [editingAttributes, setEditingAttributes] = useState<string[]>([]);
   const [newConnection, setNewConnection] = useState({
     to_person_id: '',
     relationship_type: '',
     attributes: [] as string[]
   });
+  const [showExternalConnections, setShowExternalConnections] = useState(false);
 
-  const relationshipTypes = [
-    { value: "parent", label: "Parent", icon: Users, color: "hsl(var(--chart-1))" },
-    { value: "child", label: "Child", icon: Baby, color: "hsl(var(--chart-2))" },
-    { value: "partner", label: "Partner", icon: Heart, color: "hsl(var(--chart-3))" },
-    { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))" },
-    { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))" },
-    { value: "gestational_carrier", label: "Gestational Carrier", icon: Baby, color: "hsl(var(--chart-1))" },
-  ];
+
 
   useEffect(() => {
     fetchConnections();
@@ -156,6 +151,7 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
       const allConnections = uniqueConnections;
 
       setConnections(allConnections);
+      fetchExternalPersonNames(allConnections.map(c => c.id));
     } catch (error) {
       console.error('Error fetching connections:', error);
     } finally {
@@ -178,66 +174,71 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
   };
 
   const getPersonName = (personId: string) => {
-    return availablePersons.find(p => p.id === personId)?.name || 'Unknown';
-  };
-
-  const getConnectionDisplayText = (connection: Connection) => {
-    if (connection.direction === 'incoming') {
-      // Someone else has a relationship TO this person
-      const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
-      return {
-        description: `${connection.other_person_name} is ${person.name}'s ${relationshipType?.label?.toLowerCase() || connection.relationship_type}`,
-        otherPersonName: connection.other_person_name || 'Unknown',
-        canEdit: true // Allow editing incoming connections
-      };
-    } else {
-      // This person has a relationship TO someone else
-      return {
-        description: `${person.name} is ${connection.other_person_name}'s ${relationshipTypes.find(rt => rt.value === connection.relationship_type)?.label?.toLowerCase() || connection.relationship_type}`,
-        otherPersonName: connection.other_person_name || 'Unknown',
-        canEdit: true // Allow editing outgoing connections
-      };
+    // First check if we have the person in availablePersons
+    const availablePerson = availablePersons.find(p => p.id === personId);
+    if (availablePerson) {
+      return availablePerson.name;
     }
+    
+    // Check if we have the name in externalPersonNames
+    return externalPersonNames[personId] || 'Unknown';
   };
 
-  const getRelationshipIcon = (type: string) => {
-    const relationship = relationshipTypes.find(r => r.value === type);
-    return relationship?.icon || Link2;
-  };
-
-  const getRelationshipColor = (type: string) => {
-    return relationshipTypes.find(r => r.value === type)?.color || "hsl(var(--muted-foreground))";
-  };
-
-  const getReciprocalRelationship = (relationshipType: string) => {
-    const reciprocals: Record<string, string> = {
-      'parent': 'child',
-      'child': 'parent',
-      'partner': 'partner',
-      'sibling': 'sibling',
-      'donor': 'child', // donor -> child, but child -> donor is handled separately
-      'gestational_carrier': 'child' // gestational carrier -> child
-    };
-    return reciprocals[relationshipType];
-  };
-  
-  // Helper function to determine reciprocal attributes
-  const getReciprocalAttributes = (relationshipType: string, attributes: string[]) => {
-    // Some attributes should be preserved in reciprocal relationships
-    const preservedAttributes = attributes.filter(attr => {
-      // Preserve biological/legal context and ART context
-      return ['biological', 'adopted', 'step', 'foster', 'legal', 'intended', 'ivf', 'iui', 'donor_conceived'].includes(attr);
+  const fetchExternalPersonNames = async (connectionIds: string[]) => {
+    const externalPersonIds = new Set<string>();
+    
+    // Collect all external person IDs
+    connections.forEach(conn => {
+      if (!availablePersons.find(p => p.id === conn.from_person_id)) {
+        externalPersonIds.add(conn.from_person_id);
+      }
+      if (!availablePersons.find(p => p.id === conn.to_person_id)) {
+        externalPersonIds.add(conn.to_person_id);
+      }
     });
-    
-    // For siblings, preserve specific sibling attributes
-    if (relationshipType === 'sibling') {
-      const siblingAttributes = attributes.filter(attr => 
-        ['full', 'half', 'donor_sibling', 'step_sibling'].includes(attr)
-      );
-      return [...preservedAttributes, ...siblingAttributes];
+
+    if (externalPersonIds.size === 0) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('persons')
+        .select('id, name')
+        .in('id', Array.from(externalPersonIds));
+
+      if (error) throw error;
+
+      const namesMap: Record<string, string> = {};
+      (data || []).forEach(p => {
+        namesMap[p.id] = p.name;
+      });
+
+      setExternalPersonNames(namesMap);
+    } catch (error) {
+      console.error('Error fetching external person names:', error);
     }
-    
-    return preservedAttributes;
+  };
+
+  const getConnectionDisplayTextLocal = (connection: Connection): RelationshipDisplayInfo => {
+    return getConnectionDisplayText(connection, person.name);
+  };
+
+  const getRelationshipIconLocal = (type: string) => {
+    const iconName = getRelationshipIcon(type);
+    switch (iconName) {
+      case 'Users': return Users;
+      case 'Baby': return Baby;
+      case 'Heart': return Heart;
+      case 'Dna': return Dna;
+      default: return Link2;
+    }
+  };
+
+  const getRelationshipColorLocal = (type: string) => {
+    return getRelationshipColor(type);
+  };
+
+  const getDisplayLabelLocal = (connection: Connection) => {
+    return getDisplayLabel(connection);
   };
 
   const handleCreateConnection = async () => {
@@ -255,39 +256,70 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('No user found');
 
+      let fromId = person.id;
+      let toId = newConnection.to_person_id;
+      let relType = newConnection.relationship_type;
+      let attributes = newConnection.attributes;
+
+      // Normalize parent-child: always store as 'parent' from parent -> child
+      if (relType === 'child') {
+        // Swap direction and store as 'parent'
+        fromId = newConnection.to_person_id;
+        toId = person.id;
+        relType = 'parent';
+      }
+
+      // Only create one direction for symmetric relationships
+      const symmetricTypes = ['partner', 'sibling'];
+      const isSymmetric = symmetricTypes.includes(relType);
+
+      // Check for existing connection to avoid duplicates
+      const { data: existing, error: existingError } = await supabase
+        .from('connections')
+        .select('id')
+        .eq('from_person_id', fromId)
+        .eq('to_person_id', toId)
+        .eq('relationship_type', relType);
+      if (existingError) throw existingError;
+      if (existing && existing.length > 0) {
+        toast({
+          title: "Duplicate Connection",
+          description: "This connection already exists.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Create the main connection
       const { error: mainError } = await supabase
         .from('connections')
         .insert({
-          from_person_id: person.id,
-          to_person_id: newConnection.to_person_id,
-          relationship_type: newConnection.relationship_type,
-          metadata: {
-            attributes: newConnection.attributes
-          }
+          from_person_id: fromId,
+          to_person_id: toId,
+          relationship_type: relType,
+          metadata: { attributes }
         });
-
       if (mainError) throw mainError;
 
-      // Create the reciprocal connection with appropriate attributes
-      const reciprocalType = getReciprocalRelationship(newConnection.relationship_type);
-      if (reciprocalType) {
-        // For reciprocal relationships, we need to determine appropriate attributes
-        const reciprocalAttributes = getReciprocalAttributes(newConnection.relationship_type, newConnection.attributes);
-        
-        const { error: reciprocalError } = await supabase
+      // Only create reciprocal for symmetric relationships
+      if (isSymmetric) {
+        // Check for existing reciprocal
+        const { data: reciprocalExisting, error: reciprocalExistingError } = await supabase
           .from('connections')
-          .insert({
-            from_person_id: newConnection.to_person_id,
-            to_person_id: person.id,
-          relationship_type: reciprocalType,
-          metadata: {
-              attributes: reciprocalAttributes
-            }
-          });
-
-        if (reciprocalError) {
-          console.error('Error creating reciprocal connection:', reciprocalError);
+          .select('id')
+          .eq('from_person_id', toId)
+          .eq('to_person_id', fromId)
+          .eq('relationship_type', relType);
+        if (reciprocalExistingError) throw reciprocalExistingError;
+        if (!reciprocalExisting || reciprocalExisting.length === 0) {
+          await supabase
+            .from('connections')
+            .insert({
+              from_person_id: toId,
+              to_person_id: fromId,
+              relationship_type: relType,
+              metadata: { attributes }
+            });
         }
       }
 
@@ -296,33 +328,29 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
         .from('family_tree_members')
         .select('family_tree_id')
         .eq('person_id', person.id);
-
       if (!treeError && treeMembers && treeMembers.length > 0) {
-        // Update both connections with the family tree ID from the first tree
         const familyTreeId = treeMembers[0].family_tree_id;
-        
         // Update main connection
         await supabase
           .from('connections')
           .update({ family_tree_id: familyTreeId })
-          .eq('from_person_id', person.id)
-          .eq('to_person_id', newConnection.to_person_id)
-          .eq('relationship_type', newConnection.relationship_type);
-
-        // Update reciprocal connection
-        if (reciprocalType) {
+          .eq('from_person_id', fromId)
+          .eq('to_person_id', toId)
+          .eq('relationship_type', relType);
+        // Update reciprocal if symmetric
+        if (isSymmetric) {
           await supabase
             .from('connections')
             .update({ family_tree_id: familyTreeId })
-            .eq('from_person_id', newConnection.to_person_id)
-            .eq('to_person_id', person.id)
-            .eq('relationship_type', reciprocalType);
+            .eq('from_person_id', toId)
+            .eq('to_person_id', fromId)
+            .eq('relationship_type', relType);
         }
       }
 
       toast({
         title: "Success",
-        description: "Connection and reciprocal relationship created successfully",
+        description: "Connection created successfully",
       });
 
       setNewConnection({ to_person_id: '', relationship_type: '', attributes: [] });
@@ -341,60 +369,52 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
 
   const handleUpdateConnection = async () => {
     if (!editingConnection) return;
-
     try {
+      let fromId = editingConnection.from_person_id;
+      let toId = editingConnection.to_person_id;
+      let relType = editingConnection.relationship_type;
+      let attributes = editingAttributes; // Use the editingAttributes state
+      // Normalize parent-child: always store as 'parent' from parent -> child
+      if (relType === 'child') {
+        fromId = editingConnection.to_person_id;
+        toId = editingConnection.from_person_id;
+        relType = 'parent';
+      }
+      const symmetricTypes = ['partner', 'sibling'];
+      const isSymmetric = symmetricTypes.includes(relType);
       // Update the main connection
       const { error: mainError } = await supabase
         .from('connections')
         .update({
-          relationship_type: editingConnection.relationship_type,
-          metadata: {
-            attributes: (editingConnection.metadata as any)?.attributes || []
-          }
+          relationship_type: relType,
+          metadata: { attributes }
         })
         .eq('id', editingConnection.id);
-
       if (mainError) throw mainError;
-
-      // Find and update the reciprocal connection
-      const reciprocalType = getReciprocalRelationship(editingConnection.relationship_type);
-      if (reciprocalType) {
-        // Find the reciprocal connection
+      // Update reciprocal if symmetric
+      if (isSymmetric) {
         const { data: reciprocalConnections, error: findError } = await supabase
           .from('connections')
           .select('id')
-          .eq('from_person_id', editingConnection.direction === 'outgoing' ? editingConnection.to_person_id : editingConnection.from_person_id)
-          .eq('to_person_id', editingConnection.direction === 'outgoing' ? editingConnection.from_person_id : editingConnection.to_person_id);
-
+          .eq('from_person_id', toId)
+          .eq('to_person_id', fromId)
+          .eq('relationship_type', relType);
         if (!findError && reciprocalConnections && reciprocalConnections.length > 0) {
-          // Update reciprocal connection with appropriate attributes
-          const reciprocalAttributes = getReciprocalAttributes(
-            editingConnection.relationship_type, 
-            (editingConnection.metadata as any)?.attributes || []
-          );
-          
-          const { error: reciprocalError } = await supabase
+          await supabase
             .from('connections')
             .update({
-              relationship_type: reciprocalType,
-              metadata: {
-                attributes: reciprocalAttributes
-              }
+              relationship_type: relType,
+              metadata: { attributes }
             })
             .eq('id', reciprocalConnections[0].id);
-
-          if (reciprocalError) {
-            console.error('Error updating reciprocal connection:', reciprocalError);
-          }
         }
       }
-
       toast({
         title: "Success",
-        description: "Connection and reciprocal relationship updated successfully",
+        description: "Connection updated successfully",
       });
-
       setEditingConnection(null);
+      setEditingAttributes([]);
       fetchConnections();
       onConnectionUpdated?.();
     } catch (error) {
@@ -411,37 +431,43 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
     if (!window.confirm("Are you sure you want to delete this connection? This will also remove the reciprocal relationship.")) {
       return;
     }
-
     try {
-      // Find the connection to get details for reciprocal deletion
       const connectionToDelete = connections.find(c => c.id === connectionId);
-      
       if (connectionToDelete) {
-        // Delete reciprocal connection first
-        const { error: reciprocalError } = await supabase
-          .from('connections')
-          .delete()
-          .eq('from_person_id', connectionToDelete.direction === 'outgoing' ? connectionToDelete.to_person_id : connectionToDelete.from_person_id)
-          .eq('to_person_id', connectionToDelete.direction === 'outgoing' ? connectionToDelete.from_person_id : connectionToDelete.to_person_id);
-
-        if (reciprocalError) {
-          console.error('Error deleting reciprocal connection:', reciprocalError);
+        let fromId = connectionToDelete.from_person_id;
+        let toId = connectionToDelete.to_person_id;
+        let relType = connectionToDelete.relationship_type;
+        // Normalize parent-child: always store as 'parent' from parent -> child
+        if (relType === 'child') {
+          fromId = connectionToDelete.to_person_id;
+          toId = connectionToDelete.from_person_id;
+          relType = 'parent';
+        }
+        const symmetricTypes = ['partner', 'sibling'];
+        const isSymmetric = symmetricTypes.includes(relType);
+        // Delete reciprocal if symmetric
+        if (isSymmetric) {
+          const { error: reciprocalError } = await supabase
+            .from('connections')
+            .delete()
+            .eq('from_person_id', toId)
+            .eq('to_person_id', fromId)
+            .eq('relationship_type', relType);
+          if (reciprocalError) {
+            console.error('Error deleting reciprocal connection:', reciprocalError);
+          }
         }
       }
-
       // Delete the main connection
       const { error } = await supabase
         .from('connections')
         .delete()
         .eq('id', connectionId);
-
       if (error) throw error;
-
       toast({
         title: "Success",
-        description: "Connection and reciprocal relationship deleted successfully",
+        description: "Connection deleted successfully",
       });
-
       fetchConnections();
       onConnectionUpdated?.();
     } catch (error) {
@@ -509,7 +535,7 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
                   </SelectTrigger>
                   <SelectContent>
                     {relationshipTypes.map(type => {
-                      const Icon = type.icon;
+                      const Icon = getRelationshipIconLocal(type.value);
                       return (
                         <SelectItem key={type.value} value={type.value}>
                           <div className="flex items-center gap-2">
@@ -542,125 +568,173 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
           </DialogContent>
         </Dialog>
       </div>
-
-      {connections.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No connections for {person.name} yet.</p>
-          <p className="text-sm">Add connections to define relationships.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="text-sm text-muted-foreground mb-4">
-            Showing both outgoing connections (relationships {person.name} has to others) and incoming connections (relationships others have to {person.name}).
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Relationship</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {connections.map(connection => {
-                const Icon = getRelationshipIcon(connection.relationship_type);
-                const displayInfo = getConnectionDisplayText(connection);
-                return (
-                  <TableRow key={connection.id}>
-                    <TableCell>
-                      <Badge 
-                        variant="secondary" 
-                        className="flex items-center gap-1 w-fit"
-                        style={{ 
-                          backgroundColor: `${getRelationshipColor(connection.relationship_type)}20`,
-                          color: getRelationshipColor(connection.relationship_type)
-                        }}
-                      >
-                        <Icon className="w-3 h-3" />
-                        {relationshipTypes.find(r => r.value === connection.relationship_type)?.label || connection.relationship_type}
-                        {connection.direction === 'incoming' && (
-                          <span className="text-xs opacity-70">(incoming)</span>
-                        )}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {displayInfo.description}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Dialog 
-                          open={editingConnection?.id === connection.id} 
-                          onOpenChange={(open) => !open && setEditingConnection(null)}
+      {/* Prepare for external connections pattern */}
+      {(() => {
+        const allPersonIds = new Set([person.id, ...availablePersons.map(p => p.id)]);
+        const inTreeConnections = connections.filter(c => allPersonIds.has(c.from_person_id) && allPersonIds.has(c.to_person_id));
+        const externalConnections = connections.filter(c => !allPersonIds.has(c.from_person_id) || !allPersonIds.has(c.to_person_id));
+        if (connections.length === 0) {
+          return (
+            <div className="text-center py-8 text-muted-foreground">
+              <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No connections for {person.name} yet.</p>
+              <p className="text-sm">Add connections to define relationships.</p>
+            </div>
+          );
+        }
+        return (
+          <>
+            <div className="text-sm text-muted-foreground mb-4">
+              Showing both outgoing connections (relationships {person.name} has to others) and incoming connections (relationships others have to {person.name}).
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Relationship</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {inTreeConnections.map(connection => {
+                  const Icon = getRelationshipIconLocal(connection.relationship_type);
+                  const displayInfo = getConnectionDisplayTextLocal(connection);
+                  return (
+                    <TableRow key={connection.id}>
+                      <TableCell>
+                        <Badge 
+                          variant="secondary" 
+                          className="flex items-center gap-1 w-fit"
+                          style={{ 
+                            backgroundColor: `${getRelationshipColorLocal(connection.relationship_type)}20`,
+                            color: getRelationshipColorLocal(connection.relationship_type)
+                          }}
                         >
-                          <DialogTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => setEditingConnection(connection)}
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Edit Connection</DialogTitle>
-                              <DialogDescription>
-                                Change the relationship type between {person.name} and {displayInfo.otherPersonName}.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <label className="text-sm font-medium">Relationship Type</label>
-                                <Select
-                                  value={editingConnection?.relationship_type || ''}
-                                  onValueChange={(value) => setEditingConnection(prev => 
-                                    prev ? { ...prev, relationship_type: value } : null
-                                  )}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select relationship" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {relationshipTypes.map(type => {
-                                      const Icon = type.icon;
-                                      return (
-                                        <SelectItem key={type.value} value={type.value}>
-                                          <div className="flex items-center gap-2">
-                                            <Icon className="w-4 h-4" />
-                                            {type.label}
-                                          </div>
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectContent>
-                                </Select>
+                          <Icon className="w-3 h-3" />
+                          {getDisplayLabelLocal(connection)}
+                          {connection.direction === 'incoming' && (
+                            <span className="text-xs opacity-70">(incoming)</span>
+                          )}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {displayInfo.description}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Dialog 
+                            open={editingConnection?.id === connection.id} 
+                            onOpenChange={(open) => !open && setEditingConnection(null)}
+                          >
+                            <DialogTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingConnection(connection);
+                                  setEditingAttributes((connection.metadata as any)?.attributes || []);
+                                }}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit Connection</DialogTitle>
+                                <DialogDescription>
+                                  Change the relationship type between {person.name} and {displayInfo.otherPersonName}.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-sm font-medium">Relationship Type</label>
+                                  <Select
+                                    value={editingConnection?.relationship_type || ''}
+                                    onValueChange={(value) => setEditingConnection(prev => 
+                                      prev ? { ...prev, relationship_type: value } : null
+                                    )}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select relationship" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {relationshipTypes.map(type => {
+                                        const Icon = getRelationshipIconLocal(type.value);
+                                        return (
+                                          <SelectItem key={type.value} value={type.value}>
+                                            <div className="flex items-center gap-2">
+                                              <Icon className="w-4 h-4" />
+                                              {type.label}
+                                            </div>
+                                          </SelectItem>
+                                        );
+                                      })}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                {/* Attribute Selector for editing */}
+                                {editingConnection?.relationship_type && (
+                                  <RelationshipAttributeSelector
+                                    relationshipType={editingConnection.relationship_type}
+                                    selectedAttributes={editingAttributes}
+                                    onAttributesChange={setEditingAttributes}
+                                  />
+                                )}
+                                
+                                <div className="flex gap-2">
+                                  <Button onClick={handleUpdateConnection}>Update</Button>
+                                  <Button variant="outline" onClick={() => {
+                                    setEditingConnection(null);
+                                    setEditingAttributes([]);
+                                  }}>
+                                    Cancel
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="flex gap-2">
-                                <Button onClick={handleUpdateConnection}>Update</Button>
-                                <Button variant="outline" onClick={() => setEditingConnection(null)}>
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleDeleteConnection(connection.id)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+                            </DialogContent>
+                          </Dialog>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteConnection(connection.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+            {externalConnections.length > 0 && (
+              <div className="mt-4">
+                <button className="text-sm text-blue-600 underline" onClick={() => setShowExternalConnections(true)}>
+                  +{externalConnections.length} connection{externalConnections.length > 1 ? 's' : ''} to people outside this tree
+                </button>
+                {showExternalConnections && (
+                  <div className="mt-2 p-2 border rounded bg-muted">
+                    <h4 className="font-medium mb-2">External Connections</h4>
+                    <ul className="space-y-1">
+                      {externalConnections.map(conn => {
+                        return (
+                          <li key={conn.id} className="text-sm">
+                            {getPersonName(conn.from_person_id)} → {getPersonName(conn.to_person_id)} ({conn.relationship_type})
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <button className="mt-2 text-xs text-blue-600 underline" onClick={() => setShowExternalConnections(false)}>
+                      Hide
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }

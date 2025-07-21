@@ -1,73 +1,34 @@
-# Welcome to your Lovable project
+# Family Shapes Canvas - Data and UI Patterns
 
-## Project info
+## Relationship Data Model
 
-**URL**: https://lovable.dev/projects/6e4109b6-b165-4556-baab-bd21469c6dee
+- **Parent-Child:** Only `parent` is stored for parent-child relationships, always from parent → child. No `child` direction is stored in the database.
+- **Symmetric Relationships:** `partner` and `sibling` are stored in both directions (A→B and B→A).
+- **Other Types:** `donor` and `gestational_carrier` are stored in the canonical direction (from donor/carrier to child).
 
-## How can I edit this code?
+## UI Display Logic
 
-There are several ways of editing your application.
+- The UI always infers the reciprocal label for display. For example, if A is parent of B, B will see A as their parent, and A will see B as their child.
+- For symmetric relationships, both directions are shown as appropriate.
 
-**Use Lovable**
+## D3 Layouts and Hierarchy
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6e4109b6-b165-4556-baab-bd21469c6dee) and start prompting.
+- All D3 layouts and hierarchy logic only use `parent` relationships for building the tree.
+- Duplicate or reciprocal `child` relationships are ignored.
 
-Changes made via Lovable will be committed automatically to this repo.
+## External Connections Pattern
 
-**Use your preferred IDE**
+- If a person has connections to people not in the current tree, these are shown as external connections.
+- The UI displays a summary (e.g., '+2 connections to people outside this tree') and allows expanding to view details of those external connections.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Testing
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Tests cover:
+  - Only `parent` for parent-child
+  - Symmetric relationships
+  - Edge cases (missing persons, circular, self-relationships)
+  - External connections pattern
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/6e4109b6-b165-4556-baab-bd21469c6dee) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+For more details, see the code and tests in the respective components and test files.

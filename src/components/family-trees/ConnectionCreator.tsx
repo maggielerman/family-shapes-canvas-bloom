@@ -107,9 +107,10 @@ export function ConnectionCreator({
     // Simple tree layout
     const levels = new Map<string, number>();
     const visited = new Set<string>();
-    
+    // Only use 'parent' relationships for hierarchy
+    const parentConnections = connections.filter(c => c.relationship_type === 'parent');
     // Find root nodes (no incoming parent connections)
-    const children = new Set(connections.filter(c => c.relationship_type === 'child').map(c => c.to_person_id));
+    const children = new Set(parentConnections.map(c => c.to_person_id));
     const roots = persons.filter(p => !children.has(p.id));
     
     let currentLevel = 0;
