@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import {
   ReactFlow,
   Node,
@@ -18,11 +18,13 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, Network } from 'lucide-react';
+import { Plus, Users, Network, RotateCcw } from 'lucide-react';
 import { AddPersonDialog } from './AddPersonDialog';
 import { PersonCardDialog } from '@/components/people/PersonCard';
 import { XYFlowConnectionManager } from './XYFlowConnectionManager';
 import { XYFlowLegend, relationshipTypes } from './XYFlowLegend';
+import { XYFlowLayoutSelector, LayoutType } from './XYFlowLayoutSelector';
+import { XYFlowLayoutService, LayoutResult } from './layouts/XYFlowLayoutService';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PersonNode } from './PersonNode';
@@ -55,6 +57,9 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [currentLayout, setCurrentLayout] = useState<LayoutType>('manual');
+  const [isLayoutLoading, setIsLayoutLoading] = useState(false);
+  const reactFlowRef = useRef<any>(null);
   const { toast } = useToast();
 
   // Convert persons to nodes
@@ -97,6 +102,72 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     });
     setEdges(connectionEdges);
   }, [connections, setEdges]);
+
+  // Apply layout when layout type changes
+  useEffect(() => {
+    if (nodes.length === 0 || currentLayout === 'manual') return;
+
+    let isCancelled = false;
+
+    const applyLayout = async () => {
+      setIsLayoutLoading(true);
+      try {
+        const containerWidth = 800;
+        const containerHeight = 600;
+        
+        // Add timeout to prevent blocking
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Layout timeout')), 5000);
+        });
+        
+        const layoutPromise = XYFlowLayoutService.applyLayout(
+          nodes,
+          edges,
+          currentLayout,
+          containerWidth,
+          containerHeight
+        );
+        
+        const result = await Promise.race([layoutPromise, timeoutPromise]) as LayoutResult;
+        
+        if (!isCancelled) {
+          setNodes(result.nodes);
+          setEdges(result.edges);
+          
+          // Fit view after layout is applied
+          setTimeout(() => {
+            if (reactFlowRef.current && !isCancelled) {
+              reactFlowRef.current.fitView({ padding: 0.1 });
+            }
+          }, 100);
+        }
+        
+              } catch (error) {
+          if (!isCancelled) {
+            console.error('Layout application error:', error);
+            toast({
+              title: "Layout Error",
+              description: error.message === 'Layout timeout' 
+                ? "Layout took too long. Try a different layout or fewer nodes."
+                : "Failed to apply layout. Please try again.",
+              variant: "destructive",
+            });
+            // Fallback to manual layout on error
+            setCurrentLayout('manual');
+          }
+        } finally {
+          if (!isCancelled) {
+            setIsLayoutLoading(false);
+          }
+        }
+    };
+
+    applyLayout();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentLayout]); // Only depend on currentLayout, not nodes/edges
 
   const fetchConnections = async () => {
     try {
@@ -227,12 +298,29 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
             <Plus className="w-4 h-4 mr-2" />
             Add Person
           </Button>
+          {currentLayout !== 'manual' && (
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentLayout('manual')}
+              disabled={isLayoutLoading}
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset Layout
+            </Button>
+          )}
         </div>
         
         <div className="text-sm text-muted-foreground">
           Interactive family tree builder - drag nodes to reposition, double-click to edit
         </div>
       </div>
+
+      {/* Layout Selector */}
+      <XYFlowLayoutSelector
+        currentLayout={currentLayout}
+        onLayoutChange={setCurrentLayout}
+        disabled={isLayoutLoading}
+      />
 
       {/* Legend */}
       <XYFlowLegend />
@@ -263,6 +351,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
       ) : (
         <div className="h-[600px] border rounded-lg">
           <ReactFlow
+            ref={reactFlowRef}
             nodes={nodes}
             edges={edges}
             onNodesChange={handleNodesChange}
@@ -279,6 +368,9 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
             <Panel position="top-right" className="bg-background/80 backdrop-blur-sm rounded-lg p-2">
               <div className="text-xs text-muted-foreground">
                 {persons.length} people • {connections.length} connections
+                {isLayoutLoading && (
+                  <span className="ml-2 text-blue-500">• Applying layout...</span>
+                )}
               </div>
             </Panel>
           </ReactFlow>
