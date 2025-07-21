@@ -370,49 +370,89 @@ export function PersonConnectionManager({ person, onConnectionUpdated }: PersonC
   const handleUpdateConnection = async () => {
     if (!editingConnection) return;
     try {
-      let fromId = editingConnection.from_person_id;
-      let toId = editingConnection.to_person_id;
-      let relType = editingConnection.relationship_type;
-      let attributes = editingAttributes; // Use the editingAttributes state
-      // Normalize parent-child: always store as 'parent' from parent -> child
-      if (relType === 'child') {
-        fromId = editingConnection.to_person_id;
-        toId = editingConnection.from_person_id;
-        relType = 'parent';
-      }
+      const attributes = editingAttributes; // Use the editingAttributes state
+      const newRelationshipType = editingConnection.relationship_type;
       const symmetricTypes = ['partner', 'sibling'];
-      const isSymmetric = symmetricTypes.includes(relType);
-      // Update the main connection
+      const isSymmetric = symmetricTypes.includes(newRelationshipType);
+      
+      // Store original connection data for finding reciprocal
+      const originalFromId = editingConnection.from_person_id;
+      const originalToId = editingConnection.to_person_id;
+      const originalRelType = editingConnection.relationship_type;
+      
+      // Determine the normalized relationship data
+      let normalizedFromId = originalFromId;
+      let normalizedToId = originalToId;
+      let normalizedRelType = originalRelType;
+      
+      // Normalize parent-child: always store as 'parent' from parent -> child
+      if (newRelationshipType === 'child') {
+        normalizedFromId = originalToId;
+        normalizedToId = originalFromId;
+        normalizedRelType = 'parent';
+      } else {
+        normalizedFromId = originalFromId;
+        normalizedToId = originalToId;
+        normalizedRelType = newRelationshipType;
+      }
+      
+      // Check if the normalized relationship already exists (excluding the current connection)
+      const { data: existingConnections, error: checkError } = await supabase
+        .from('connections')
+        .select('id')
+        .eq('from_person_id', normalizedFromId)
+        .eq('to_person_id', normalizedToId)
+        .eq('relationship_type', normalizedRelType)
+        .neq('id', editingConnection.id);
+      
+      if (checkError) throw checkError;
+      
+      // If a normalized relationship already exists, we can't update this way
+      if (existingConnections && existingConnections.length > 0) {
+        toast({
+          title: "Error",
+          description: "A connection with this relationship type already exists between these people",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Update the main connection with normalized data
       const { error: mainError } = await supabase
         .from('connections')
         .update({
-          from_person_id: fromId,
-          to_person_id: toId,
-          relationship_type: relType,
+          from_person_id: normalizedFromId,
+          to_person_id: normalizedToId,
+          relationship_type: normalizedRelType,
           metadata: { attributes }
         })
         .eq('id', editingConnection.id);
       if (mainError) throw mainError;
-      // Update reciprocal if symmetric
+      
+      // Handle reciprocal connection for symmetric relationships
       if (isSymmetric) {
+        // First, find the existing reciprocal using the original relationship data
         const { data: reciprocalConnections, error: findError } = await supabase
           .from('connections')
           .select('id')
-          .eq('from_person_id', toId)
-          .eq('to_person_id', fromId)
-          .eq('relationship_type', relType);
+          .eq('from_person_id', originalToId)
+          .eq('to_person_id', originalFromId)
+          .eq('relationship_type', originalRelType);
+        
         if (!findError && reciprocalConnections && reciprocalConnections.length > 0) {
+          // Update the reciprocal connection with the new normalized data
           await supabase
             .from('connections')
             .update({
-              from_person_id: toId,
-              to_person_id: fromId,
-              relationship_type: relType,
+              from_person_id: normalizedToId,
+              to_person_id: normalizedFromId,
+              relationship_type: normalizedRelType,
               metadata: { attributes }
             })
             .eq('id', reciprocalConnections[0].id);
         }
       }
+      
       toast({
         title: "Success",
         description: "Connection updated successfully",
