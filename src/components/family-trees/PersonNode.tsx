@@ -6,20 +6,45 @@ import { Badge } from '@/components/ui/badge';
 import { formatDateShort, calculateAge } from '@/utils/dateUtils';
 import { Person, PersonUtils } from '@/types/person';
 
-export const PersonNode = memo(({ data }: NodeProps) => {
+interface PersonNodeData {
+  person: Person;
+  generationColor?: string;
+  generation?: number;
+}
+
+export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
   const person = data.person as Person;
+  const generationColor = data.generationColor;
+  const generation = data.generation;
   const age = person.date_of_birth ? calculateAge(person.date_of_birth) : null;
   const initials = PersonUtils.getInitials(person);
 
   return (
-    <Card className="w-48 shadow-lg border-2 hover:border-primary/50 transition-colors">
+    <Card 
+      className="w-48 shadow-lg border-2 hover:border-primary/50 transition-colors"
+      style={{
+        borderColor: generationColor || 'hsl(var(--border))',
+        backgroundColor: generationColor ? `${generationColor}10` : undefined
+      }}
+    >
       <Handle type="target" position={Position.Top} className="w-3 h-3" />
       
       <CardContent className="p-3">
         <div className="flex items-center gap-3 mb-2">
-          <Avatar className="w-10 h-10">
+          <Avatar 
+            className="w-10 h-10 ring-2"
+            style={{ 
+              ringColor: generationColor || 'hsl(var(--border))'
+            }}
+          >
             <AvatarImage src={person.profile_photo_url || undefined} />
-            <AvatarFallback className="text-xs">
+            <AvatarFallback 
+              className="text-xs"
+              style={{
+                backgroundColor: generationColor || undefined,
+                color: generationColor ? '#ffffff' : undefined
+              }}
+            >
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -34,6 +59,11 @@ export const PersonNode = memo(({ data }: NodeProps) => {
                   {formatDateShort(person.date_of_birth)}
                   {age && ` (${age})`}
                 </span>
+              )}
+              {generation !== undefined && (
+                <div className="text-xs font-medium mt-1" style={{ color: generationColor }}>
+                  Gen {generation}
+                </div>
               )}
             </div>
           </div>

@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
+import { 
+  calculateGenerations, 
+  getGenerationalConnections, 
+  GenerationInfo 
+} from '@/utils/generationUtils';
 
 interface Person {
   id: string;
@@ -50,8 +55,14 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
       validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
     );
 
-    // Create hierarchical data structure
-    const hierarchyData = createHierarchy(persons, validConnections);
+    // Calculate generations for color coding
+    const generationMap = calculateGenerations(persons, validConnections);
+
+    // Use only generational connections for tree structure
+    const generationalConnections = getGenerationalConnections(validConnections);
+
+    // Create hierarchical data structure using only generational connections
+    const hierarchyData = createHierarchy(persons, generationalConnections);
     if (!hierarchyData) return;
 
     // Create the tree layout
@@ -64,7 +75,7 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
     const g = svg.append('g')
       .attr('transform', 'translate(50,50)');
 
-    // Create links
+    // Create links (only for generational connections)
     g.selectAll('.link')
       .data(root.links())
       .enter()
@@ -77,7 +88,7 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
       .attr('stroke', 'hsl(var(--border))')
       .attr('stroke-width', 2);
 
-    // Create nodes
+    // Create nodes with generation-based coloring
     const nodes = g.selectAll('.node')
       .data(root.descendants())
       .enter()
@@ -89,12 +100,19 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
         onPersonClick?.(d.data);
       });
 
-    // Add circles for nodes
+    // Add circles for nodes with generation colors
     nodes.append('circle')
       .attr('r', 30)
-      .attr('fill', d => getPersonColor(d.data, validConnections, relationshipTypes))
-      .attr('stroke', 'hsl(var(--border))')
-      .attr('stroke-width', 2);
+      .attr('fill', d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.color || 'hsl(var(--chart-1))';
+      })
+      .attr('stroke', d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.color || 'hsl(var(--border))';
+      })
+      .attr('stroke-width', 3)
+      .attr('opacity', 0.8);
 
     // Add profile images if available
     nodes.filter(d => d.data.profile_photo_url)
@@ -114,6 +132,21 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
       .attr('fill', 'hsl(var(--foreground))')
       .text(d => d.data.name);
 
+    // Add generation labels
+    nodes.append('text')
+      .attr('dy', -40)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '10px')
+      .attr('fill', d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo?.color || 'hsl(var(--muted-foreground))';
+      })
+      .attr('font-weight', 'bold')
+      .text(d => {
+        const generationInfo = generationMap.get(d.data.id);
+        return generationInfo ? `Gen ${generationInfo.generation}` : '';
+      });
+
     // Add zoom and pan
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
@@ -122,6 +155,41 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
       });
 
     svg.call(zoom);
+
+    // Add legend for generation colors
+    const legend = svg.append('g')
+      .attr('class', 'legend')
+      .attr('transform', 'translate(20, 20)');
+
+    const uniqueGenerations = Array.from(generationMap.values())
+      .sort((a, b) => a.generation - b.generation)
+      .filter((gen, index, arr) => 
+        index === arr.findIndex(g => g.generation === gen.generation)
+      );
+
+    legend.selectAll('.legend-item')
+      .data(uniqueGenerations.slice(0, 6)) // Show first 6 generations
+      .enter()
+      .append('g')
+      .attr('class', 'legend-item')
+      .attr('transform', (d, i) => `translate(0, ${i * 20})`)
+      .each(function(d) {
+        const item = d3.select(this);
+        
+        item.append('circle')
+          .attr('r', 8)
+          .attr('fill', d.color)
+          .attr('stroke', d.color)
+          .attr('stroke-width', 2)
+          .attr('opacity', 0.8);
+        
+        item.append('text')
+          .attr('x', 15)
+          .attr('y', 4)
+          .attr('font-size', '12px')
+          .attr('fill', 'hsl(var(--foreground))')
+          .text(`Generation ${d.generation}`);
+      });
 
   }, [persons, connections, width, height, onPersonClick]);
 
@@ -138,10 +206,10 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
 function createHierarchy(persons: Person[], connections: Connection[]): Person | null {
   if (persons.length === 0) return null;
 
-  // Connections are already filtered in the calling function
+  // Connections are already filtered to generational connections
   const validConnections = connections;
 
-  // Find root person (someone who is not a child)
+  // Find root person (someone who is not a child in generational connections)
   const childIds = new Set(validConnections.map(c => c.to_person_id));
   const rootPersons = persons.filter(p => !childIds.has(p.id));
   
@@ -190,19 +258,4 @@ function buildTree(person: Person, allPersons: Person[], connections: Connection
     ...person,
     children: children.length > 0 ? children : undefined
   };
-}
-
-function getPersonColor(person: Person, connections: Connection[], relationshipTypes: RelationshipType[]): string {
-  // Find the primary relationship for this person (first connection as "to_person")
-  const primaryConnection = connections.find(c => c.to_person_id === person.id);
-  
-  if (primaryConnection) {
-    const relationshipType = relationshipTypes.find(rt => rt.value === primaryConnection.relationship_type);
-    if (relationshipType) {
-      return relationshipType.color;
-    }
-  }
-  
-  // Default to first relationship type color if no specific relationship found
-  return relationshipTypes[0]?.color || 'hsl(var(--chart-1))';
 }
