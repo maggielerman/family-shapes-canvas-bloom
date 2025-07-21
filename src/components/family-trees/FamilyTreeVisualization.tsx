@@ -12,6 +12,7 @@ import { RadialTreeLayout } from "./layouts/RadialTreeLayout";
 import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
 import { ReactD3TreeLayout } from "./layouts/ReactD3TreeLayout";
 import { ClusterLayout } from "./layouts/ClusterLayout";
+import { XYFlowTreeBuilder } from "./XYFlowTreeBuilder";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -212,8 +213,12 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </div>
         </div>
       ) : (
-        <Tabs defaultValue="tree" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="xyflow" className="w-full">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="xyflow" className="flex items-center gap-1">
+              <Network className="w-3 h-3" />
+              Interactive
+            </TabsTrigger>
             <TabsTrigger value="tree" className="flex items-center gap-1">
               <GitBranch className="w-3 h-3" />
               Tree
@@ -235,6 +240,14 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
               Cluster
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="xyflow" className="mt-4">
+            <XYFlowTreeBuilder
+              familyTreeId={familyTreeId}
+              persons={persons}
+              onPersonAdded={onPersonAdded}
+            />
+          </TabsContent>
           
           <TabsContent value="tree" className="mt-4">
             <TreeLayout
