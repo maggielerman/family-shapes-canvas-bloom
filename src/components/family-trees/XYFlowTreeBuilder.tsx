@@ -15,6 +15,7 @@ import {
   applyEdgeChanges,
   MarkerType,
   Panel,
+  ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
@@ -28,16 +29,8 @@ import { XYFlowLayoutService, LayoutResult } from './layouts/XYFlowLayoutService
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PersonNode } from './PersonNode';
-import { Person } from '@/types/person';
-import { ConnectionUtils } from '@/types/connection';
-
-interface PersonConnection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-  family_tree_id?: string | null;
-}
+import { Person, CreatePersonData } from '@/types/person';
+import { ConnectionUtils, Connection, RelationshipType } from '@/types/connection';
 
 interface XYFlowTreeBuilderProps {
   familyTreeId: string;
@@ -54,13 +47,13 @@ const nodeTypes = {
 export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFlowTreeBuilderProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [connections, setConnections] = useState<PersonConnection[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [currentLayout, setCurrentLayout] = useState<LayoutType>('manual');
   const [isLayoutLoading, setIsLayoutLoading] = useState(false);
-  const reactFlowRef = useRef<any>(null);
+  const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const { toast } = useToast();
 
   // Convert persons to nodes
@@ -80,10 +73,10 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   }, [familyTreeId]);
 
   useEffect(() => {
-          const deduplicatedConnections = connections; // ConnectionUtils.deduplicate expects full Connection type, but we're working with PersonConnection
+    const deduplicatedConnections = ConnectionUtils.deduplicate(connections);
     const connectionEdges: Edge[] = deduplicatedConnections.map((connection) => {
       const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
-              const isBidirectional = ConnectionUtils.isBidirectional(connection.relationship_type as any);
+      const isBidirectional = ConnectionUtils.isBidirectional(connection.relationship_type as RelationshipType);
       
       return {
         id: connection.id,
@@ -215,7 +208,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     }
   };
 
-  const handleAddPerson = async (personData: any) => {
+  const handleAddPerson = async (personData: CreatePersonData) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('No user found');
