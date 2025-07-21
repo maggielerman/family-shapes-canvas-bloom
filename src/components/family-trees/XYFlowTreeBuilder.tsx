@@ -144,7 +144,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
             console.error('Layout application error:', error);
             toast({
               title: "Layout Error",
-              description: error.message === 'Layout timeout' 
+              description: (error instanceof Error && error.message === 'Layout timeout') 
                 ? "Layout took too long. Try a different layout or fewer nodes."
                 : "Failed to apply layout. Please try again.",
               variant: "destructive",
