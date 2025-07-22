@@ -327,26 +327,27 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           {currentFolderId && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setCurrentFolderId(null)}
+              className="w-full sm:w-auto"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Root
             </Button>
           )}
-          <h3 className="text-xl font-semibold">
+          <h3 className="text-lg sm:text-xl font-semibold">
             {currentFolderId ? 'Folder Contents' : 'Family Media'}
           </h3>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
           <div className="flex border rounded-md">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -368,12 +369,12 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
           
           <Dialog open={createFolderOpen} onOpenChange={setCreateFolderOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <FolderPlus className="w-4 h-4 mr-2" />
                 New Folder
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="w-[95vw] max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Create New Folder</DialogTitle>
                 <DialogDescription>
@@ -395,14 +396,15 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
                     placeholder="Enter folder description"
                     value={folderDescription}
                     onChange={(e) => setFolderDescription(e.target.value)}
+                    className="resize-none"
                   />
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setCreateFolderOpen(false)}>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => setCreateFolderOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button onClick={createFolder} disabled={!folderName.trim()}>
+                <Button onClick={createFolder} disabled={!folderName.trim()} className="w-full sm:w-auto">
                   Create Folder
                 </Button>
               </DialogFooter>
@@ -411,12 +413,12 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
 
           <Dialog open={uploadFilesOpen} onOpenChange={setUploadFilesOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Files
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="w-[95vw] max-w-lg">
               <DialogHeader>
                 <DialogTitle>Upload Files</DialogTitle>
                 <DialogDescription>
@@ -435,13 +437,14 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
                   </div>
                 )}
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setUploadFilesOpen(false)}>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => setUploadFilesOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleUpload} 
                   disabled={selectedFiles.length === 0 || isUploading}
+                  className="w-full sm:w-auto"
                 >
                   {isUploading ? 'Uploading...' : `Upload ${selectedFiles.length} file(s)`}
                 </Button>
@@ -464,17 +467,17 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
 
       {/* Content */}
       {filteredFolders.length === 0 && filteredMedia.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Folder className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+        <Card className="text-center py-8 md:py-12">
+          <CardContent className="px-4">
+            <Folder className="w-12 h-12 md:w-16 md:h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No media files yet</h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 text-sm md:text-base">
               Start organizing your family media by creating folders and uploading files.
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" : "space-y-2"}>
+        <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "space-y-2"}>
           {/* Folders */}
           {filteredFolders.map((folder) => viewMode === 'grid' ? (
             <Card 
@@ -484,13 +487,13 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, folder.id)}
             >
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-3">
-                  <Folder className="w-8 h-8 text-primary" />
+                  <Folder className="w-6 h-6 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium truncate">{folder.name}</h4>
+                    <h4 className="font-medium truncate text-sm sm:text-base">{folder.name}</h4>
                     {folder.description && (
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {folder.description}
                       </p>
                     )}
@@ -508,11 +511,11 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
             >
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
-                  <Folder className="w-6 h-6 text-primary" />
+                  <Folder className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium truncate">{folder.name}</h4>
+                    <h4 className="font-medium truncate text-sm sm:text-base">{folder.name}</h4>
                     {folder.description && (
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {folder.description}
                       </p>
                     )}
@@ -542,7 +545,7 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <FileIcon className="h-12 w-12 text-muted-foreground" />
+                      <FileIcon className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
                     </div>
                   )}
                   
@@ -551,7 +554,7 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                        className="absolute top-2 right-2 bg-white/80 hover:bg-white h-8 w-8 p-0"
                       >
                         <MoreVertical className="h-3 w-3" />
                       </Button>
@@ -573,14 +576,14 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
                   </DropdownMenu>
                 </div>
                 
-                <CardContent className="p-3">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm truncate" title={item.media_file.file_name}>
+                <CardContent className="p-2 sm:p-3">
+                  <div className="space-y-1 sm:space-y-2">
+                    <h4 className="font-medium text-xs sm:text-sm truncate" title={item.media_file.file_name}>
                       {item.media_file.file_name}
                     </h4>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>{formatFileSize(item.media_file.file_size)}</span>
-                      <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                      <span className="hidden sm:inline">{new Date(item.created_at).toLocaleDateString()}</span>
                     </div>
                     {item.tags && item.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
@@ -597,80 +600,80 @@ export function FamilyTreeDocumentManager({ familyTreeId }: FamilyTreeDocumentMa
                       </div>
                     )}
                   </div>
-                 </CardContent>
-               </Card>
-             ) : (
-               <Card 
-                 key={item.id} 
-                 className="cursor-move"
-                 draggable
-                 onDragStart={(e) => handleDragStart(e, item.id)}
-               >
-                 <CardContent className="p-3">
-                   <div className="flex items-center gap-3">
-                     {item.media_file.mime_type.startsWith('image/') ? (
-                       <img
-                         src={getFileUrl(item.media_file.bucket_name, item.media_file.file_path)}
-                         alt={item.media_file.file_name}
-                         className="w-12 h-12 object-cover rounded"
-                         loading="lazy"
-                       />
-                     ) : (
-                       <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
-                         <FileIcon className="h-6 w-6 text-muted-foreground" />
-                       </div>
-                     )}
-                     
-                     <div className="flex-1 min-w-0">
-                       <h4 className="font-medium truncate">{item.media_file.file_name}</h4>
-                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                         <span>{formatFileSize(item.media_file.file_size)}</span>
-                         <span>{new Date(item.created_at).toLocaleDateString()}</span>
-                       </div>
-                       {item.tags && item.tags.length > 0 && (
-                         <div className="flex flex-wrap gap-1 mt-1">
-                           {item.tags.slice(0, 3).map((tag, index) => (
-                             <Badge key={index} variant="secondary" className="text-xs">
-                               {tag}
-                             </Badge>
-                           ))}
-                           {item.tags.length > 3 && (
-                             <Badge variant="secondary" className="text-xs">
-                               +{item.tags.length - 3}
-                             </Badge>
-                           )}
-                         </div>
-                       )}
-                     </div>
-                     
-                     <DropdownMenu>
-                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" size="sm">
-                           <MoreVertical className="h-4 w-4" />
-                         </Button>
-                       </DropdownMenuTrigger>
-                       <DropdownMenuContent>
-                         <DropdownMenuItem onClick={() => downloadFile(item.media_file)}>
-                           <Download className="h-4 w-4 mr-2" />
-                           Download
-                         </DropdownMenuItem>
-                         <DropdownMenuSeparator />
-                         <DropdownMenuItem 
-                           onClick={() => removeFromTree(item.id)}
-                           className="text-destructive"
-                         >
-                           <Trash2 className="h-4 w-4 mr-2" />
-                           Remove from Tree
-                         </DropdownMenuItem>
-                       </DropdownMenuContent>
-                     </DropdownMenu>
-                   </div>
-                 </CardContent>
-               </Card>
-             );
-           })}
-         </div>
-       )}
-     </div>
-   );
- }
+                </CardContent>
+              </Card>
+            ) : (
+              <Card 
+                key={item.id} 
+                className="cursor-move"
+                draggable
+                onDragStart={(e) => handleDragStart(e, item.id)}
+              >
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    {item.media_file.mime_type.startsWith('image/') ? (
+                      <img
+                        src={getFileUrl(item.media_file.bucket_name, item.media_file.file_path)}
+                        alt={item.media_file.file_name}
+                        className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded flex-shrink-0"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded flex items-center justify-center flex-shrink-0">
+                        <FileIcon className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium truncate text-sm sm:text-base">{item.media_file.file_name}</h4>
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                        <span>{formatFileSize(item.media_file.file_size)}</span>
+                        <span className="hidden sm:inline">{new Date(item.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {item.tags && item.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.tags.slice(0, 3).map((tag, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                          {item.tags.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{item.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => downloadFile(item.media_file)}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => removeFromTree(item.id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove from Tree
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
