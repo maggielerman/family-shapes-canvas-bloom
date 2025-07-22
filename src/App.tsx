@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
+import SidebarLayout2 from "@/components/layouts/SidebarLayout2";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -60,6 +61,9 @@ const App = () => (
             <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
             <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDashboard /></SidebarLayout>} />
             <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
+            
+            {/* Test route for SidebarLayout2 */}
+            <Route path="/dashboard2" element={<SidebarLayout2><Dashboard /></SidebarLayout2>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
