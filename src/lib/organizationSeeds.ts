@@ -97,6 +97,15 @@ export const seedData: SeedData = {
   persons: [
     // Pacific Sperm Bank - Donor #2847 Families
     {
+      name: "Sperm Donor #2847",
+      gender: "male",
+      date_of_birth: "1980-01-01",
+      birth_place: "Unknown",
+      status: "living",
+      organization_name: "Pacific Sperm Bank",
+      group_label: "Donor #2847 Families"
+    },
+    {
       name: "David Chen",
       gender: "male",
       date_of_birth: "1985-03-15",
@@ -143,6 +152,15 @@ export const seedData: SeedData = {
     },
     // Rainbow Family Clinic families
     {
+      name: "Egg Donor #E123",
+      gender: "female",
+      date_of_birth: "1985-06-15",
+      birth_place: "Unknown",
+      status: "living",
+      organization_name: "Rainbow Family Clinic",
+      group_label: "Rainbow Clinic Class of 2020"
+    },
+    {
       name: "Dr. Sarah Kim",
       gender: "female",
       date_of_birth: "1982-09-12",
@@ -163,8 +181,8 @@ export const seedData: SeedData = {
     {
       name: "Luna Kim-Park",
       gender: "female",
-      date_of_birth: "2020-08-25",
-      birth_place: "Seattle, WA",
+      date_of_birth: "2020-03-15",
+      birth_place: "San Francisco, CA",
       status: "living",
       organization_name: "Rainbow Family Clinic",
       group_label: "Rainbow Clinic Class of 2020"
@@ -233,6 +251,19 @@ export const seedData: SeedData = {
       relationship_type: "parent",
       organization_name: "Pacific Sperm Bank"
     },
+    // Add actual donor relationships
+    {
+      from_person_name: "Sperm Donor #2847",
+      to_person_name: "Elena Chen-Rodriguez",
+      relationship_type: "donor",
+      organization_name: "Pacific Sperm Bank"
+    },
+    {
+      from_person_name: "Sperm Donor #2847",
+      to_person_name: "Jamie Thompson",
+      relationship_type: "donor",
+      organization_name: "Pacific Sperm Bank"
+    },
     {
       from_person_name: "Elena Chen-Rodriguez",
       to_person_name: "Jamie Thompson",
@@ -256,6 +287,12 @@ export const seedData: SeedData = {
       from_person_name: "Lisa Park",
       to_person_name: "Luna Kim-Park",
       relationship_type: "parent",
+      organization_name: "Rainbow Family Clinic"
+    },
+    {
+      from_person_name: "Egg Donor #E123",
+      to_person_name: "Luna Kim-Park",
+      relationship_type: "donor",
       organization_name: "Rainbow Family Clinic"
     },
     // Johnson Family connections

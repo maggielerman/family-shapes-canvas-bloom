@@ -12,6 +12,7 @@ describe('Generation Utils', () => {
     { id: 'grandparent', name: 'Grandparent' },
     { id: 'parent1', name: 'Parent 1' },
     { id: 'parent2', name: 'Parent 2' },
+    { id: 'donor', name: 'Sperm Donor' },
     { id: 'child1', name: 'Child 1' },
     { id: 'child2', name: 'Child 2' },
     { id: 'child3', name: 'Child 3' },
@@ -26,6 +27,7 @@ describe('Generation Utils', () => {
     { id: 'c5', from_person_id: 'child1', to_person_id: 'grandchild', relationship_type: 'parent', family_tree_id: 'tree1' },
     { id: 'c6', from_person_id: 'child1', to_person_id: 'child2', relationship_type: 'sibling', family_tree_id: 'tree1' },
     { id: 'c7', from_person_id: 'parent1', to_person_id: 'parent2', relationship_type: 'partner', family_tree_id: 'tree1' },
+    { id: 'c8', from_person_id: 'donor', to_person_id: 'child1', relationship_type: 'donor', family_tree_id: 'tree1' },
   ];
 
   describe('calculateGenerations', () => {
@@ -62,9 +64,9 @@ describe('Generation Utils', () => {
     it('should filter to only parent-child relationships', () => {
       const generationalConnections = getGenerationalConnections(mockConnections);
       
-      expect(generationalConnections).toHaveLength(5);
+      expect(generationalConnections).toHaveLength(6);
       expect(generationalConnections.every(c => 
-        ['parent', 'child', 'biological_parent', 'social_parent'].includes(c.relationship_type)
+        ['parent', 'child', 'biological_parent', 'social_parent', 'donor'].includes(c.relationship_type)
       )).toBe(true);
     });
   });
@@ -84,6 +86,7 @@ describe('Generation Utils', () => {
       expect(isGenerationalConnection('child')).toBe(true);
       expect(isGenerationalConnection('biological_parent')).toBe(true);
       expect(isGenerationalConnection('social_parent')).toBe(true);
+      expect(isGenerationalConnection('donor')).toBe(true);
       
       expect(isGenerationalConnection('sibling')).toBe(false);
       expect(isGenerationalConnection('partner')).toBe(false);

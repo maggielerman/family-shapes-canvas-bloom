@@ -125,7 +125,7 @@ export function getGenerationColor(generation: number): string {
  * vs a lateral relationship (sibling, partner, etc.)
  */
 export function isGenerationalConnection(relationshipType: string): boolean {
-  const generationalTypes = ['parent', 'child', 'biological_parent', 'social_parent'];
+  const generationalTypes = ['parent', 'child', 'biological_parent', 'social_parent', 'donor'];
   return generationalTypes.includes(relationshipType);
 }
 
