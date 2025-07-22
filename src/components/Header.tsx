@@ -159,12 +159,12 @@ const Header = () => {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b">
-                <div className="flex items-center space-x-3">
+                <Link to="/" className="flex items-center space-x-3" onClick={() => setMobileMenuOpen(false)}>
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
                     <Heart className="w-3 h-3 text-white" />
                   </div>
                   <span className="text-lg font-light tracking-wide text-navy-800">Family Shapes</span>
-                </div>
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"

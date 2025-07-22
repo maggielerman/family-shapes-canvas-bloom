@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import { 
   Heart, 
   Menu, 
@@ -55,12 +56,12 @@ const FamilyShapesLanding = () => {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="w-full px-6 lg:px-12 py-8 flex items-center justify-between bg-white">
-        <div className="flex items-center space-x-3">
+        <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center">
             <Heart className="w-4 h-4 text-white" />
           </div>
           <span className="text-2xl font-light tracking-wide text-slate-800">Family Shapes</span>
-        </div>
+        </Link>
         
         <nav className="hidden md:flex items-center space-x-12">
           <a href="#features" className="text-xs uppercase tracking-wider text-slate-600 hover:text-orange-600 transition-colors">
@@ -264,12 +265,12 @@ const FamilyShapesLanding = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             {/* Brand */}
             <div className="md:col-span-2">
-              <div className="flex items-center space-x-3 mb-6">
+              <Link to="/" className="flex items-center space-x-3 mb-6 hover:opacity-80 transition-opacity">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-pink-600 flex items-center justify-center">
                   <Heart className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-2xl font-light tracking-wide text-white">Family Shapes</span>
-              </div>
+              </Link>
               <p className="text-sm text-slate-300 leading-relaxed font-light max-w-md">
                 Thoughtfully designed to nurture family connections and celebrate 
                 the unique shapes that love creates within every family.
