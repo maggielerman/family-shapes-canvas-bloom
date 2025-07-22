@@ -244,10 +244,8 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
       <AddPersonDialog
         open={addPersonDialogOpen}
         onOpenChange={setAddPersonDialogOpen}
-        familyTreeId={familyTreeId}
-        onPersonAdded={handleAddPerson}
-        onDonorAdded={handleAddDonor}
-        relationshipTypes={relationshipTypes}
+        onSubmit={handleAddPerson}
+        onDonorSubmit={handleAddDonor}
       />
 
       {viewingPerson && (
