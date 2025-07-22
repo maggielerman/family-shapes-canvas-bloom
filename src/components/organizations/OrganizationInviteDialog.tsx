@@ -86,18 +86,8 @@ export function OrganizationInviteDialog({
       // Create invitations for each email
       for (const email of emailList) {
         try {
-          // Check if user is already a member
-          const { data: existingMembership } = await supabase
-            .from('organization_memberships')
-            .select('id')
-            .eq('organization_id', organizationId)
-            .eq('user_id', user.id)
-            .single();
-
-          if (existingMembership) {
-            errors.push(`${email} is already a member`);
-            continue;
-          }
+          // Note: We can't easily check if the invitee is already a member without admin privileges
+          // The invitation will be handled appropriately when they try to accept it
 
           // Check if there's already a pending invitation
           const { data: existingInvitation } = await supabase
@@ -113,6 +103,11 @@ export function OrganizationInviteDialog({
             continue;
           }
 
+          // Debug: Check user permissions before creating invitation
+          console.log('Creating invitation for email:', email);
+          console.log('Organization ID:', organizationId);
+          console.log('User ID:', user.id);
+          
           // Create the invitation
           const { data: invitation, error: invitationError } = await supabase
             .from('organization_invitations')
@@ -127,6 +122,7 @@ export function OrganizationInviteDialog({
             .single();
 
           if (invitationError) {
+            console.error('Invitation creation error:', invitationError);
             errors.push(`Failed to create invitation for ${email}: ${invitationError.message}`);
             continue;
           }

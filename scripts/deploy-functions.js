@@ -5,9 +5,9 @@
  * This script helps deploy the updated invitation functions
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 const PROJECT_REF = 'nhkufibfwskdpzdjwirr';
 const FUNCTIONS = ['send-invitation', 'process-invitation'];

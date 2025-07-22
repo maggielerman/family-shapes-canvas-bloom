@@ -178,13 +178,48 @@ export function OrganizationMembers({ organizationId, canManage, currentUserId }
 
   const cancelInvitation = async (invitationId: string) => {
     try {
+      console.log('Attempting to cancel invitation:', invitationId);
+      
+      // Debug: Check user permissions
+      const { data: permissions, error: permError } = await supabase
+        .rpc('debug_user_permissions' as any, { org_id: organizationId });
+      
+      if (permError) {
+        console.error('Error checking permissions:', permError);
+      } else {
+        console.log('User permissions:', permissions);
+      }
+      
+      // First, let's check if we can read the invitation
+      const { data: invitation, error: readError } = await supabase
+        .from('organization_invitations')
+        .select('*')
+        .eq('id', invitationId)
+        .single();
+      
+      if (readError) {
+        console.error('Error reading invitation:', readError);
+        toast({
+          title: "Error",
+          description: `Cannot read invitation: ${readError.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Found invitation:', invitation);
+      
       const { error } = await supabase
         .from('organization_invitations')
         .update({ status: 'cancelled' })
         .eq('id', invitationId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating invitation:', error);
+        throw error;
+      }
 
+      console.log('Successfully cancelled invitation');
       toast({
         title: "Invitation Cancelled",
         description: "The invitation has been cancelled"
@@ -195,7 +230,7 @@ export function OrganizationMembers({ organizationId, canManage, currentUserId }
       console.error('Error cancelling invitation:', error);
       toast({
         title: "Error",
-        description: "Failed to cancel invitation",
+        description: `Failed to cancel invitation: ${error instanceof Error ? error.message : String(error)}`,
         variant: "destructive"
       });
     }
