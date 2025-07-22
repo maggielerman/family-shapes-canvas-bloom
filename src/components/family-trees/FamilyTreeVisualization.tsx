@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,6 +47,8 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const [connections, setConnections] = useState<Connection[]>([]);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const { handleAddPerson, handleAddDonor } = usePersonManagement({
@@ -69,6 +71,23 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   useEffect(() => {
     fetchConnections();
   }, [familyTreeId]);
+
+  // Handle responsive dimensions
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setDimensions({
+          width: rect.width || 800,
+          height: rect.height || 600
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   const fetchConnections = async () => {
     try {
@@ -97,7 +116,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const siblingConnections = getSiblingConnections(connections);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={containerRef}>
       {/* Controls */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div className="flex gap-2">
@@ -183,6 +202,9 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <TreeLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
               onPersonClick={handlePersonClick}
             />
           </Suspense>
@@ -193,6 +215,9 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <RadialTreeLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
               onPersonClick={handlePersonClick}
             />
           </Suspense>
@@ -203,6 +228,9 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <ForceDirectedLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
               onPersonClick={handlePersonClick}
             />
           </Suspense>
@@ -213,6 +241,9 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <ReactD3TreeLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
               onPersonClick={handlePersonClick}
             />
           </Suspense>
@@ -223,6 +254,9 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <ClusterLayout
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
               onPersonClick={handlePersonClick}
             />
           </Suspense>
