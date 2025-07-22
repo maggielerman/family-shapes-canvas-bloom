@@ -180,7 +180,7 @@ export default function FamilyTreeDetail() {
 
   if (loading || !familyTree) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto p-4 sm:p-6 space-y-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -190,68 +190,90 @@ export default function FamilyTreeDetail() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/family-trees')}
+          className="flex-shrink-0"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Trees
+          <span className="hidden sm:inline">Back to Trees</span>
+          <span className="sm:hidden">Back</span>
         </Button>
       </div>
 
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold">{familyTree.name}</h1>
-            <Badge className={getVisibilityColor(familyTree.visibility)}>
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold truncate">{familyTree.name}</h1>
+            <Badge className={`${getVisibilityColor(familyTree.visibility)} flex-shrink-0`}>
               {familyTree.visibility}
             </Badge>
           </div>
           {familyTree.description && (
-            <p className="text-muted-foreground">{familyTree.description}</p>
+            <p className="text-muted-foreground line-clamp-2">{familyTree.description}</p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
           <Button 
             variant="outline"
             onClick={() => setSharingDialogOpen(true)}
+            size="sm"
+            className="w-full sm:w-auto"
           >
             <Share2 className="w-4 h-4 mr-2" />
             Share
           </Button>
-          <Button variant="outline">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full sm:w-auto"
+          >
             <Edit className="w-4 h-4 mr-2" />
-            Edit Tree
+            <span className="hidden sm:inline">Edit Tree</span>
+            <span className="sm:hidden">Edit</span>
           </Button>
-          <Button variant="outline">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full sm:w-auto"
+          >
             <Upload className="w-4 h-4 mr-2" />
-            Upload Documents
+            <span className="hidden sm:inline">Upload Documents</span>
+            <span className="sm:hidden">Upload</span>
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="people" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="people">People</TabsTrigger>
-          <TabsTrigger value="tree">Tree View</TabsTrigger>
-          <TabsTrigger value="documents">Media</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="people" className="flex-1 sm:flex-none">People</TabsTrigger>
+            <TabsTrigger value="tree" className="flex-1 sm:flex-none">Tree View</TabsTrigger>
+            <TabsTrigger value="documents" className="flex-1 sm:flex-none">Media</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="people" className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <h2 className="text-xl font-semibold">Family Members</h2>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button 
                 variant="outline" 
                 onClick={() => setAddExistingPersonDialogOpen(true)}
+                size="sm"
+                className="w-full sm:w-auto"
               >
                 <Users className="w-4 h-4 mr-2" />
                 Add Existing
               </Button>
-              <Button onClick={() => setAddPersonDialogOpen(true)}>
+              <Button 
+                onClick={() => setAddPersonDialogOpen(true)}
+                size="sm"
+                className="w-full sm:w-auto"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add New Person
               </Button>
@@ -259,22 +281,26 @@ export default function FamilyTreeDetail() {
           </div>
 
           {persons.length === 0 ? (
-            <Card className="text-center py-12">
+            <Card className="text-center py-8 sm:py-12">
               <CardContent>
-                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <Users className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-4 px-4">
                   Start building your family tree by adding family members.
                 </p>
-                <div className="flex gap-2 justify-center">
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
                   <Button 
                     variant="outline"
                     onClick={() => setAddExistingPersonDialogOpen(true)}
+                    className="w-full sm:w-auto"
                   >
                     <Users className="w-4 h-4 mr-2" />
                     Add Existing Person
                   </Button>
-                  <Button onClick={() => setAddPersonDialogOpen(true)}>
+                  <Button 
+                    onClick={() => setAddPersonDialogOpen(true)}
+                    className="w-full sm:w-auto"
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Person
                   </Button>
@@ -282,7 +308,7 @@ export default function FamilyTreeDetail() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {persons.map((person) => (
                 <PersonCard 
                   key={person.id} 

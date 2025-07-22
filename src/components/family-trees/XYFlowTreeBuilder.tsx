@@ -366,20 +366,23 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
       {/* XYFlow Canvas */}
       {persons.length === 0 ? (
         <div className="border rounded-lg bg-card">
-          <div className="flex flex-col items-center justify-center h-96 text-center">
-            <Users className="w-16 h-16 text-muted-foreground mb-4" />
+          <div className="flex flex-col items-center justify-center h-64 sm:h-96 text-center p-4">
+            <Users className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 max-w-md">
               Start building your family tree by adding family members.
             </p>
-            <Button onClick={() => setAddPersonDialogOpen(true)}>
+            <Button 
+              onClick={() => setAddPersonDialogOpen(true)}
+              className="w-full sm:w-auto"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add First Person
             </Button>
           </div>
         </div>
       ) : (
-        <div className="h-[600px] border rounded-lg">
+        <div className="h-[400px] sm:h-[500px] lg:h-[600px] border rounded-lg">
           <ReactFlow
             ref={reactFlowRef}
             nodes={nodes}
@@ -395,15 +398,24 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
           >
             <Controls />
             <Background />
-            <Panel position="top-right" className="bg-background/80 backdrop-blur-sm rounded-lg p-2">
+            <Panel position="top-right" className="bg-background/80 backdrop-blur-sm rounded-lg p-2 max-w-[250px] sm:max-w-none">
               <div className="text-xs text-muted-foreground">
-                {persons.length} people • {visibleConnections.length} generational connections
-                {hiddenSiblingConnections > 0 && (
-                  <span className="block">{hiddenSiblingConnections} sibling connections (color-coded)</span>
-                )}
-                {isLayoutLoading && (
-                  <span className="ml-2 text-blue-500">• Applying layout...</span>
-                )}
+                <div className="hidden sm:block">
+                  {persons.length} people • {visibleConnections.length} generational connections
+                  {hiddenSiblingConnections > 0 && (
+                    <span className="block">{hiddenSiblingConnections} sibling connections (color-coded)</span>
+                  )}
+                  {isLayoutLoading && (
+                    <span className="ml-2 text-blue-500">• Applying layout...</span>
+                  )}
+                </div>
+                <div className="sm:hidden">
+                  <div>{persons.length} people</div>
+                  <div>{visibleConnections.length} connections</div>
+                  {isLayoutLoading && (
+                    <div className="text-blue-500">Applying layout...</div>
+                  )}
+                </div>
               </div>
             </Panel>
           </ReactFlow>

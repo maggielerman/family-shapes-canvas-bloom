@@ -120,14 +120,14 @@ export default function FamilyTrees() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex justify-between items-center">
+      <div className="container mx-auto p-4 sm:p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Family Trees</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Family Trees</h1>
             <p className="text-muted-foreground">Create and manage your family trees</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
@@ -145,45 +145,51 @@ export default function FamilyTrees() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Family Trees</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Family Trees</h1>
           <p className="text-muted-foreground">Create and manage your family trees</p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button 
+          onClick={() => setCreateDialogOpen(true)}
+          className="w-full sm:w-auto"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Create Tree
         </Button>
       </div>
 
       {familyTrees.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-8 sm:py-12">
           <CardContent>
-            <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <Users className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No family trees yet</h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 px-4">
               Create your first family tree to start building your family history.
             </p>
-            <Button onClick={() => setCreateDialogOpen(true)}>
+            <Button 
+              onClick={() => setCreateDialogOpen(true)}
+              className="w-full sm:w-auto"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Tree
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {familyTrees.map((tree) => (
             <Card key={tree.id} className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{tree.name}</CardTitle>
-                    <CardDescription className="mt-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base sm:text-lg truncate">{tree.name}</CardTitle>
+                    <CardDescription className="mt-1 line-clamp-2">
                       {tree.description || "No description"}
                     </CardDescription>
                   </div>
-                  <Badge className={getVisibilityColor(tree.visibility)}>
+                  <Badge className={`${getVisibilityColor(tree.visibility)} flex-shrink-0 text-xs`}>
                     {tree.visibility}
                   </Badge>
                 </div>
@@ -195,7 +201,7 @@ export default function FamilyTrees() {
                     <span>{tree._count?.connections || 0} connections</span>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       size="sm"
                       className="flex-1"
@@ -203,28 +209,34 @@ export default function FamilyTrees() {
                     >
                       View Tree
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/family-trees/${tree.id}/settings`);
-                      }}
-                    >
-                      <Settings className="w-4 h-4" />
-                    </Button>
-                    {tree.visibility !== 'private' && (
+                    <div className="flex gap-2 sm:flex-shrink-0">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // TODO: Share functionality
+                          navigate(`/family-trees/${tree.id}/settings`);
                         }}
+                        className="flex-1 sm:flex-none"
                       >
-                        <Share2 className="w-4 h-4" />
+                        <Settings className="w-4 h-4" />
+                        <span className="sm:hidden ml-2">Settings</span>
                       </Button>
-                    )}
+                      {tree.visibility !== 'private' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // TODO: Share functionality
+                          }}
+                          className="flex-1 sm:flex-none"
+                        >
+                          <Share2 className="w-4 h-4" />
+                          <span className="sm:hidden ml-2">Share</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
