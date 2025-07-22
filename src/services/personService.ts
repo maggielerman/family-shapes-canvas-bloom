@@ -35,6 +35,7 @@ export class PersonService {
         family_tree_id: familyTreeId,
         person_id: personId,
         added_by: userData.user.id,
+        role: 'member',
       });
 
     if (error) throw error;
