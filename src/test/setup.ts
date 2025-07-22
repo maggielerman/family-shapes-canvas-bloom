@@ -1,6 +1,20 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
+// Mock ResizeObserver for JSDOM environment
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}))
+
+// Mock IntersectionObserver for JSDOM environment
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}))
+
 // Mock Supabase client with factory function
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
@@ -12,10 +26,21 @@ vi.mock('@/integrations/supabase/client', () => ({
         eq: vi.fn(() => ({
           single: vi.fn(() => ({ error: null, data: null })),
           order: vi.fn(() => ({ error: null, data: [] })),
+          in: vi.fn(() => ({ error: null, data: [] })),
         })),
         insert: vi.fn(() => ({ error: null })),
         update: vi.fn(() => ({ error: null })),
         delete: vi.fn(() => ({ error: null })),
+        is: vi.fn(() => ({
+          single: vi.fn(() => ({ error: null, data: null })),
+          order: vi.fn(() => ({ error: null, data: [] })),
+          in: vi.fn(() => ({ error: null, data: [] })),
+        })),
+        in: vi.fn(() => ({
+          single: vi.fn(() => ({ error: null, data: null })),
+          order: vi.fn(() => ({ error: null, data: [] })),
+          in: vi.fn(() => ({ error: null, data: [] })),
+        })),
       })),
     })),
   },
