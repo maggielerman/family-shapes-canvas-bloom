@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import {
   ReactFlow,
   Node,
@@ -64,8 +64,8 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const { toast } = useToast();
 
-  // Use centralized relationship types
-  const relationshipTypes = RelationshipTypeHelpers.getForSelection();
+  // Use centralized relationship types - memoized to prevent unnecessary re-renders
+  const relationshipTypes = useMemo(() => RelationshipTypeHelpers.getForSelection(), []);
 
   // Calculate generations whenever persons or connections change
   useEffect(() => {
