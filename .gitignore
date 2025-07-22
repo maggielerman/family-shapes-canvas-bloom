@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .env
+supabase/migrations/20250722163000_remove_groups_tables.sql
+supabase/.temp/rest-version
+supabase/.temp/project-ref
+supabase/.temp/postgres-version
+supabase/.temp/pooler-url
+supabase/.temp/gotrue-version
+supabase/.temp/cli-latest

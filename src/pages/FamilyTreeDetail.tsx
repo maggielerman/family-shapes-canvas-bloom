@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PersonService } from "@/services/personService";
 import { Person } from "@/types/person";
+import { usePersonManagement } from '@/hooks/use-person-management';
 
 interface FamilyTree {
   id: string;
@@ -122,28 +123,17 @@ export default function FamilyTreeDetail() {
     }
   };
 
-  const handleAddPerson = async (personData: any) => {
-    try {
-      if (!id) throw new Error('Family tree ID not found');
-      
-      await PersonService.createPersonAndAddToTree(personData, id);
-
-      toast({
-        title: "Success",
-        description: "Person added successfully",
-      });
-
+  const { handleAddPerson, handleAddDonor, isSubmitting } = usePersonManagement({
+    familyTreeId: familyTree?.id,
+    onPersonAdded: () => {
       setAddPersonDialogOpen(false);
-      fetchPersons();
-    } catch (error) {
-      console.error('Error adding person:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add person",
-        variant: "destructive",
-      });
-    }
-  };
+      fetchFamilyTree();
+    },
+    onDonorAdded: () => {
+      setAddPersonDialogOpen(false);
+      fetchFamilyTree();
+    },
+  });
 
   const getVisibilityColor = (visibility: string) => {
     switch (visibility) {
@@ -316,6 +306,7 @@ export default function FamilyTreeDetail() {
         open={addPersonDialogOpen}
         onOpenChange={setAddPersonDialogOpen}
         onSubmit={handleAddPerson}
+        onDonorSubmit={handleAddDonor}
       />
 
       <AddExistingPersonDialog

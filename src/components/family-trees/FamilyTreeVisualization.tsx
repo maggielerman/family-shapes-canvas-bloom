@@ -26,6 +26,7 @@ import {
   getSiblingConnections,
   getGenerationStats 
 } from "@/utils/generationUtils";
+import { usePersonManagement } from '@/hooks/use-person-management';
 
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
@@ -38,6 +39,20 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const { toast } = useToast();
+
+  const { handleAddPerson, handleAddDonor } = usePersonManagement({
+    familyTreeId,
+    onPersonAdded: () => {
+      setAddPersonDialogOpen(false);
+      // Refresh the tree data
+      fetchConnections();
+    },
+    onDonorAdded: () => {
+      setAddPersonDialogOpen(false);
+      // Refresh the tree data
+      fetchConnections();
+    },
+  });
 
   // Use centralized relationship types
   const relationshipTypes = RelationshipTypeHelpers.getForSelection();
@@ -55,27 +70,6 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
       toast({
         title: "Error",
         description: "Failed to load connections",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAddPerson = async (personData: any) => {
-    try {
-      await PersonService.createPersonAndAddToTree(personData, familyTreeId);
-
-      toast({
-        title: "Success",
-        description: "Person added successfully",
-      });
-
-      setAddPersonDialogOpen(false);
-      onPersonAdded();
-    } catch (error) {
-      console.error('Error adding person:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add person",
         variant: "destructive",
       });
     }
@@ -266,6 +260,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
         open={addPersonDialogOpen}
         onOpenChange={setAddPersonDialogOpen}
         onSubmit={handleAddPerson}
+        onDonorSubmit={handleAddDonor}
       />
 
       <PersonCardDialog

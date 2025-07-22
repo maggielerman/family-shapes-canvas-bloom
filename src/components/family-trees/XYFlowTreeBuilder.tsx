@@ -40,6 +40,7 @@ import {
   isGenerationalConnection,
   GenerationInfo 
 } from '@/utils/generationUtils';
+import { usePersonManagement } from '@/hooks/use-person-management';
 
 interface XYFlowTreeBuilderProps {
   familyTreeId: string;
@@ -213,26 +214,25 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     }
   };
 
-  const handleAddPerson = async (personData: CreatePersonData) => {
-    try {
-      await PersonService.createPersonAndAddToTree(personData, familyTreeId);
-
-      toast({
-        title: "Success",
-        description: "Person added successfully",
-      });
-
+  const { handleAddPerson, handleAddDonor } = usePersonManagement({
+    familyTreeId,
+    onPersonAdded: () => {
       setAddPersonDialogOpen(false);
-      onPersonAdded();
-    } catch (error) {
-      console.error('Error adding person:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add person",
-        variant: "destructive",
-      });
-    }
-  };
+      // Refresh the tree data
+      if (onNodesChange) {
+        // Trigger a refresh of the tree
+        onNodesChange([]);
+      }
+    },
+    onDonorAdded: () => {
+      setAddPersonDialogOpen(false);
+      // Refresh the tree data
+      if (onNodesChange) {
+        // Trigger a refresh of the tree
+        onNodesChange([]);
+      }
+    },
+  });
 
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     const person = node.data.person as Person;
@@ -368,6 +368,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
         open={addPersonDialogOpen}
         onOpenChange={setAddPersonDialogOpen}
         onSubmit={handleAddPerson}
+        onDonorSubmit={handleAddDonor}
       />
 
       <PersonCardDialog

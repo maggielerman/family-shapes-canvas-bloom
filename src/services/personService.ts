@@ -1,5 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Person, CreatePersonData } from '@/types/person';
+import { CreateDonorData } from '@/types/donor';
+import { DonorService } from '@/services/donorService';
 
 export class PersonService {
   /**
@@ -9,7 +11,7 @@ export class PersonService {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error('No user found');
 
-    const { data: newPerson, error } = await supabase
+    const { data, error } = await supabase
       .from('persons')
       .insert({
         ...personData,
@@ -19,76 +21,119 @@ export class PersonService {
       .single();
 
     if (error) throw error;
-    return newPerson as Person;
+    return data as Person;
   }
 
   /**
-   * Add a person to a family tree
+   * Create a new person and add to a family tree
    */
-  static async addPersonToFamilyTree(personId: string, familyTreeId: string): Promise<void> {
+  static async createPersonAndAddToTree(
+    personData: CreatePersonData,
+    familyTreeId: string
+  ): Promise<Person> {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error('No user found');
 
-    const { error } = await supabase
+    // Start a transaction-like operation
+    const { data: person, error: personError } = await supabase
+      .from('persons')
+      .insert({
+        ...personData,
+        user_id: userData.user.id,
+      })
+      .select()
+      .single();
+
+    if (personError) throw personError;
+
+    // Add person to the family tree
+    const { error: treeError } = await supabase
       .from('family_tree_members')
       .insert({
         family_tree_id: familyTreeId,
-        person_id: personId,
+        person_id: person.id,
         added_by: userData.user.id,
         role: 'member',
       });
 
-    if (error) throw error;
+    if (treeError) throw treeError;
+
+    return person as Person;
   }
 
   /**
-   * Create a person and add them to a family tree in one operation
+   * Create a person as a donor (creates both person and donor records)
    */
-  static async createPersonAndAddToTree(
-    personData: CreatePersonData, 
-    familyTreeId: string
-  ): Promise<Person> {
-    const person = await this.createPerson(personData);
-    await this.addPersonToFamilyTree(person.id, familyTreeId);
-    return person;
+  static async createPersonAsDonor(
+    personData: CreatePersonData,
+    donorData: CreateDonorData,
+    familyTreeId?: string
+  ): Promise<{ person: Person; donor: any }> {
+    // Use the DonorService to handle the creation
+    if (familyTreeId) {
+      // First create the person and add to tree
+      const person = await this.createPersonAndAddToTree(personData, familyTreeId);
+      
+      // Then create the donor record
+      const donor = await DonorService.createDonor({
+        ...donorData,
+        person_id: person.id,
+      });
+      
+      return { person, donor };
+    } else {
+      // Create person first
+      const person = await this.createPerson(personData);
+      
+      // Then create the donor record
+      const donor = await DonorService.createDonor({
+        ...donorData,
+        person_id: person.id,
+      });
+      
+      return { person, donor };
+    }
   }
 
   /**
-   * Remove a person from a family tree
+   * Get all persons for a user
    */
-  static async removePersonFromFamilyTree(personId: string, familyTreeId: string): Promise<void> {
-    const { error } = await supabase
-      .from('family_tree_members')
-      .delete()
-      .eq('person_id', personId)
-      .eq('family_tree_id', familyTreeId);
+  static async getPersons(): Promise<Person[]> {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error('No user found');
 
-    if (error) throw error;
-  }
-
-  /**
-   * Get all persons in a family tree
-   */
-  static async getPersonsInFamilyTree(familyTreeId: string): Promise<Person[]> {
-    const { data, error } = await supabase
-      .from('family_tree_members')
-      .select(`
-        person:persons(*)
-      `)
-      .eq('family_tree_id', familyTreeId);
-
-    if (error) throw error;
-    return (data || []).map(member => member.person) as Person[];
-  }
-
-  /**
-   * Update a person
-   */
-  static async updatePerson(personId: string, updates: Partial<CreatePersonData>): Promise<Person> {
     const { data, error } = await supabase
       .from('persons')
-      .update(updates)
-      .eq('id', personId)
+      .select('*')
+      .eq('user_id', userData.user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data as Person[];
+  }
+
+  /**
+   * Get person by ID
+   */
+  static async getPersonById(id: string): Promise<Person | null> {
+    const { data, error } = await supabase
+      .from('persons')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data as Person | null;
+  }
+
+  /**
+   * Update person
+   */
+  static async updatePerson(id: string, updateData: Partial<CreatePersonData>): Promise<Person> {
+    const { data, error } = await supabase
+      .from('persons')
+      .update(updateData)
+      .eq('id', id)
       .select()
       .single();
 
@@ -97,13 +142,13 @@ export class PersonService {
   }
 
   /**
-   * Delete a person
+   * Delete person
    */
-  static async deletePerson(personId: string): Promise<void> {
+  static async deletePerson(id: string): Promise<void> {
     const { error } = await supabase
       .from('persons')
       .delete()
-      .eq('id', personId);
+      .eq('id', id);
 
     if (error) throw error;
   }

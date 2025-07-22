@@ -25,6 +25,7 @@ import { PersonCardDialog } from "@/components/people/PersonCard";
 import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { DeletePersonDialog } from "@/components/people/DeletePersonDialog";
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
+import { usePersonManagement } from '@/hooks/use-person-management';
 
 
 interface Person {
@@ -63,8 +64,19 @@ export default function People() {
   
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [deletingPerson, setDeletingPerson] = useState<Person | null>(null);
-  const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
+  const [showAddPersonDialog, setShowAddPersonDialog] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
+
+  const { handleAddPerson, handleAddDonor } = usePersonManagement({
+    onPersonAdded: () => {
+      setShowAddPersonDialog(false);
+      fetchPersons();
+    },
+    onDonorAdded: () => {
+      setShowAddPersonDialog(false);
+      fetchPersons();
+    },
+  });
 
   useEffect(() => {
     fetchPersons();
@@ -210,7 +222,7 @@ export default function People() {
             Manage all people in your family trees and connections
           </p>
         </div>
-        <Button onClick={() => setAddPersonDialogOpen(true)}>
+        <Button onClick={() => setShowAddPersonDialog(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Person
         </Button>
@@ -327,7 +339,7 @@ export default function People() {
                 : "Add your first family member to get started"}
             </p>
             {!searchTerm && statusFilter === "all" && genderFilter === "all" && (
-              <Button onClick={() => setAddPersonDialogOpen(true)}>
+              <Button onClick={() => setShowAddPersonDialog(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Person
               </Button>
@@ -355,35 +367,10 @@ export default function People() {
 
       {/* Dialogs */}
       <AddPersonDialog
-        open={addPersonDialogOpen}
-        onOpenChange={setAddPersonDialogOpen}
-        onSubmit={async (data) => {
-          try {
-            const { error } = await supabase
-              .from('persons')
-              .insert({
-                ...data,
-                user_id: user?.id
-              });
-
-            if (error) throw error;
-
-            toast({
-              title: "Person Added",
-              description: `${data.name} has been added successfully`
-            });
-
-            fetchPersons();
-            setAddPersonDialogOpen(false);
-          } catch (error) {
-            console.error('Error adding person:', error);
-            toast({
-              title: "Error",
-              description: "Failed to add person",
-              variant: "destructive"
-            });
-          }
-        }}
+        open={showAddPersonDialog}
+        onOpenChange={setShowAddPersonDialog}
+        onSubmit={handleAddPerson}
+        onDonorSubmit={handleAddDonor}
       />
 
       {editingPerson && (
