@@ -216,6 +216,18 @@ export function PublicFamilyTreeViewer({
     }
   };
 
+  // Calculate responsive dimensions for the tree visualization
+  const getTreeDimensions = () => {
+    if (typeof window !== 'undefined') {
+      const width = Math.min(window.innerWidth - 40, 800);
+      const height = Math.min(window.innerHeight * 0.7, 600);
+      return { width, height };
+    }
+    return { width: 800, height: 600 };
+  };
+
+  const { width: treeWidth, height: treeHeight } = getTreeDimensions();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-4">
@@ -259,28 +271,30 @@ export function PublicFamilyTreeViewer({
       {/* Public Header */}
       <div className="border-b bg-card/50 sticky top-0 z-50 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Heart className="w-6 h-6 text-primary" />
-              <div>
-                <h1 className="text-xl font-bold">{familyTree.name}</h1>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Globe className="w-3 h-3" />
-                  <span>Public Family Tree</span>
-                  <Badge variant="outline" className="text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <Heart className="w-6 h-6 text-primary flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl font-bold truncate">{familyTree.name}</h1>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Globe className="w-3 h-3 flex-shrink-0" />
+                    <span>Public Family Tree</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs w-fit">
                     <Eye className="w-3 h-3 mr-1" />
                     Read Only
                   </Badge>
                 </div>
               </div>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto flex-shrink-0">
               <Share2 className="w-4 h-4 mr-2" />
               Share This Tree
             </Button>
           </div>
           {familyTree.description && (
-            <p className="text-muted-foreground mt-2 text-sm max-w-2xl">
+            <p className="text-muted-foreground mt-2 text-sm max-w-2xl line-clamp-2">
               {familyTree.description}
             </p>
           )}
@@ -290,43 +304,53 @@ export function PublicFamilyTreeViewer({
       {/* Main Content */}
       <div className="max-w-6xl mx-auto p-4">
         <Tabs defaultValue="tree" className="space-y-6">
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="tree">Family Tree</TabsTrigger>
-            <TabsTrigger value="people">Family Members ({persons.length})</TabsTrigger>
-            <TabsTrigger value="about">About This Tree</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="bg-muted/50 w-full sm:w-auto">
+              <TabsTrigger value="tree" className="flex-1 sm:flex-none">Family Tree</TabsTrigger>
+              <TabsTrigger value="people" className="flex-1 sm:flex-none">
+                <span className="hidden sm:inline">Family Members ({persons.length})</span>
+                <span className="sm:hidden">People ({persons.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="about" className="flex-1 sm:flex-none">
+                <span className="hidden sm:inline">About This Tree</span>
+                <span className="sm:hidden">About</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="tree" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                   <Users className="w-5 h-5" />
                   Interactive Family Tree
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted/30 rounded-lg p-1 mb-4">
+                <div className="bg-muted/30 rounded-lg p-3 mb-4">
                   <Alert>
                     <Info className="h-4 w-4" />
-                    <AlertDescription>
+                    <AlertDescription className="text-sm">
                       This is a read-only view. You can explore the family relationships but cannot make changes.
                     </AlertDescription>
                   </Alert>
                 </div>
-                <TreeLayout
-                  persons={persons as any[]}
-                  connections={connections as any[]}
-                  relationshipTypes={relationshipTypes}
-                  width={800}
-                  height={600}
-                  onPersonClick={() => {}}
-                />
+                <div className="w-full overflow-auto rounded-lg border bg-background">
+                  <TreeLayout
+                    persons={persons as any[]}
+                    connections={connections as any[]}
+                    relationshipTypes={relationshipTypes}
+                    width={treeWidth}
+                    height={treeHeight}
+                    onPersonClick={() => {}}
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="people" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {persons.map((person) => (
                 <Card key={person.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
@@ -335,10 +359,10 @@ export function PublicFamilyTreeViewer({
                         <img
                           src={person.profile_photo_url}
                           alt={person.name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <Users className="w-6 h-6 text-primary" />
                         </div>
                       )}
@@ -347,17 +371,17 @@ export function PublicFamilyTreeViewer({
                         <div className="space-y-1 text-sm text-muted-foreground">
                           {person.date_of_birth && (
                             <div className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              <span>{formatDate(person.date_of_birth)}</span>
+                              <Calendar className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{formatDate(person.date_of_birth)}</span>
                             </div>
                           )}
                           {person.birth_place && (
                             <div className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
+                              <MapPin className="w-3 h-3 flex-shrink-0" />
                               <span className="truncate">{person.birth_place}</span>
                             </div>
                           )}
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-xs w-fit">
                             {person.status || 'living'}
                           </Badge>
                         </div>
@@ -380,10 +404,10 @@ export function PublicFamilyTreeViewer({
                 <CardTitle>About This Family Tree</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Tree Name</label>
-                    <p className="text-sm">{familyTree.name}</p>
+                    <p className="text-sm break-words">{familyTree.name}</p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Created</label>
@@ -402,7 +426,7 @@ export function PublicFamilyTreeViewer({
                 {familyTree.description && (
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Description</label>
-                    <p className="text-sm whitespace-pre-wrap">{familyTree.description}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">{familyTree.description}</p>
                   </div>
                 )}
 
