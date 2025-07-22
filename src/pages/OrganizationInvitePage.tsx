@@ -50,19 +50,22 @@ export default function OrganizationInvitePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Decode the token to handle URL encoding issues
+  const decodedToken = token ? decodeURIComponent(token) : null;
+
   useEffect(() => {
     fetchInvitationDetails();
-  }, [token]);
+  }, [decodedToken]);
 
   // If user is already authenticated, redirect to the normal invitation flow
   useEffect(() => {
     if (!authLoading && user && invitation && !error) {
-      navigate(`/invitation/${action}/${token}`);
+      navigate(`/invitation/${action}/${decodedToken}`);
     }
-  }, [authLoading, user, invitation, error, action, token, navigate]);
+  }, [authLoading, user, invitation, error, action, decodedToken, navigate]);
 
   const fetchInvitationDetails = async () => {
-    if (!token) {
+    if (!decodedToken) {
       setError("Invalid invitation link");
       setLoading(false);
       return;
@@ -88,7 +91,7 @@ export default function OrganizationInvitePage() {
             subdomain
           )
         `)
-        .eq('token', token)
+        .eq('token', decodedToken)
         .single();
 
       if (invitationError || !invitationData) {

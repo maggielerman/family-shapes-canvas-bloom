@@ -56,8 +56,8 @@ serve(async (req) => {
     const role = invitation.role;
     
     // Generate accept/decline links
-    const acceptUrl = `${appUrl}/invite/accept/${invitation.token}`;
-    const declineUrl = `${appUrl}/invite/decline/${invitation.token}`;
+    const acceptUrl = `${appUrl}/invite/accept/${encodeURIComponent(invitation.token)}`;
+    const declineUrl = `${appUrl}/invite/decline/${encodeURIComponent(invitation.token)}`;
 
     // Send the invitation email
     console.log("Attempting to send email to:", inviteeEmail);

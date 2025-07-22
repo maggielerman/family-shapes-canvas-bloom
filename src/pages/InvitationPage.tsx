@@ -7,25 +7,30 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Building2, Check, X, AlertTriangle, Loader2 } from "lucide-react";
 
+interface InvitationInfo {
+  organization: { name: string; type: string };
+  role: string;
+  inviter: string;
+}
+
 const InvitationPage = () => {
   const { token, action } = useParams<{ token: string; action: string }>();
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [invitationInfo, setInvitationInfo] = useState<{
-    organization: { name: string; type: string };
-    role: string;
-    inviter: string;
-  } | null>(null);
+  const [invitationInfo, setInvitationInfo] = useState<InvitationInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isExpired, setIsExpired] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Decode the token to handle URL encoding issues
+  const decodedToken = token ? decodeURIComponent(token) : null;
 
   // Load invitation information
   useEffect(() => {
     const fetchInvitationInfo = async () => {
-      if (!token) {
+      if (!decodedToken) {
         setError("Invalid invitation link");
         return;
       }
@@ -43,7 +48,7 @@ const InvitationPage = () => {
               type
             )
           `)
-          .eq('token', token)
+          .eq('token', decodedToken)
           .single();
 
         if (error || !data) {
@@ -80,26 +85,26 @@ const InvitationPage = () => {
     };
 
     fetchInvitationInfo();
-  }, [token]);
+  }, [decodedToken]);
 
   // Handle automatic action based on URL parameter
   useEffect(() => {
-    if (!loading && user && action && token && invitationInfo && !error && !isExpired) {
+    if (!loading && user && action && decodedToken && invitationInfo && !error && !isExpired) {
       // Auto-process based on action in URL
       if (action === 'accept' || action === 'decline') {
         processInvitation(action);
       }
     }
-  }, [loading, user, action, token, invitationInfo, error, isExpired]);
+  }, [loading, user, action, decodedToken, invitationInfo, error, isExpired]);
 
   const processInvitation = async (action: 'accept' | 'decline') => {
-    if (!user || !token) return;
+    if (!user || !decodedToken) return;
 
     setIsProcessing(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('process-invitation', {
-        body: { token, action, userId: user.id }
+        body: { token: decodedToken, action, userId: user.id }
       });
 
       if (error) {

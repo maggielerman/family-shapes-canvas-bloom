@@ -30,6 +30,9 @@ serve(async (req) => {
       throw new Error("Missing required parameters");
     }
 
+    // Decode the token to handle URL encoding issues
+    const decodedToken = decodeURIComponent(token);
+
     // Create Supabase client
     const supabase = await createClient();
 
@@ -37,7 +40,7 @@ serve(async (req) => {
     const { data: invitation, error: invitationError } = await supabase
       .from("organization_invitations")
       .select("*, organizations(*)")
-      .eq("token", token)
+      .eq("token", decodedToken)
       .single();
 
     if (invitationError || !invitation) {

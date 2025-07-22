@@ -65,6 +65,7 @@ const App = () => (
               <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
               <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />
               <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />
+              <Route path="/invite/:action/P/:token" element={<OrganizationInvitePage />} />
               <Route path="/invitation/:action/:token" element={<InvitationPage />} />
               
               {/* Admin routes */}
