@@ -8,60 +8,14 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
+import { RELATIONSHIP_ATTRIBUTES, RelationshipAttributeHelpers } from '@/types/relationshipAttributes';
 
-// Attribute definitions organized by category
-export const relationshipAttributes = {
-  biological: [
-    { value: "biological", label: "Biological", description: "Genetically related" },
-    { value: "adopted", label: "Adopted", description: "Legal adoption" },
-    { value: "step", label: "Step", description: "Through marriage/partnership" },
-    { value: "foster", label: "Foster", description: "Foster care relationship" },
-  ],
-  
-  legal: [
-    { value: "legal", label: "Legal", description: "Legally recognized" },
-    { value: "intended", label: "Intended", description: "Intended parent in ART" },
-  ],
-  
-  art: [
-    { value: "ivf", label: "IVF", description: "In vitro fertilization" },
-    { value: "iui", label: "IUI", description: "Intrauterine insemination" },
-    { value: "donor_conceived", label: "Donor Conceived", description: "Conceived using donor gametes" },
-  ],
-  
-  sibling: [
-    { value: "full", label: "Full", description: "Shares both biological parents" },
-    { value: "half", label: "Half", description: "Shares one biological parent" },
-    { value: "donor_sibling", label: "Dibling", description: "Shares same sperm/egg donor" },
-    { value: "step_sibling", label: "Step", description: "Through parent's marriage/partnership" },
-  ],
-  
-  donor: [
-    { value: "sperm_donor", label: "Sperm Donor", description: "Provided sperm" },
-    { value: "egg_donor", label: "Egg Donor", description: "Provided eggs" },
-    { value: "embryo_donor", label: "Embryo Donor", description: "Provided embryo" },
-  ],
-};
+// Use centralized relationship attributes
+export const relationshipAttributes = RELATIONSHIP_ATTRIBUTES;
 
 // Helper to get relevant attribute categories based on relationship type
 export const getRelevantAttributes = (relationshipType: string) => {
-  const baseCategories = ['biological', 'legal'];
-  
-  switch (relationshipType) {
-    case 'sibling':
-      return [...baseCategories, 'art', 'sibling'];
-    case 'donor':
-      return ['donor'];
-    case 'parent':
-    case 'child':
-      return [...baseCategories, 'art'];
-    case 'gestational_carrier':
-      return ['legal', 'art'];
-    case 'partner':
-      return ['legal'];
-    default:
-      return baseCategories;
-  }
+  return RelationshipAttributeHelpers.getRelevantCategories(relationshipType);
 };
 
 interface RelationshipAttributeSelectorProps {

@@ -5,31 +5,14 @@ import {
   getGenerationalConnections, 
   GenerationInfo 
 } from '@/utils/generationUtils';
-
-interface Person {
-  id: string;
-  name: string;
-  gender?: string | null;
-  profile_photo_url?: string | null;
-}
-
-interface Connection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-}
-
-interface RelationshipType {
-  value: string;
-  label: string;
-  color: string;
-}
+import { Person } from '@/types/person';
+import { Connection } from '@/types/connection';
+import { LayoutRelationshipType } from '@/types/layoutTypes';
 
 interface TreeLayoutProps {
   persons: Person[];
   connections: Connection[];
-  relationshipTypes: RelationshipType[];
+  relationshipTypes: LayoutRelationshipType[];
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
@@ -56,10 +39,22 @@ export function TreeLayout({ persons, connections, relationshipTypes, width, hei
     );
 
     // Calculate generations for color coding
-    const generationMap = calculateGenerations(persons, validConnections);
+    const generationMap = calculateGenerations(persons, validConnections.map(c => ({
+      id: c.id,
+      from_person_id: c.from_person_id,
+      to_person_id: c.to_person_id,
+      relationship_type: c.relationship_type,
+      family_tree_id: c.family_tree_id
+    })));
 
     // Use only generational connections for tree structure
-    const generationalConnections = getGenerationalConnections(validConnections);
+    const generationalConnections = getGenerationalConnections(validConnections.map(c => ({
+      id: c.id,
+      from_person_id: c.from_person_id,
+      to_person_id: c.to_person_id,
+      relationship_type: c.relationship_type,
+      family_tree_id: c.family_tree_id
+    })));
 
     // Create hierarchical data structure using only generational connections
     const hierarchyData = createHierarchy(persons, generationalConnections);

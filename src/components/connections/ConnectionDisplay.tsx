@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { ConnectionWithDetails } from '@/types/connection';
 import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
 import { Person } from '@/types/person';
+import { RelationshipAttributeHelpers } from '@/types/relationshipAttributes';
 
 interface ConnectionDisplayProps {
   connections: ConnectionWithDetails[];
@@ -35,44 +36,7 @@ export function ConnectionDisplay({
   };
 
   const getAttributeInfo = (attributes: string[]) => {
-    const relationshipAttributes = {
-      biological: [
-        { value: "biological", label: "Biological", description: "Genetically related" },
-        { value: "adopted", label: "Adopted", description: "Legal adoption" },
-        { value: "step", label: "Step", description: "Through marriage/partnership" },
-        { value: "foster", label: "Foster", description: "Foster care relationship" },
-      ],
-      legal: [
-        { value: "legal", label: "Legal", description: "Legally recognized" },
-        { value: "intended", label: "Intended", description: "Intended parent in ART" },
-      ],
-      art: [
-        { value: "ivf", label: "IVF", description: "In vitro fertilization" },
-        { value: "iui", label: "IUI", description: "Intrauterine insemination" },
-        { value: "donor_conceived", label: "Donor Conceived", description: "Conceived using donor gametes" },
-      ],
-      sibling: [
-        { value: "full", label: "Full", description: "Shares both biological parents" },
-        { value: "half", label: "Half", description: "Shares one biological parent" },
-        { value: "donor_sibling", label: "Dibling", description: "Shares same sperm/egg donor" },
-        { value: "step_sibling", label: "Step", description: "Through parent's marriage/partnership" },
-      ],
-      donor: [
-        { value: "sperm_donor", label: "Sperm Donor", description: "Provided sperm" },
-        { value: "egg_donor", label: "Egg Donor", description: "Provided eggs" },
-        { value: "embryo_donor", label: "Embryo Donor", description: "Provided embryo" },
-      ],
-    };
-
-    const allAttributes = Object.values(relationshipAttributes).flat();
-    return attributes.map(attrValue => {
-      const attribute = allAttributes.find(attr => attr.value === attrValue);
-      return {
-        value: attrValue,
-        label: attribute?.label || attrValue,
-        description: attribute?.description || ''
-      };
-    });
+    return RelationshipAttributeHelpers.getAttributeInfo(attributes);
   };
 
   const getConnectionDisplayText = (connection: ConnectionWithDetails) => {
