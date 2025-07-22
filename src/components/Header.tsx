@@ -37,13 +37,23 @@ const Header = () => {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8 lg:space-x-12">
           {navigationItems.map((item) => (
-            <a 
-              key={item.href}
-              href={item.href} 
-              className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors"
-            >
-              {item.label}
-            </a>
+            item.href.startsWith('#') ? (
+              <a 
+                key={item.href}
+                href={item.href} 
+                className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link 
+                key={item.href}
+                to={item.href} 
+                className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors"
+              >
+                {item.label}
+              </Link>
+            )
           ))}
         </nav>
 
@@ -170,13 +180,23 @@ const Header = () => {
                 <ul className="space-y-4">
                   {navigationItems.map((item) => (
                     <li key={item.href}>
-                      <a
-                        href={item.href}
-                        className="block py-3 px-4 text-base text-navy-700 hover:text-coral-600 hover:bg-coral-50 rounded-lg transition-colors"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        {item.label}
-                      </a>
+                      {item.href.startsWith('#') ? (
+                        <a
+                          href={item.href}
+                          className="block py-3 px-4 text-base text-navy-700 hover:text-coral-600 hover:bg-coral-50 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <Link
+                          to={item.href}
+                          className="block py-3 px-4 text-base text-navy-700 hover:text-coral-600 hover:bg-coral-50 rounded-lg transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                   
