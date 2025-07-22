@@ -51,7 +51,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             
             {/* Protected routes with sidebar layout */}
-            <Route path="/dashboard" element={<SidebarLayout><Dashboard /></SidebarLayout>} />
+            <Route path="/dashboard" element={<SidebarLayout2><Dashboard /></SidebarLayout2>} />
             <Route path="/profile" element={<SidebarLayout><UserProfile /></SidebarLayout>} />
             <Route path="/people" element={<SidebarLayout><People /></SidebarLayout>} />
             <Route path="/family-trees" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />

@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/components/auth/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DeleteAccountDialogProps {
   children: React.ReactNode;
@@ -24,6 +26,7 @@ export function DeleteAccountDialog({ children, userEmail }: DeleteAccountDialog
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
 
   const expectedText = "DELETE MY ACCOUNT";
   const isConfirmValid = confirmText === expectedText;
@@ -33,17 +36,25 @@ export function DeleteAccountDialog({ children, userEmail }: DeleteAccountDialog
 
     setIsDeleting(true);
     try {
-      // TODO: Implement actual account deletion logic
-      // This would typically involve:
-      // 1. Deleting all user data
-      // 2. Removing user from organizations
-      // 3. Deleting the user account
-      
-      toast({
-        title: "Account Deletion Requested",
-        description: "Your account deletion request has been submitted. You will receive an email confirmation.",
+      if (!user?.id) throw new Error("User not authenticated");
+
+      // Call Supabase Edge Function to handle server-side deletion
+      const { error } = await supabase.functions.invoke("delete-account", {
+        body: { user_id: user.id },
       });
-      
+
+      if (error) throw error;
+
+      // Sign the user out locally and redirect
+      await signOut();
+
+      toast({
+        title: "Account Deleted",
+        description: "Your account and associated data have been deleted.",
+      });
+
+      window.location.href = "/";
+
       setOpen(false);
       setConfirmText("");
     } catch (error) {

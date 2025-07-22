@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Download, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DataExportDialogProps {
   children: React.ReactNode;
@@ -75,8 +76,7 @@ export function DataExportDialog({ children }: DataExportDialogProps) {
   };
 
   const handleExport = async () => {
-    const selectedOptions = exportOptions.filter(option => option.enabled);
-    
+    const selectedOptions = exportOptions.filter((o) => o.enabled);
     if (selectedOptions.length === 0) {
       toast({
         title: "No Data Selected",
@@ -87,38 +87,55 @@ export function DataExportDialog({ children }: DataExportDialogProps) {
     }
 
     setIsExporting(true);
-    setExportProgress(0);
+    setExportProgress(5);
 
     try {
-      // Simulate export progress
-      const steps = selectedOptions.length;
-      for (let i = 0; i < steps; i++) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setExportProgress(((i + 1) / steps) * 100);
-      }
-
-      // TODO: Implement actual data export logic
-      // This would typically involve:
-      // 1. Gathering data from various tables
-      // 2. Formatting as JSON/CSV
-      // 3. Creating a downloadable ZIP file
-      // 4. Sending download link via email or direct download
-
-      toast({
-        title: "Export Complete",
-        description: "Your data export has been prepared. Check your email for the download link.",
+      // Invoke Supabase Edge Function to prepare data export
+      const { data, error } = await supabase.functions.invoke("export-user-data", {
+        body: {
+          options: selectedOptions.map((o) => o.id),
+        },
       });
 
-      setOpen(false);
-      setExportProgress(0);
+      if (error) throw error;
+      if (!data || !data.file) throw new Error("No export returned from server");
+
+      setExportProgress(70);
+
+      // Decode base64 zip string and trigger download using JSZip/FileSaver
+      const binaryString = window.atob(data.file as string);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "family-shapes-export.zip";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      setExportProgress(100);
+      toast({
+        title: "Export Complete",
+        description: "Your data export has been downloaded.",
+      });
+      setTimeout(() => setOpen(false), 800);
     } catch (error) {
+      console.error("Export error:", error);
       toast({
         title: "Export Failed",
-        description: "Failed to export your data. Please try again.",
+        description:
+          error instanceof Error ? error.message : "Failed to export your data.",
         variant: "destructive",
       });
     } finally {
       setIsExporting(false);
+      setExportProgress(0);
     }
   };
 
