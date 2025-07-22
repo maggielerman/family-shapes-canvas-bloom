@@ -169,33 +169,46 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
       )}
 
       {/* Visualization Tabs */}
-      <Tabs defaultValue="tree" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
-          <TabsTrigger value="tree" className="flex items-center gap-2">
-            <GitBranch className="w-4 h-4" />
-            <span className="hidden lg:inline">Tree</span>
-          </TabsTrigger>
-          <TabsTrigger value="radial" className="flex items-center gap-2">
-            <Target className="w-4 h-4" />
-            <span className="hidden lg:inline">Radial</span>
-          </TabsTrigger>
-          <TabsTrigger value="force" className="flex items-center gap-2">
-            <Network className="w-4 h-4" />
-            <span className="hidden lg:inline">Force</span>
-          </TabsTrigger>
-          <TabsTrigger value="d3tree" className="flex items-center gap-2">
-            <TreePine className="w-4 h-4" />
-            <span className="hidden lg:inline">D3 Tree</span>
-          </TabsTrigger>
-          <TabsTrigger value="cluster" className="flex items-center gap-2">
-            <Layers className="w-4 h-4" />
-            <span className="hidden lg:inline">Cluster</span>
-          </TabsTrigger>
-          <TabsTrigger value="xyflow" className="flex items-center gap-2">
-            <Zap className="w-4 h-4" />
-            <span className="hidden lg:inline">XY Flow</span>
-          </TabsTrigger>
-        </TabsList>
+      {persons.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Users className="w-12 h-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
+          <p className="text-muted-foreground mb-4">
+            Add your first family member to start building your family tree
+          </p>
+          <Button onClick={() => setAddPersonDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add First Person
+          </Button>
+        </div>
+      ) : (
+        <Tabs defaultValue="tree" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
+            <TabsTrigger value="tree" className="flex items-center gap-2">
+              <GitBranch className="w-4 h-4" />
+              <span className="hidden lg:inline">Tree</span>
+            </TabsTrigger>
+            <TabsTrigger value="radial" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              <span className="hidden lg:inline">Radial</span>
+            </TabsTrigger>
+            <TabsTrigger value="force" className="flex items-center gap-2">
+              <Network className="w-4 h-4" />
+              <span className="hidden lg:inline">Force</span>
+            </TabsTrigger>
+            <TabsTrigger value="d3tree" className="flex items-center gap-2">
+              <TreePine className="w-4 h-4" />
+              <span className="hidden lg:inline">D3 Tree</span>
+            </TabsTrigger>
+            <TabsTrigger value="cluster" className="flex items-center gap-2">
+              <Layers className="w-4 h-4" />
+              <span className="hidden lg:inline">Cluster</span>
+            </TabsTrigger>
+            <TabsTrigger value="xyflow" className="flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              <span className="hidden lg:inline">XY Flow</span>
+            </TabsTrigger>
+          </TabsList>
 
         <TabsContent value="tree" className="mt-6">
           <Suspense fallback={<ChartLoadingSpinner />}>
@@ -267,15 +280,12 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             <XYFlowTreeBuilder
               familyTreeId={familyTreeId}
               persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={dimensions.width}
-              height={dimensions.height}
-              onPersonClick={handlePersonClick}
+              onPersonAdded={onPersonAdded}
             />
           </Suspense>
         </TabsContent>
       </Tabs>
+      )}
 
       {/* Dialogs */}
       <AddPersonDialog
