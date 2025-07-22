@@ -130,8 +130,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           <ConnectionManager 
             familyTreeId={familyTreeId}
             persons={persons}
-            connections={connections}
-            onConnectionsUpdated={fetchConnections}
+            onConnectionUpdated={fetchConnections}
           />
         </div>
       </div>
