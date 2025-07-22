@@ -34,11 +34,9 @@ export default defineConfig(({ mode }) => ({
     },
     // Enable tree shaking
     minify: 'terser',
-    terser: {
-      terserOptions: {
-        compress: {
-          drop_debugger: mode === 'production',
-        },
+    terserOptions: {
+      compress: {
+        drop_debugger: mode === 'production',
       },
     },
     // Optimize chunk size
