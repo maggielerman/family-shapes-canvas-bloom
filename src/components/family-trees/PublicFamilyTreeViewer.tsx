@@ -19,6 +19,7 @@ import {
   Globe
 } from "lucide-react";
 import { TreeLayout } from "./layouts/TreeLayout";
+import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -73,14 +74,8 @@ export function PublicFamilyTreeViewer({
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
 
-  const relationshipTypes = [
-    { value: "parent", label: "Parent", color: "hsl(var(--chart-1))" },
-    { value: "child", label: "Child", color: "hsl(var(--chart-2))" },
-    { value: "partner", label: "Partner", color: "hsl(var(--chart-3))" },
-    { value: "sibling", label: "Sibling", color: "hsl(var(--chart-4))" },
-    { value: "donor", label: "Donor", color: "hsl(var(--chart-5))" },
-    { value: "gestational_carrier", label: "Gestational Carrier", color: "hsl(var(--chart-1))" },
-  ];
+  // Use centralized relationship types
+  const relationshipTypes = RelationshipTypeHelpers.getForSelection();
 
   useEffect(() => {
     if (familyTreeId) {

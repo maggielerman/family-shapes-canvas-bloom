@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import {
   ReactFlow,
   Node,
@@ -23,7 +23,7 @@ import { Plus, Users, Network, RotateCcw } from 'lucide-react';
 import { AddPersonDialog } from './AddPersonDialog';
 import { PersonCardDialog } from '@/components/people/PersonCard';
 import { ConnectionManager } from '@/components/connections/ConnectionManager';
-import { XYFlowLegend, relationshipTypes } from './XYFlowLegend';
+import { XYFlowLegend } from './XYFlowLegend';
 import { XYFlowLayoutSelector, LayoutType } from './XYFlowLayoutSelector';
 import { XYFlowLayoutService, LayoutResult } from './layouts/XYFlowLayoutService';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +31,9 @@ import { useToast } from '@/hooks/use-toast';
 import { PersonNode } from './PersonNode';
 import { Person, CreatePersonData } from '@/types/person';
 import { ConnectionUtils, Connection as ConnectionType, RelationshipType } from '@/types/connection';
+import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
+import { ConnectionService } from '@/services/connectionService';
+import { PersonService } from '@/services/personService';
 import { 
   calculateGenerations, 
   getGenerationalConnections, 
@@ -60,6 +63,9 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   const [isLayoutLoading, setIsLayoutLoading] = useState(false);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const { toast } = useToast();
+
+  // Use centralized relationship types - memoized to prevent unnecessary re-renders
+  const relationshipTypes = useMemo(() => RelationshipTypeHelpers.getForSelection(), []);
 
   // Calculate generations whenever persons or connections change
   useEffect(() => {
@@ -125,7 +131,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
       };
     });
     setEdges(connectionEdges);
-  }, [connections, setEdges]);
+  }, [connections, relationshipTypes, setEdges]);
 
   // Apply layout when layout type changes
   useEffect(() => {
@@ -195,73 +201,21 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
 
   const fetchConnections = async () => {
     try {
-      // Fetch connections directly associated with this family tree
-      const { data: treeConnections, error: treeError } = await supabase
-        .from('connections')
-        .select('*')
-        .eq('family_tree_id', familyTreeId);
-
-      if (treeError) throw treeError;
-
-      // Get person IDs who are members of this family tree
-      const { data: treeMembers, error: membersError } = await supabase
-        .from('family_tree_members')
-        .select('person_id')
-        .eq('family_tree_id', familyTreeId);
-
-      if (membersError) throw membersError;
-
-      const personIds = (treeMembers || []).map(m => m.person_id);
-
-      // Fetch connections between people who are members of this tree (but don't have family_tree_id set)
-      const { data: memberConnections, error: memberError } = await supabase
-        .from('connections')
-        .select('*')
-        .is('family_tree_id', null)
-        .in('from_person_id', personIds)
-        .in('to_person_id', personIds);
-
-      if (memberError) throw memberError;
-
-      // Combine and deduplicate connections
-      const allConnections = [...(treeConnections || []), ...(memberConnections || [])];
-      const uniqueConnections = allConnections.filter((conn, index, self) => 
-        index === self.findIndex(c => c.id === conn.id)
-      );
-
-      setConnections(uniqueConnections);
+      const connectionsData = await ConnectionService.getConnectionsForFamilyTree(familyTreeId);
+      setConnections(connectionsData);
     } catch (error) {
       console.error('Error fetching connections:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load connections",
+        variant: "destructive",
+      });
     }
   };
 
   const handleAddPerson = async (personData: CreatePersonData) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('No user found');
-
-      // Add person to persons table
-      const { data: newPerson, error: personError } = await supabase
-        .from('persons')
-        .insert({
-          ...personData,
-          user_id: userData.user.id,
-        })
-        .select()
-        .single();
-
-      if (personError) throw personError;
-
-      // Add person to family tree members
-      const { error: memberError } = await supabase
-        .from('family_tree_members')
-        .insert({
-          family_tree_id: familyTreeId,
-          person_id: newPerson.id,
-          added_by: userData.user.id,
-        });
-
-      if (memberError) throw memberError;
+      await PersonService.createPersonAndAddToTree(personData, familyTreeId);
 
       toast({
         title: "Success",

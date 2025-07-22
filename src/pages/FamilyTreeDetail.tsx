@@ -16,6 +16,7 @@ import { SharingSettingsDialog } from "@/components/family-trees/SharingSettings
 import { FamilyTreeDocumentManager } from "@/components/family-trees/FamilyTreeDocumentManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PersonService } from "@/services/personService";
 import { Person } from "@/types/person";
 
 interface FamilyTree {
@@ -123,32 +124,9 @@ export default function FamilyTreeDetail() {
 
   const handleAddPerson = async (personData: any) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('No user found');
-
-      // First create the person
-      const { data: newPerson, error: personError } = await supabase
-        .from('persons')
-        .insert({
-          ...personData,
-          user_id: userData.user.id,
-        })
-        .select()
-        .single();
-
-      if (personError) throw personError;
-
-      // Then add them to the family tree
-      const { error: membershipError } = await supabase
-        .from('family_tree_members')
-        .insert({
-          family_tree_id: id,
-          person_id: newPerson.id,
-          added_by: userData.user.id,
-          role: 'member'
-        });
-
-      if (membershipError) throw membershipError;
+      if (!id) throw new Error('Family tree ID not found');
+      
+      await PersonService.createPersonAndAddToTree(personData, id);
 
       toast({
         title: "Success",
