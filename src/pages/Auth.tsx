@@ -118,7 +118,8 @@ const Auth = () => {
       const { error } = await signUp(
         signUpData.email, 
         signUpData.password,
-        displayName
+        displayName,
+        accountType
       );
 
       if (error) {
@@ -131,7 +132,9 @@ const Auth = () => {
       } else {
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account.",
+          description: accountType === 'organization' 
+            ? "Your organization account has been created. Please check your email to verify your account."
+            : "Please check your email to verify your account.",
         });
         
         // Clear form after successful signup

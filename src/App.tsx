@@ -16,6 +16,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Organizations = lazy(() => import("./pages/Organizations"));
 const OrganizationDashboard = lazy(() => import("./pages/OrganizationDashboard"));
+const OrganizationOnboardingPage = lazy(() => import("./pages/OrganizationOnboardingPage"));
 const InvitationPage = lazy(() => import("./pages/InvitationPage"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 const FamilyTrees = lazy(() => import("./pages/FamilyTrees"));
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="/media" element={<SidebarLayout><Media /></SidebarLayout>} />
               <Route path="/share" element={<SidebarLayout><Share /></SidebarLayout>} />
               <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
+              <Route path="/organizations/:id/onboarding" element={<OrganizationOnboardingPage />} />
               <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDashboard /></SidebarLayout>} />
               <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
               

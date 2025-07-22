@@ -17,7 +17,9 @@ import {
   Home,
   Share2,
   TreePine,
-  User
+  User,
+  Settings,
+  ArrowRight
 } from "lucide-react";
 
 // Fixed: Removed non-existent 'Family' icon import
@@ -26,6 +28,8 @@ interface UserProfile {
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  account_type: string;
+  organization_id: string | null;
 }
 
 interface Organization {
@@ -56,21 +60,85 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const fetchUserData = async () => {
+  // Redirect organization accounts to their organization dashboard or onboarding
+  useEffect(() => {
+    if (profile && profile.account_type === 'organization' && profile.organization_id) {
+      console.log('Redirecting organization account to org dashboard:', profile.organization_id);
+      // Check if organization setup is complete by looking at the type
+      checkOrganizationSetup(profile.organization_id);
+    }
+  }, [profile, navigate]);
+
+  const checkOrganizationSetup = async (organizationId: string) => {
     try {
-      // Fetch user profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user!.id)
+      const { data: org, error } = await supabase
+        .from('organizations')
+        .select('type, description')
+        .eq('id', organizationId)
         .single();
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching profile:', profileError);
+      if (error) throw error;
+
+      // If organization type is still the default 'fertility_clinic' and has default description,
+      // redirect to onboarding
+      if (org.type === 'fertility_clinic' && 
+          org.description === 'Organization created during signup') {
+        navigate(`/organizations/${organizationId}/onboarding`);
+      } else {
+        navigate(`/organizations/${organizationId}`);
+      }
+    } catch (error) {
+      console.error('Error checking organization setup:', error);
+      // Fallback to organization dashboard
+      navigate(`/organizations/${organizationId}`);
+    }
+  };
+
+  const fetchUserData = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoadingData(true);
+
+      // Fetch user profile with account type and organization info
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, avatar_url, bio, account_type, organization_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        toast({
+          title: "Error loading profile",
+          description: "There was an issue loading your profile data.",
+          variant: "destructive",
+        });
       } else {
         setProfile(profileData);
       }
 
+      // Only fetch organizations for individual accounts
+      if (profileData?.account_type === 'individual') {
+        await fetchOrganizations();
+      }
+
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const fetchOrganizations = async () => {
+    if (!user) return;
+
+    try {
       // Fetch user organizations (both owned and memberships)
       const [ownedOrgsData, membershipOrgsData] = await Promise.all([
         // Organizations owned by user
@@ -115,9 +183,7 @@ const Dashboard = () => {
       
       setOrganizations(uniqueOrgs);
     } catch (error) {
-      console.error('Error fetching user data:', error);
-    } finally {
-      setIsLoadingData(false);
+      console.error('Error fetching organizations:', error);
     }
   };
 
