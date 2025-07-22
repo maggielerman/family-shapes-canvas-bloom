@@ -142,18 +142,34 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const generationalConnections = getGenerationalConnections(connections);
   const siblingConnections = getSiblingConnections(connections);
 
+  // Calculate responsive dimensions based on screen size
+  const getVisualizationDimensions = () => {
+    if (typeof window !== 'undefined') {
+      const width = Math.min(window.innerWidth - 40, 800); // Account for padding
+      const height = Math.min(window.innerHeight * 0.7, 600);
+      return { width, height };
+    }
+    return { width: 800, height: 600 };
+  };
+
+  const { width: vizWidth, height: vizHeight } = getVisualizationDimensions();
+
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center justify-between">
         <div className="flex gap-2">
-          <Button onClick={() => setAddPersonDialogOpen(true)}>
+          <Button 
+            onClick={() => setAddPersonDialogOpen(true)}
+            size="sm"
+            className="w-full sm:w-auto"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Person
           </Button>
         </div>
         
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground text-center sm:text-right">
           Generation-based visualization • {generationStats.totalGenerations} generations
         </div>
       </div>
@@ -174,7 +190,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
             <div>
               <div className="text-muted-foreground">Total People</div>
               <div className="font-semibold">{persons.length}</div>
@@ -205,13 +221,16 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
       {/* Visualization */}
       {persons.length === 0 ? (
         <div className="border rounded-lg bg-card">
-          <div className="flex flex-col items-center justify-center h-96 text-center">
-            <Users className="w-16 h-16 text-muted-foreground mb-4" />
+          <div className="flex flex-col items-center justify-center h-64 sm:h-96 text-center p-4">
+            <Users className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 max-w-md">
               Start building your family tree by adding family members.
             </p>
-            <Button onClick={() => setAddPersonDialogOpen(true)}>
+            <Button 
+              onClick={() => setAddPersonDialogOpen(true)}
+              className="w-full sm:w-auto"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add First Person
             </Button>
@@ -219,94 +238,112 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
         </div>
       ) : (
         <Tabs defaultValue="xyflow" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="xyflow" className="flex items-center gap-1">
-              <Network className="w-3 h-3" />
-              Interactive
-            </TabsTrigger>
-            <TabsTrigger value="tree" className="flex items-center gap-1">
-              <GitBranch className="w-3 h-3" />
-              Tree
-            </TabsTrigger>
-            <TabsTrigger value="radial" className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              Radial
-            </TabsTrigger>
-            <TabsTrigger value="force" className="flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              Force
-            </TabsTrigger>
-            <TabsTrigger value="react-tree" className="flex items-center gap-1">
-              <Network className="w-3 h-3" />
-              D3 Tree
-            </TabsTrigger>
-            <TabsTrigger value="cluster" className="flex items-center gap-1">
-              <Layers className="w-3 h-3" />
-              Cluster
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="grid w-full min-w-max grid-cols-6 sm:w-auto">
+              <TabsTrigger value="xyflow" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                <Network className="w-3 h-3" />
+                <span className="hidden sm:inline">Interactive</span>
+                <span className="sm:hidden">Flow</span>
+              </TabsTrigger>
+              <TabsTrigger value="tree" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                <GitBranch className="w-3 h-3" />
+                Tree
+              </TabsTrigger>
+              <TabsTrigger value="radial" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                <Users className="w-3 h-3" />
+                <span className="hidden sm:inline">Radial</span>
+                <span className="sm:hidden">Rad</span>
+              </TabsTrigger>
+              <TabsTrigger value="force" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                <Zap className="w-3 h-3" />
+                Force
+              </TabsTrigger>
+              <TabsTrigger value="react-tree" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                <Network className="w-3 h-3" />
+                <span className="hidden sm:inline">D3 Tree</span>
+                <span className="sm:hidden">D3</span>
+              </TabsTrigger>
+              <TabsTrigger value="cluster" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3">
+                <Layers className="w-3 h-3" />
+                <span className="hidden sm:inline">Cluster</span>
+                <span className="sm:hidden">Clus</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="xyflow" className="mt-4">
-            <XYFlowTreeBuilder
-              familyTreeId={familyTreeId}
-              persons={persons}
-              onPersonAdded={onPersonAdded}
-            />
+            <div className="w-full overflow-hidden rounded-lg border">
+              <XYFlowTreeBuilder
+                familyTreeId={familyTreeId}
+                persons={persons}
+                onPersonAdded={onPersonAdded}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="tree" className="mt-4">
-            <TreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
+            <div className="w-full overflow-auto rounded-lg border bg-background">
+              <TreeLayout
+                persons={persons}
+                connections={connections}
+                relationshipTypes={relationshipTypes}
+                width={vizWidth}
+                height={vizHeight}
+                onPersonClick={handlePersonClick}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="radial" className="mt-4">
-            <RadialTreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
+            <div className="w-full overflow-auto rounded-lg border bg-background">
+              <RadialTreeLayout
+                persons={persons}
+                connections={connections}
+                relationshipTypes={relationshipTypes}
+                width={vizWidth}
+                height={vizHeight}
+                onPersonClick={handlePersonClick}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="force" className="mt-4">
-            <ForceDirectedLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
+            <div className="w-full overflow-auto rounded-lg border bg-background">
+              <ForceDirectedLayout
+                persons={persons}
+                connections={connections}
+                relationshipTypes={relationshipTypes}
+                width={vizWidth}
+                height={vizHeight}
+                onPersonClick={handlePersonClick}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="react-tree" className="mt-4">
-            <ReactD3TreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
+            <div className="w-full overflow-auto rounded-lg border bg-background">
+              <ReactD3TreeLayout
+                persons={persons}
+                connections={connections}
+                relationshipTypes={relationshipTypes}
+                width={vizWidth}
+                height={vizHeight}
+                onPersonClick={handlePersonClick}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="cluster" className="mt-4">
-            <ClusterLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
+            <div className="w-full overflow-auto rounded-lg border bg-background">
+              <ClusterLayout
+                persons={persons}
+                connections={connections}
+                relationshipTypes={relationshipTypes}
+                width={vizWidth}
+                height={vizHeight}
+                onPersonClick={handlePersonClick}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       )}
