@@ -73,32 +73,34 @@ export function PersonCard({
       onClick={onClick}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
               <AvatarImage src={person.profile_photo_url || ""} />
-              <AvatarFallback>
+              <AvatarFallback className="text-sm">
                 {getInitials(person.name)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h3 className="font-semibold">{person.name}</h3>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold truncate text-sm sm:text-base">{person.name}</h3>
               {person.date_of_birth && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Age {calculateAgeLocal(person.date_of_birth)}
                 </p>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Badge className={getStatusColor(person.status)}>
-              {person.status}
-            </Badge>
-            {person.is_self && (
-              <Badge variant="default" className="bg-[hsl(9,67%,49%)] text-white border-[hsl(9,67%,49%)]">
-                Self
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
+            <div className="flex flex-wrap gap-1 justify-end">
+              <Badge className={getStatusColor(person.status)} variant="outline">
+                {person.status}
               </Badge>
-            )}
+              {person.is_self && (
+                <Badge variant="default" className="bg-[hsl(9,67%,49%)] text-white border-[hsl(9,67%,49%)]">
+                  Self
+                </Badge>
+              )}
+            </div>
             {(showActions || onEdit || onDelete || showRemoveFromTree) && (
               <div className="flex items-center gap-1">
                 {onEdit && (
@@ -110,8 +112,9 @@ export function PersonCard({
                       onEdit(person);
                     }}
                     title="Edit person"
+                    className="h-8 w-8 p-0"
                   >
-                    <Edit className="w-4 h-4" />
+                    <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                 )}
                 {showRemoveFromTree && onRemoveFromTree && (
@@ -123,9 +126,9 @@ export function PersonCard({
                       onRemoveFromTree(person);
                     }}
                     title="Remove from this tree"
-                    className="text-amber-600 hover:text-amber-700"
+                    className="text-amber-600 hover:text-amber-700 h-8 w-8 p-0"
                   >
-                    <UserMinus className="w-4 h-4" />
+                    <UserMinus className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                 )}
                 {showActions && onDelete && (
@@ -137,9 +140,9 @@ export function PersonCard({
                       onDelete(person);
                     }}
                     title="Delete person permanently"
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive h-8 w-8 p-0"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                 )}
               </div>
@@ -148,37 +151,37 @@ export function PersonCard({
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 sm:space-y-3">
         {person.date_of_birth && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="w-4 h-4" />
-            Born {formatDate(person.date_of_birth)}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span>Born {formatDate(person.date_of_birth)}</span>
           </div>
         )}
         
         {person.email && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Mail className="w-4 h-4" />
-            {person.email}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="truncate">{person.email}</span>
           </div>
         )}
         
         {person.phone && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="w-4 h-4" />
-            {person.phone}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span>{person.phone}</span>
           </div>
         )}
         
         {person.gender && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <UserCircle className="w-4 h-4" />
-            {person.gender.charAt(0).toUpperCase() + person.gender.slice(1)}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <UserCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span>{person.gender.charAt(0).toUpperCase() + person.gender.slice(1)}</span>
           </div>
         )}
         
         {person.notes && (
-          <div className="text-sm text-muted-foreground border-t pt-3">
+          <div className="text-xs sm:text-sm text-muted-foreground border-t pt-2 sm:pt-3">
             <p className="line-clamp-2">{person.notes}</p>
           </div>
         )}

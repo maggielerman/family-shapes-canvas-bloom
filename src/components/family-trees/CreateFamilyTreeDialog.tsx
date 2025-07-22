@@ -62,7 +62,7 @@ export function CreateFamilyTreeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Family Tree</DialogTitle>
           <DialogDescription>
@@ -91,6 +91,7 @@ export function CreateFamilyTreeDialog({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Optional description of your family tree"
                 rows={3}
+                className="resize-none"
               />
             </div>
             
@@ -102,29 +103,39 @@ export function CreateFamilyTreeDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="private">
-                    Private - Only you can see this tree
+                    <div className="text-left">
+                      <div className="font-medium">Private</div>
+                      <div className="text-xs text-muted-foreground">Only you can see this tree</div>
+                    </div>
                   </SelectItem>
                   <SelectItem value="shared">
-                    Shared - People you invite can see this tree
+                    <div className="text-left">
+                      <div className="font-medium">Shared</div>
+                      <div className="text-xs text-muted-foreground">People you invite can see this tree</div>
+                    </div>
                   </SelectItem>
                   <SelectItem value="public">
-                    Public - Anyone can view this tree
+                    <div className="text-left">
+                      <div className="font-medium">Public</div>
+                      <div className="text-xs text-muted-foreground">Anyone can view this tree</div>
+                    </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+            <Button type="submit" disabled={isSubmitting || !name.trim()} className="w-full sm:w-auto">
               {isSubmitting ? "Creating..." : "Create Tree"}
             </Button>
           </DialogFooter>

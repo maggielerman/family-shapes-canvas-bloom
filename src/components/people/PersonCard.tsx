@@ -156,17 +156,17 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
+            <Avatar className="h-12 w-12 sm:h-16 sm:w-16">
               <AvatarImage src={person.profile_photo_url || undefined} alt={person.name} />
-              <AvatarFallback className="text-lg font-semibold">
+              <AvatarFallback className="text-sm sm:text-lg font-semibold">
                 {getInitials(person.name)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-2xl">{person.name}</CardTitle>
-              <div className="flex items-center gap-2 mt-1">
+              <CardTitle className="text-lg sm:text-2xl">{person.name}</CardTitle>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
                 {person.gender && (
                   <Badge variant="secondary">
                     {person.gender}
@@ -190,7 +190,7 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center sm:justify-start">
             {onEdit && (
               <Button variant="outline" size="sm" onClick={onEdit}>
                 <Edit className="h-4 w-4" />
@@ -210,20 +210,20 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
       <CardContent>
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="medical">Medical</TabsTrigger>
-            <TabsTrigger value="trees">Trees</TabsTrigger>
-            <TabsTrigger value="media">Media</TabsTrigger>
+            <TabsTrigger value="details" className="text-xs sm:text-sm">Details</TabsTrigger>
+            <TabsTrigger value="contact" className="text-xs sm:text-sm">Contact</TabsTrigger>
+            <TabsTrigger value="medical" className="text-xs sm:text-sm">Medical</TabsTrigger>
+            <TabsTrigger value="trees" className="text-xs sm:text-sm">Trees</TabsTrigger>
+            <TabsTrigger value="media" className="text-xs sm:text-sm">Media</TabsTrigger>
           </TabsList>
           
           <TabsContent value="details" className="space-y-4 mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div className="flex items-center text-sm">
                   <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span className="text-muted-foreground">Born:</span>
-                                          <span className="ml-2">{formatDateLocal(person.date_of_birth)}</span>
+                  <span className="ml-2">{formatDateLocal(person.date_of_birth)}</span>
                   {person.date_of_birth && getAge(person.date_of_birth) && (
                     <span className="ml-2 text-muted-foreground">
                       (Age {getAge(person.date_of_birth)})
@@ -262,7 +262,7 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                   <span className="text-muted-foreground">Email:</span>
                   <a 
                     href={`mailto:${person.email}`}
-                    className="ml-2 text-primary hover:underline"
+                    className="ml-2 text-primary hover:underline break-all"
                   >
                     {person.email}
                   </a>
@@ -359,7 +359,7 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                 <p className="text-xs">Media files can be linked from the Media Gallery</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {mediaFiles.map((personMedia) => (
                   <Card key={personMedia.id} className="overflow-hidden">
                     <div className="aspect-square bg-muted relative">
@@ -452,7 +452,7 @@ export function PersonCardDialog({ person, open, onOpenChange, onEdit }: PersonC
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Person Details</DialogTitle>
           <DialogDescription>

@@ -119,7 +119,7 @@ export function AddExistingPersonDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Add Existing Person</DialogTitle>
         </DialogHeader>
@@ -159,17 +159,17 @@ export function AddExistingPersonDialog({
             ) : (
               <div className="space-y-3">
                 {persons.map((person) => (
-                  <div key={person.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-12 w-12">
+                  <div key={person.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-muted/50 gap-3">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
                         <AvatarImage src={person.profile_photo_url || undefined} />
                         <AvatarFallback>
                           {getInitials(person.name)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <h4 className="font-medium">{person.name}</h4>
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium truncate">{person.name}</h4>
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                           {person.gender && (
                             <Badge variant="secondary" className="text-xs">
                               {person.gender}
@@ -191,6 +191,7 @@ export function AddExistingPersonDialog({
                       size="sm"
                       onClick={() => addPersonToTree(person.id)}
                       disabled={adding === person.id}
+                      className="w-full sm:w-auto flex-shrink-0"
                     >
                       {adding === person.id ? (
                         "Adding..."

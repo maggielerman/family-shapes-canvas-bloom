@@ -165,21 +165,21 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <Avatar className="h-12 w-12 sm:h-16 sm:w-16 mx-auto sm:mx-0">
               <AvatarImage src={formData.profile_photo_url || undefined} alt={formData.name} />
-              <AvatarFallback className="text-lg font-semibold">
+              <AvatarFallback className="text-sm sm:text-lg font-semibold">
                 {getInitials(formData.name)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <DialogTitle className="text-2xl">Edit Person Details</DialogTitle>
+            <div className="text-center sm:text-left">
+              <DialogTitle className="text-xl sm:text-2xl">Edit Person Details</DialogTitle>
               <DialogDescription>
                 Update information for {person.name}
               </DialogDescription>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
                 {formData.gender && (
                   <Badge variant="secondary">
                     {formData.gender}
@@ -202,13 +202,13 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="details" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="contact">Contact</TabsTrigger>
-              <TabsTrigger value="medical">Medical</TabsTrigger>
+              <TabsTrigger value="details" className="text-xs sm:text-sm">Details</TabsTrigger>
+              <TabsTrigger value="contact" className="text-xs sm:text-sm">Contact</TabsTrigger>
+              <TabsTrigger value="medical" className="text-xs sm:text-sm">Medical</TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="space-y-4 mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">
                     <User className="h-4 w-4 inline mr-2" />
@@ -299,12 +299,13 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Additional notes about this person"
                   rows={3}
+                  className="resize-none"
                 />
               </div>
             </TabsContent>
             
             <TabsContent value="contact" className="space-y-4 mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">
                     <Mail className="h-4 w-4 inline mr-2" />
@@ -333,7 +334,7 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
                   />
                 </div>
                 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2 lg:col-span-2">
                   <Label htmlFor="address">
                     <MapPin className="h-4 w-4 inline mr-2" />
                     Address
@@ -344,6 +345,7 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder="Enter full address"
                     rows={2}
+                    className="resize-none"
                   />
                 </div>
                 
@@ -409,11 +411,11 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="mt-6 flex-col gap-2 sm:flex-row">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

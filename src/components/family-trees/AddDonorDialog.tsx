@@ -73,7 +73,7 @@ export function AddDonorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Donor Information</DialogTitle>
           <DialogDescription>
@@ -84,7 +84,7 @@ export function AddDonorDialog({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             {/* Basic Information */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="donor_number">Donor Number</Label>
                 <Input
@@ -106,7 +106,7 @@ export function AddDonorDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="donor_type">Donor Type</Label>
                 <Select 
@@ -149,7 +149,7 @@ export function AddDonorDialog({
             </div>
 
             {/* Physical Characteristics */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="height">Height</Label>
                 <Input
@@ -181,7 +181,7 @@ export function AddDonorDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="eye_color">Eye Color</Label>
                 <Input
@@ -242,16 +242,18 @@ export function AddDonorDialog({
                 onChange={(e) => setDonorData(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="Additional notes about the donor..."
                 rows={3}
+                className="resize-none"
               />
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
             <Button
               type="button"
               variant="outline"
               onClick={handleReset}
               disabled={isSubmitting}
+              className="w-full sm:w-auto"
             >
               Reset
             </Button>
@@ -260,10 +262,11 @@ export function AddDonorDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
               {isSubmitting ? "Adding..." : "Add Donor"}
             </Button>
           </DialogFooter>

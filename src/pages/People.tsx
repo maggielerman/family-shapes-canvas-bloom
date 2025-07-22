@@ -213,23 +213,23 @@ export default function People() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">People</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">People</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Manage all people in your family trees and connections
           </p>
         </div>
-        <Button onClick={() => setShowAddPersonDialog(true)}>
+        <Button onClick={() => setShowAddPersonDialog(true)} className="w-full md:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Add Person
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total People</CardTitle>
@@ -276,14 +276,14 @@ export default function People() {
 
       {/* Filters */}
       <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Filter className="h-5 w-5" />
             Filters
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="space-y-4 md:space-y-0 md:flex md:gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -296,29 +296,31 @@ export default function People() {
               </div>
             </div>
             
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="living">Living</SelectItem>
-                <SelectItem value="deceased">Deceased</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={genderFilter} onValueChange={setGenderFilter}>
-              <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Genders</SelectItem>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="non-binary">Non-Binary</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 gap-2 md:contents">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[150px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="living">Living</SelectItem>
+                  <SelectItem value="deceased">Deceased</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={genderFilter} onValueChange={setGenderFilter}>
+                <SelectTrigger className="w-full md:w-[150px]">
+                  <SelectValue placeholder="Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Genders</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="non-binary">Non-Binary</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -326,20 +328,20 @@ export default function People() {
       {/* People Grid */}
       {filteredPersons.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
+          <CardContent className="flex flex-col items-center justify-center py-8 md:py-12 px-4">
             <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
+            <h3 className="text-lg font-semibold mb-2 text-center">
               {searchTerm || statusFilter !== "all" || genderFilter !== "all" 
                 ? "No people match your filters" 
                 : "No people yet"}
             </h3>
-            <p className="text-muted-foreground mb-4 text-center">
+            <p className="text-muted-foreground mb-4 text-center text-sm md:text-base">
               {searchTerm || statusFilter !== "all" || genderFilter !== "all"
                 ? "Try adjusting your search criteria or filters"
                 : "Add your first family member to get started"}
             </p>
             {!searchTerm && statusFilter === "all" && genderFilter === "all" && (
-              <Button onClick={() => setShowAddPersonDialog(true)}>
+              <Button onClick={() => setShowAddPersonDialog(true)} className="w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Person
               </Button>
@@ -347,7 +349,7 @@ export default function People() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
           {filteredPersons.map((person) => (
             <div key={person.id} className="relative">
               <PersonCard
