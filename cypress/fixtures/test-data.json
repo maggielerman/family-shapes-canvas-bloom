@@ -1,0 +1,101 @@
+{
+  "users": {
+    "testUser": {
+      "email": "test@familyshapes.com",
+      "password": "TestPassword123!"
+    },
+    "adminUser": {
+      "email": "admin@familyshapes.com",
+      "password": "AdminPassword123!"
+    }
+  },
+  "familyTrees": {
+    "smithFamily": {
+      "name": "The Smith Family Tree",
+      "description": "A comprehensive family tree for the Smith family lineage"
+    },
+    "johnsonFamily": {
+      "name": "Johnson Family Heritage",
+      "description": "Tracing the Johnson family roots back three generations"
+    },
+    "publicTree": {
+      "name": "Public Family Tree",
+      "description": "A publicly accessible family tree for testing sharing features"
+    }
+  },
+  "people": {
+    "grandparents": [
+      {
+        "firstName": "William",
+        "lastName": "Smith",
+        "birthDate": "1930-05-15",
+        "gender": "male",
+        "notes": "Family patriarch, served in WWII"
+      },
+      {
+        "firstName": "Mary",
+        "lastName": "Smith",
+        "birthDate": "1932-08-22",
+        "gender": "female",
+        "notes": "Beloved grandmother, teacher for 40 years"
+      }
+    ],
+    "parents": [
+      {
+        "firstName": "Robert",
+        "lastName": "Smith",
+        "birthDate": "1955-03-10",
+        "gender": "male",
+        "notes": "Engineer, father of three"
+      },
+      {
+        "firstName": "Susan",
+        "lastName": "Smith",
+        "birthDate": "1957-11-18",
+        "gender": "female",
+        "notes": "Nurse, community volunteer"
+      }
+    ],
+    "children": [
+      {
+        "firstName": "Michael",
+        "lastName": "Smith",
+        "birthDate": "1980-01-25",
+        "gender": "male",
+        "notes": "Software developer, married with two children"
+      },
+      {
+        "firstName": "Sarah",
+        "lastName": "Smith",
+        "birthDate": "1982-07-14",
+        "gender": "female",
+        "notes": "Doctor, recently married"
+      },
+      {
+        "firstName": "David",
+        "lastName": "Smith",
+        "birthDate": "1985-12-03",
+        "gender": "male",
+        "notes": "Artist, lives in California"
+      }
+    ]
+  },
+  "relationships": [
+    {
+      "type": "spouse",
+      "description": "Married couple"
+    },
+    {
+      "type": "parent-child",
+      "description": "Parent to child relationship"
+    },
+    {
+      "type": "sibling",
+      "description": "Brothers and sisters"
+    },
+    {
+      "type": "grandparent-grandchild",
+      "description": "Grandparent to grandchild relationship"
+    }
+  ]
+}
