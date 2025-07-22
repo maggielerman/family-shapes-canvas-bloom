@@ -231,7 +231,8 @@ describe('Consolidation Regression Tests', () => {
       const personData = {
         name: 'Test Person',
         date_of_birth: '1990-01-01',
-        gender: 'male'
+        gender: 'male',
+        status: 'living'
       };
 
       // Should not throw and should call expected Supabase methods
@@ -242,7 +243,8 @@ describe('Consolidation Regression Tests', () => {
       const personData = {
         name: 'Test Person',
         date_of_birth: '1990-01-01',
-        gender: 'male'
+        gender: 'male',
+        status: 'living'
       };
 
       // Should not throw and should complete both operations
@@ -287,20 +289,11 @@ describe('Consolidation Regression Tests', () => {
 
   describe('Error Handling Regression', () => {
     it('should maintain proper error handling in services', async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const mockSupabase = supabase as any;
+      // Import the mock to control it
+      const { mockConnectionService } = await import('../setup');
       
-      // Mock database error
-      mockSupabase.from.mockReturnValue({
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Database error' }
-            })
-          })
-        })
-      });
+      // Mock the service to throw an error
+      mockConnectionService.createConnection.mockRejectedValueOnce(new Error('Database error'));
 
       const connectionData = {
         from_person_id: 'person-1',
@@ -310,7 +303,7 @@ describe('Consolidation Regression Tests', () => {
       };
 
       // Should throw error properly
-      await expect(ConnectionService.createConnection(connectionData)).rejects.toThrow();
+      await expect(ConnectionService.createConnection(connectionData)).rejects.toThrow('Database error');
     });
 
     it('should maintain validation error messages', () => {

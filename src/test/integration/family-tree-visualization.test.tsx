@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render } from '../utils/test-helpers';
+import { render, waitFor } from '../utils/test-helpers';
 import { FamilyTreeVisualization } from '@/components/family-trees/FamilyTreeVisualization';
 import { createMockPerson, createMockConnection, createMockFamilyTree } from '../utils/test-helpers';
+import { act } from '@testing-library/react';
 
 describe('FamilyTreeVisualization Integration', () => {
   const mockFamilyTree = createMockFamilyTree();
@@ -35,81 +36,114 @@ describe('FamilyTreeVisualization Integration', () => {
   });
 
   describe('Component Integration', () => {
-    it('should render without crashing with persons', () => {
-      const result = render(
-        <FamilyTreeVisualization
-          familyTreeId={mockFamilyTree.id}
-          persons={mockPersons}
-          onPersonAdded={vi.fn()}
-        />
-      );
+    it('should render without crashing with persons', async () => {
+      let result: any;
       
-      expect(result.container).toBeTruthy();
+      await act(async () => {
+        result = render(
+          <FamilyTreeVisualization
+            familyTreeId={mockFamilyTree.id}
+            persons={mockPersons}
+            onPersonAdded={vi.fn()}
+          />
+        );
+      });
+      
+      await waitFor(() => {
+        expect(result.container).toBeTruthy();
+      });
     });
 
-    it('should render without crashing with empty persons', () => {
-      const result = render(
-        <FamilyTreeVisualization
-          familyTreeId={mockFamilyTree.id}
-          persons={[]}
-          onPersonAdded={vi.fn()}
-        />
-      );
+    it('should render without crashing with empty persons', async () => {
+      let result: any;
       
-      expect(result.container).toBeTruthy();
+      await act(async () => {
+        result = render(
+          <FamilyTreeVisualization
+            familyTreeId={mockFamilyTree.id}
+            persons={[]}
+            onPersonAdded={vi.fn()}
+          />
+        );
+      });
+      
+      await waitFor(() => {
+        expect(result.container).toBeTruthy();
+      });
     });
   });
 
   describe('Connection Data Flow', () => {
-    it('should attempt to fetch connections on mount', () => {
-      const component = render(
-        <FamilyTreeVisualization
-          familyTreeId={mockFamilyTree.id}
-          persons={mockPersons}
-          onPersonAdded={vi.fn()}
-        />
-      );
+    it('should attempt to fetch connections on mount', async () => {
+      let component: any;
+      
+      await act(async () => {
+        component = render(
+          <FamilyTreeVisualization
+            familyTreeId={mockFamilyTree.id}
+            persons={mockPersons}
+            onPersonAdded={vi.fn()}
+          />
+        );
+      });
 
-      expect(component.container).toBeTruthy();
+      await waitFor(() => {
+        expect(component.container).toBeTruthy();
+      });
     });
 
-    it('should handle connection updates', () => {
-      const { rerender } = render(
-        <FamilyTreeVisualization
-          familyTreeId={mockFamilyTree.id}
-          persons={mockPersons}
-          onPersonAdded={vi.fn()}
-        />
-      );
+    it('should handle connection updates', async () => {
+      let rerender: any;
+      
+      await act(async () => {
+        const result = render(
+          <FamilyTreeVisualization
+            familyTreeId={mockFamilyTree.id}
+            persons={mockPersons}
+            onPersonAdded={vi.fn()}
+          />
+        );
+        rerender = result.rerender;
+      });
 
-      rerender(
-        <FamilyTreeVisualization
-          familyTreeId={mockFamilyTree.id}
-          persons={[...mockPersons, createMockPerson({ id: 'person-4', name: 'Diana' })]}
-          onPersonAdded={vi.fn()}
-        />
-      );
+      await act(async () => {
+        rerender(
+          <FamilyTreeVisualization
+            familyTreeId={mockFamilyTree.id}
+            persons={[...mockPersons, createMockPerson({ id: 'person-4', name: 'Diana' })]}
+            onPersonAdded={vi.fn()}
+          />
+        );
+      });
 
-      expect(rerender).toBeTruthy();
+      await waitFor(() => {
+        expect(rerender).toBeTruthy();
+      });
     });
   });
 
   describe('Error Handling', () => {
-    it('should handle connection fetch errors gracefully', () => {
-      const result = render(
-        <FamilyTreeVisualization
-          familyTreeId={mockFamilyTree.id}
-          persons={mockPersons}
-          onPersonAdded={vi.fn()}
-        />
-      );
+    it('should handle connection fetch errors gracefully', async () => {
+      let result: any;
+      
+      await act(async () => {
+        result = render(
+          <FamilyTreeVisualization
+            familyTreeId={mockFamilyTree.id}
+            persons={mockPersons}
+            onPersonAdded={vi.fn()}
+          />
+        );
+      });
 
-      expect(result.container).toBeTruthy();
+      await waitFor(() => {
+        expect(result.container).toBeTruthy();
+      });
     });
   });
 
   describe('Data Consistency Validation', () => {
-    it('should handle missing person references in connections', () => {
+    it('should handle missing person references in connections', async () => {
       const connectionsWithMissingPerson = [
         createMockConnection({ 
           from_person_id: 'missing-person', 
@@ -119,16 +153,21 @@ describe('FamilyTreeVisualization Integration', () => {
       ];
 
       // Test component with invalid connections
+      let result: any;
+      
+      await act(async () => {
+        result = render(
+          <FamilyTreeVisualization
+            familyTreeId={mockFamilyTree.id}
+            persons={mockPersons}
+            onPersonAdded={vi.fn()}
+          />
+        );
+      });
 
-      const result = render(
-        <FamilyTreeVisualization
-          familyTreeId={mockFamilyTree.id}
-          persons={mockPersons}
-          onPersonAdded={vi.fn()}
-        />
-      );
-
-      expect(result.container).toBeTruthy();
+      await waitFor(() => {
+        expect(result.container).toBeTruthy();
+      });
     });
 
     it('should validate relationship consistency', () => {
@@ -173,7 +212,7 @@ describe('FamilyTreeVisualization Integration', () => {
   });
 
   describe('Performance Considerations', () => {
-    it('should handle large datasets efficiently', () => {
+    it('should handle large datasets efficiently', async () => {
       const largePersonSet = Array.from({ length: 100 }, (_, i) => 
         createMockPerson({ id: `person-${i}`, name: `Person ${i}` })
       );
@@ -187,21 +226,25 @@ describe('FamilyTreeVisualization Integration', () => {
       );
 
       // Test component with large dataset
-
+      let result: any;
       const startTime = performance.now();
       
-      const result = render(
-        <FamilyTreeVisualization
-          familyTreeId={mockFamilyTree.id}
-          persons={largePersonSet}
-          onPersonAdded={vi.fn()}
-        />
-      );
+      await act(async () => {
+        result = render(
+          <FamilyTreeVisualization
+            familyTreeId={mockFamilyTree.id}
+            persons={largePersonSet}
+            onPersonAdded={vi.fn()}
+          />
+        );
+      });
 
       const endTime = performance.now();
       const renderTime = endTime - startTime;
 
-      expect(result.container).toBeTruthy();
+      await waitFor(() => {
+        expect(result.container).toBeTruthy();
+      });
       expect(renderTime).toBeLessThan(5000); // 5 seconds
     });
   });
