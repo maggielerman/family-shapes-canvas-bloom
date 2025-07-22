@@ -6,8 +6,6 @@ const DYNAMIC_CACHE = 'dynamic-v1';
 const STATIC_FILES = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/index.css',
 ];
 
 // Install event - cache static files
