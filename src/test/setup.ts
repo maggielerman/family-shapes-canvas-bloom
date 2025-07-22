@@ -42,45 +42,6 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }))
 
-// Create a mock that can be controlled by tests
-const mockConnectionService = {
-  createConnection: vi.fn(() => Promise.resolve({ id: 'mock-connection-id' })),
-  createConnectionWithReciprocal: vi.fn(() => Promise.resolve({ 
-    main: { id: 'mock-connection-id' }, 
-    reciprocal: { id: 'mock-reciprocal-id' } 
-  })),
-  getConnectionsForPerson: vi.fn(() => Promise.resolve([])),
-  getConnectionsForFamilyTree: vi.fn(() => Promise.resolve([])),
-  updateConnection: vi.fn(() => Promise.resolve({ id: 'mock-connection-id' })),
-  updateConnectionWithReciprocal: vi.fn(() => Promise.resolve({ 
-    main: { id: 'mock-connection-id' }, 
-    reciprocal: { id: 'mock-reciprocal-id' } 
-  })),
-  deleteConnection: vi.fn(() => Promise.resolve()),
-  deleteConnectionWithReciprocal: vi.fn(() => Promise.resolve()),
-  connectionExists: vi.fn(() => Promise.resolve(false)),
-};
-
-// Mock the services directly to avoid complex Supabase mocking
-vi.mock('@/services/connectionService', () => ({
-  ConnectionService: mockConnectionService
-}));
-
-// Export the mock for test control
-export { mockConnectionService };
-
-vi.mock('@/services/personService', () => ({
-  PersonService: {
-    createPerson: vi.fn(() => Promise.resolve({ id: 'mock-person-id', name: 'Mock Person' })),
-    createPersonAndAddToTree: vi.fn(() => Promise.resolve({ id: 'mock-person-id', name: 'Mock Person' })),
-    addPersonToFamilyTree: vi.fn(() => Promise.resolve()),
-    removePersonFromFamilyTree: vi.fn(() => Promise.resolve()),
-    getPersonsInFamilyTree: vi.fn(() => Promise.resolve([])),
-    updatePerson: vi.fn(() => Promise.resolve({ id: 'mock-person-id', name: 'Mock Person' })),
-    deletePerson: vi.fn(() => Promise.resolve()),
-  }
-}));
-
 // Mock toast
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({

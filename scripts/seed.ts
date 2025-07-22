@@ -1,11 +1,20 @@
 #!/usr/bin/env node
 
+// Load environment variables from .env file
+import { config } from 'dotenv';
+config();
+
 import { seedOrganizations, clearSeededData } from '../src/lib/organizationSeeds';
-import { supabase } from '../src/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '../src/integrations/supabase/types';
+
+const SUPABASE_URL = "https://nhkufibfwskdpzdjwirr.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oa3VmaWJmd3NrZHB6ZGp3aXJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzcwNDcsImV4cCI6MjA2NzMxMzA0N30.ocKAuYTWxj4DUQGdFkRP4rcVy02nBqRqGjT2VopSsXg";
 
 async function main() {
   const command = process.argv[2];
   const userId = process.argv[3] || process.env.SUPABASE_USER_ID;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!userId) {
     console.error('❌ Error: User ID is required');
@@ -18,22 +27,35 @@ async function main() {
     console.log('  npm run seed seed your-user-id');
     console.log('  npm run seed clear your-user-id');
     console.log('  SUPABASE_USER_ID=your-user-id npm run seed seed');
+    console.log('');
+    console.log('For production seeding, set SUPABASE_SERVICE_ROLE_KEY environment variable');
     process.exit(1);
   }
 
   try {
     console.log(`🔐 Authenticating with user ID: ${userId}`);
     
-    // Test the connection
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) {
-      console.error('❌ Authentication error:', authError.message);
-      process.exit(1);
+    // Create Supabase client with service role key if available, otherwise use anon key
+    const supabase = createClient<Database>(
+      SUPABASE_URL, 
+      serviceRoleKey || SUPABASE_ANON_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    if (serviceRoleKey) {
+      console.log('🔑 Using service role key for authentication');
+    } else {
+      console.log('⚠️  No service role key found, using anon key (may have limited permissions)');
     }
 
     if (command === 'seed') {
       console.log('🌱 Seeding database with test data...');
-      const results = await seedOrganizations(userId);
+      const results = await seedOrganizations(userId, supabase);
       
       console.log('✅ Seeding completed successfully!');
       console.log(`📊 Created:`);
@@ -49,7 +71,7 @@ async function main() {
       
     } else if (command === 'clear') {
       console.log('🧹 Clearing seeded data...');
-      await clearSeededData(userId);
+      await clearSeededData(userId, supabase);
       console.log('✅ Seeded data cleared successfully!');
       
     } else {

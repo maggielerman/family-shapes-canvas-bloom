@@ -1,5 +1,6 @@
 // Organization test seed data
-import { supabase } from "@/integrations/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface SeedData {
   organizations: Array<{
@@ -37,7 +38,7 @@ export const seedData: SeedData = {
   organizations: [
     {
       name: "Rainbow Family Clinic",
-      slug: "rainbow-family-clinic",
+      slug: "rainbow-family-clinic-2025",
       subdomain: "rainbow-clinic",
       type: "fertility_clinic",
       description: "A progressive fertility clinic specializing in LGBTQ+ family building and donor conception services.",
@@ -45,7 +46,7 @@ export const seedData: SeedData = {
     },
     {
       name: "Pacific Sperm Bank",
-      slug: "pacific-sperm-bank",
+      slug: "pacific-sperm-bank-2025",
       subdomain: "pacific-sperm",
       type: "sperm_bank",
       description: "Premier sperm bank serving the Pacific Northwest with comprehensive donor screening and family support.",
@@ -53,17 +54,17 @@ export const seedData: SeedData = {
     },
     {
       name: "The Johnson Extended Family",
-      slug: "johnson-extended-family",
+      slug: "johnson-extended-family-2025",
       subdomain: "johnson-family",
-      type: "family",
+      type: "family_group",
       description: "A large extended family network including donor-conceived children and their connections.",
       visibility: "private"
     },
     {
       name: "Donor Sibling Registry Northwest",
-      slug: "dsr-northwest",
+      slug: "dsr-northwest-2025",
       subdomain: "dsr-nw",
-      type: "registry",
+      type: "donor_community",
       description: "Regional registry helping donor-conceived individuals find genetic half-siblings and donors.",
       visibility: "public"
     }
@@ -71,25 +72,25 @@ export const seedData: SeedData = {
   groups: [
     {
       label: "Donor #2847 Families",
-      type: "sibling_group",
+      type: "family",
       description: "Families with children conceived using donor #2847 from Pacific Sperm Bank",
       organization_name: "Pacific Sperm Bank"
     },
     {
       label: "Rainbow Clinic Class of 2020",
-      type: "clinic_cohort",
+      type: "family",
       description: "Families who completed treatment at Rainbow Family Clinic in 2020",
       organization_name: "Rainbow Family Clinic"
     },
     {
       label: "Johnson Core Family",
-      type: "nuclear_family",
+      type: "family",
       description: "The immediate Johnson family nucleus",
       organization_name: "The Johnson Extended Family"
     },
     {
       label: "Seattle Donor Siblings",
-      type: "regional_group",
+      type: "family",
       description: "Donor-conceived individuals and families in the Seattle area",
       organization_name: "Donor Sibling Registry Northwest"
     }
@@ -163,8 +164,8 @@ export const seedData: SeedData = {
     {
       name: "Dr. Sarah Kim",
       gender: "female",
-      date_of_birth: "1982-09-12",
-      birth_place: "San Francisco, CA",
+      date_of_birth: "1980-03-10",
+      birth_place: "Seattle, WA",
       status: "living",
       organization_name: "Rainbow Family Clinic",
       group_label: "Rainbow Clinic Class of 2020"
@@ -172,8 +173,8 @@ export const seedData: SeedData = {
     {
       name: "Lisa Park",
       gender: "female",
-      date_of_birth: "1984-04-18",
-      birth_place: "Los Angeles, CA",
+      date_of_birth: "1982-09-25",
+      birth_place: "Portland, OR",
       status: "living",
       organization_name: "Rainbow Family Clinic",
       group_label: "Rainbow Clinic Class of 2020"
@@ -181,18 +182,18 @@ export const seedData: SeedData = {
     {
       name: "Luna Kim-Park",
       gender: "female",
-      date_of_birth: "2020-03-15",
-      birth_place: "San Francisco, CA",
+      date_of_birth: "2018-11-08",
+      birth_place: "Seattle, WA",
       status: "living",
       organization_name: "Rainbow Family Clinic",
       group_label: "Rainbow Clinic Class of 2020"
     },
-    // Johnson Extended Family
+    // Johnson Family
     {
       name: "Robert Johnson Sr.",
       gender: "male",
-      date_of_birth: "1955-02-28",
-      birth_place: "Chicago, IL",
+      date_of_birth: "1955-04-12",
+      birth_place: "Spokane, WA",
       status: "living",
       organization_name: "The Johnson Extended Family",
       group_label: "Johnson Core Family"
@@ -200,8 +201,8 @@ export const seedData: SeedData = {
     {
       name: "Margaret Johnson",
       gender: "female",
-      date_of_birth: "1958-06-14",
-      birth_place: "Detroit, MI",
+      date_of_birth: "1957-08-20",
+      birth_place: "Tacoma, WA",
       status: "living",
       organization_name: "The Johnson Extended Family",
       group_label: "Johnson Core Family"
@@ -209,7 +210,7 @@ export const seedData: SeedData = {
     {
       name: "Robert Johnson Jr.",
       gender: "male",
-      date_of_birth: "1985-10-05",
+      date_of_birth: "1985-06-15",
       birth_place: "Seattle, WA",
       status: "living",
       organization_name: "The Johnson Extended Family",
@@ -218,7 +219,7 @@ export const seedData: SeedData = {
     {
       name: "Emily Johnson-Smith",
       gender: "female",
-      date_of_birth: "1988-01-20",
+      date_of_birth: "1988-12-03",
       birth_place: "Seattle, WA",
       status: "living",
       organization_name: "The Johnson Extended Family",
@@ -267,7 +268,7 @@ export const seedData: SeedData = {
     {
       from_person_name: "Elena Chen-Rodriguez",
       to_person_name: "Jamie Thompson",
-      relationship_type: "donor_sibling",
+      relationship_type: "sibling",
       organization_name: "Pacific Sperm Bank"
     },
     // Rainbow Family Clinic connections
@@ -335,7 +336,7 @@ export const seedData: SeedData = {
   ]
 };
 
-export async function seedOrganizations(userId: string) {
+export async function seedOrganizations(userId: string, supabase: SupabaseClient<Database>) {
   const results = {
     organizations: [] as any[],
     groups: [] as any[],
@@ -508,7 +509,7 @@ export async function seedOrganizations(userId: string) {
   }
 }
 
-export async function clearSeededData(userId: string) {
+export async function clearSeededData(userId: string, supabase: SupabaseClient<Database>) {
   try {
     console.log('Clearing seeded data...');
     
