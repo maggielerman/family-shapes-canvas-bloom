@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers } from "lucide-react";
+import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers, TreePine } from "lucide-react";
 import { AddPersonDialog } from "./AddPersonDialog";
 import { PersonCardDialog } from "@/components/people/PersonCard";
 import { ConnectionManager } from "@/components/connections/ConnectionManager";
 
-import { TreeLayout } from "./layouts/TreeLayout";
-import { RadialTreeLayout } from "./layouts/RadialTreeLayout";
-import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
-import { ReactD3TreeLayout } from "./layouts/ReactD3TreeLayout";
-import { ClusterLayout } from "./layouts/ClusterLayout";
-import { XYFlowTreeBuilder } from "./XYFlowTreeBuilder";
+// Lazy load heavy chart components for better performance
+const TreeLayout = lazy(() => import("./layouts/TreeLayout").then(module => ({ default: module.TreeLayout })));
+const RadialTreeLayout = lazy(() => import("./layouts/RadialTreeLayout").then(module => ({ default: module.RadialTreeLayout })));
+const ForceDirectedLayout = lazy(() => import("./layouts/ForceDirectedLayout").then(module => ({ default: module.ForceDirectedLayout })));
+const ReactD3TreeLayout = lazy(() => import("./layouts/ReactD3TreeLayout").then(module => ({ default: module.ReactD3TreeLayout })));
+const ClusterLayout = lazy(() => import("./layouts/ClusterLayout").then(module => ({ default: module.ClusterLayout })));
+const XYFlowTreeBuilder = lazy(() => import("./XYFlowTreeBuilder").then(module => ({ default: module.XYFlowTreeBuilder })));
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Person } from "@/types/person";
@@ -28,6 +30,13 @@ import {
 } from "@/utils/generationUtils";
 import { usePersonManagement } from '@/hooks/use-person-management';
 
+// Loading component for chart components
+const ChartLoadingSpinner = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral-600"></div>
+  </div>
+);
+
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
   persons: Person[];
@@ -38,6 +47,8 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const [connections, setConnections] = useState<Connection[]>([]);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const { handleAddPerson, handleAddDonor } = usePersonManagement({
@@ -60,6 +71,23 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   useEffect(() => {
     fetchConnections();
   }, [familyTreeId]);
+
+  // Handle responsive dimensions
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setDimensions({
+          width: rect.width || 800,
+          height: rect.height || 600
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   const fetchConnections = async () => {
     try {
@@ -88,7 +116,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const siblingConnections = getSiblingConnections(connections);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" ref={containerRef}>
       {/* Controls */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div className="flex gap-2">
@@ -98,164 +126,167 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </Button>
         </div>
         
-        <div className="text-sm text-muted-foreground">
-          Generation-based visualization • {generationStats.totalGenerations} generations
+        <div className="flex gap-2">
+          <ConnectionManager 
+            familyTreeId={familyTreeId}
+            persons={persons}
+            onConnectionUpdated={fetchConnections}
+          />
         </div>
       </div>
 
-      {/* Connection Manager */}
-      <ConnectionManager
-        familyTreeId={familyTreeId}
-        persons={persons}
-        onConnectionUpdated={fetchConnections}
-      />
-
-      {/* Generation & Connection Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Layers className="w-4 h-4" />
-            Family Tree Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <div className="text-muted-foreground">Total People</div>
-              <div className="font-semibold">{persons.length}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">Generations</div>
-              <div className="font-semibold">{generationStats.totalGenerations}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">Parent-Child Lines</div>
-              <div className="font-semibold">{generationalConnections.length}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">Sibling Groups</div>
-              <div className="font-semibold text-muted-foreground">
-                {siblingConnections.length} 
-                <span className="text-xs block">color coded</span>
+      {/* Generation Stats */}
+      {generationStats.totalGenerations > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Generation Statistics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-coral-600">{generationStats.totalGenerations}</div>
+                <div className="text-sm text-muted-foreground">Generations</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-sage-600">{persons.length}</div>
+                <div className="text-sm text-muted-foreground">People</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-dusty-600">{connections.length}</div>
+                <div className="text-sm text-muted-foreground">Connections</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-navy-600">{generationStats.maxGeneration}</div>
+                <div className="text-sm text-muted-foreground">Max Gen</div>
               </div>
             </div>
-          </div>
-          <div className="mt-4 text-xs text-muted-foreground">
-            <strong>How to read:</strong> Each generation has a unique color. 
-            Lines connect parents to children. Siblings share the same generation color but aren't connected by lines.
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Visualization */}
+      {/* Visualization Tabs */}
       {persons.length === 0 ? (
-        <div className="border rounded-lg bg-card">
-          <div className="flex flex-col items-center justify-center h-96 text-center">
-            <Users className="w-16 h-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Start building your family tree by adding family members.
-            </p>
-            <Button onClick={() => setAddPersonDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add First Person
-            </Button>
-          </div>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Users className="w-12 h-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
+          <p className="text-muted-foreground mb-4">
+            Add your first family member to start building your family tree
+          </p>
+          <Button onClick={() => setAddPersonDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add First Person
+          </Button>
         </div>
       ) : (
-        <Tabs defaultValue="xyflow" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="xyflow" className="flex items-center gap-1">
-              <Network className="w-3 h-3" />
-              Interactive
+        <Tabs defaultValue="tree" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
+            <TabsTrigger value="tree" className="flex items-center gap-2">
+              <GitBranch className="w-4 h-4" />
+              <span className="hidden lg:inline">Tree</span>
             </TabsTrigger>
-            <TabsTrigger value="tree" className="flex items-center gap-1">
-              <GitBranch className="w-3 h-3" />
-              Tree
+            <TabsTrigger value="radial" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              <span className="hidden lg:inline">Radial</span>
             </TabsTrigger>
-            <TabsTrigger value="radial" className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              Radial
+            <TabsTrigger value="force" className="flex items-center gap-2">
+              <Network className="w-4 h-4" />
+              <span className="hidden lg:inline">Force</span>
             </TabsTrigger>
-            <TabsTrigger value="force" className="flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              Force
+            <TabsTrigger value="d3tree" className="flex items-center gap-2">
+              <TreePine className="w-4 h-4" />
+              <span className="hidden lg:inline">D3 Tree</span>
             </TabsTrigger>
-            <TabsTrigger value="react-tree" className="flex items-center gap-1">
-              <Network className="w-3 h-3" />
-              D3 Tree
+            <TabsTrigger value="cluster" className="flex items-center gap-2">
+              <Layers className="w-4 h-4" />
+              <span className="hidden lg:inline">Cluster</span>
             </TabsTrigger>
-            <TabsTrigger value="cluster" className="flex items-center gap-1">
-              <Layers className="w-3 h-3" />
-              Cluster
+            <TabsTrigger value="xyflow" className="flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              <span className="hidden lg:inline">XY Flow</span>
             </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="xyflow" className="mt-4">
+
+        <TabsContent value="tree" className="mt-6">
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <TreeLayout
+              persons={persons}
+              connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
+              onPersonClick={handlePersonClick}
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="radial" className="mt-6">
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <RadialTreeLayout
+              persons={persons}
+              connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
+              onPersonClick={handlePersonClick}
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="force" className="mt-6">
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <ForceDirectedLayout
+              persons={persons}
+              connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
+              onPersonClick={handlePersonClick}
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="d3tree" className="mt-6">
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <ReactD3TreeLayout
+              persons={persons}
+              connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
+              onPersonClick={handlePersonClick}
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="cluster" className="mt-6">
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <ClusterLayout
+              persons={persons}
+              connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
+              onPersonClick={handlePersonClick}
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="xyflow" className="mt-6">
+          <Suspense fallback={<ChartLoadingSpinner />}>
             <XYFlowTreeBuilder
               familyTreeId={familyTreeId}
               persons={persons}
               onPersonAdded={onPersonAdded}
             />
-          </TabsContent>
-          
-          <TabsContent value="tree" className="mt-4">
-            <TreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
-          </TabsContent>
-          
-          <TabsContent value="radial" className="mt-4">
-            <RadialTreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
-          </TabsContent>
-          
-          <TabsContent value="force" className="mt-4">
-            <ForceDirectedLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
-          </TabsContent>
-          
-          <TabsContent value="react-tree" className="mt-4">
-            <ReactD3TreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
-          </TabsContent>
-          
-          <TabsContent value="cluster" className="mt-4">
-            <ClusterLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={800}
-              height={600}
-              onPersonClick={handlePersonClick}
-            />
-          </TabsContent>
-        </Tabs>
+          </Suspense>
+        </TabsContent>
+      </Tabs>
       )}
 
+      {/* Dialogs */}
       <AddPersonDialog
         open={addPersonDialogOpen}
         onOpenChange={setAddPersonDialogOpen}
@@ -263,11 +294,13 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
         onDonorSubmit={handleAddDonor}
       />
 
-      <PersonCardDialog
-        person={viewingPerson}
-        open={!!viewingPerson}
-        onOpenChange={(open) => !open && setViewingPerson(null)}
-      />
+      {viewingPerson && (
+        <PersonCardDialog
+          person={viewingPerson}
+          open={!!viewingPerson}
+          onOpenChange={(open) => !open && setViewingPerson(null)}
+        />
+      )}
     </div>
   );
 }

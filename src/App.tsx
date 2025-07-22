@@ -1,4 +1,5 @@
 
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,27 +8,46 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
 import SidebarLayout2 from "@/components/layouts/SidebarLayout2";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Organizations from "./pages/Organizations";
-import OrganizationDashboard from "./pages/OrganizationDashboard";
-import InvitationPage from "./pages/InvitationPage";
-import UserProfile from "./pages/UserProfile";
-import FamilyTrees from "./pages/FamilyTrees";
-import People from "./pages/People";
-import FamilyTreeDetail from "./pages/FamilyTreeDetail";
-import OrganizationInvitePage from "./pages/OrganizationInvitePage";
-import PublicFamilyTree from "./pages/PublicFamilyTree";
-import Media from "./pages/Media";
-import Share from "./pages/Share";
-import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
-import Settings from "./pages/Settings";
 
-const queryClient = new QueryClient();
+// Lazy load heavy components for better performance
+const Index = lazy(() => import("./pages/Index"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Organizations = lazy(() => import("./pages/Organizations"));
+const OrganizationDashboard = lazy(() => import("./pages/OrganizationDashboard"));
+const InvitationPage = lazy(() => import("./pages/InvitationPage"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const FamilyTrees = lazy(() => import("./pages/FamilyTrees"));
+const People = lazy(() => import("./pages/People"));
+const FamilyTreeDetail = lazy(() => import("./pages/FamilyTreeDetail"));
+const OrganizationInvitePage = lazy(() => import("./pages/OrganizationInvitePage"));
+const PublicFamilyTree = lazy(() => import("./pages/PublicFamilyTree"));
+const Media = lazy(() => import("./pages/Media"));
+const Share = lazy(() => import("./pages/Share"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Settings = lazy(() => import("./pages/Settings"));
+
+// Loading component for Suspense fallback
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-coral-600"></div>
+  </div>
+);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Optimize query caching for better performance
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -36,38 +56,40 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
-            <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />
-            <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />
-            <Route path="/invitation/:action/:token" element={<InvitationPage />} />
-            
-            {/* Admin routes */}
-            <Route path="/admin" element={<Admin />} />
-            
-            {/* Protected routes with sidebar layout */}
-            <Route path="/dashboard" element={<SidebarLayout2><Dashboard /></SidebarLayout2>} />
-            <Route path="/profile" element={<SidebarLayout><UserProfile /></SidebarLayout>} />
-            <Route path="/people" element={<SidebarLayout><People /></SidebarLayout>} />
-            <Route path="/family-trees" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
-            <Route path="/family-trees/:id" element={<SidebarLayout><FamilyTreeDetail /></SidebarLayout>} />
-            <Route path="/media" element={<SidebarLayout><Media /></SidebarLayout>} />
-            <Route path="/share" element={<SidebarLayout><Share /></SidebarLayout>} />
-            <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
-            <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDashboard /></SidebarLayout>} />
-            <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
-            
-            {/* Test route for SidebarLayout2 */}
-            <Route path="/dashboard2" element={<SidebarLayout2><Dashboard /></SidebarLayout2>} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
+              <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />
+              <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />
+              <Route path="/invitation/:action/:token" element={<InvitationPage />} />
+              
+              {/* Admin routes */}
+              <Route path="/admin" element={<Admin />} />
+              
+              {/* Protected routes with sidebar layout */}
+              <Route path="/dashboard" element={<SidebarLayout2><Dashboard /></SidebarLayout2>} />
+              <Route path="/profile" element={<SidebarLayout><UserProfile /></SidebarLayout>} />
+              <Route path="/people" element={<SidebarLayout><People /></SidebarLayout>} />
+              <Route path="/family-trees" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
+              <Route path="/family-trees/:id" element={<SidebarLayout><FamilyTreeDetail /></SidebarLayout>} />
+              <Route path="/media" element={<SidebarLayout><Media /></SidebarLayout>} />
+              <Route path="/share" element={<SidebarLayout><Share /></SidebarLayout>} />
+              <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
+              <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDashboard /></SidebarLayout>} />
+              <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
+              
+              {/* Test route for SidebarLayout2 */}
+              <Route path="/dashboard2" element={<SidebarLayout2><Dashboard /></SidebarLayout2>} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
