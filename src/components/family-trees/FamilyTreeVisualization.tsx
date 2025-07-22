@@ -16,20 +16,16 @@ import { XYFlowTreeBuilder } from "./XYFlowTreeBuilder";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Person } from "@/types/person";
+import { Connection, ConnectionUtils } from "@/types/connection";
+import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
+import { ConnectionService } from "@/services/connectionService";
+import { PersonService } from "@/services/personService";
 import { 
   calculateGenerations, 
   getGenerationalConnections, 
   getSiblingConnections,
   getGenerationStats 
 } from "@/utils/generationUtils";
-
-interface Connection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-  family_tree_id?: string | null;
-}
 
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
@@ -43,14 +39,8 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const { toast } = useToast();
 
-  const relationshipTypes = [
-    { value: "parent", label: "Parent", icon: Users, color: "hsl(var(--chart-1))" },
-    { value: "child", label: "Child", icon: Baby, color: "hsl(var(--chart-2))" },
-    { value: "partner", label: "Partner", icon: Heart, color: "hsl(var(--chart-3))" },
-    { value: "sibling", label: "Sibling", icon: Users, color: "hsl(var(--chart-4))" },
-    { value: "donor", label: "Donor", icon: Dna, color: "hsl(var(--chart-5))" },
-    { value: "gestational_carrier", label: "Gestational Carrier", icon: Baby, color: "hsl(var(--chart-1))" },
-  ];
+  // Use centralized relationship types
+  const relationshipTypes = RelationshipTypeHelpers.getForSelection();
 
   useEffect(() => {
     fetchConnections();
@@ -58,60 +48,21 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
 
   const fetchConnections = async () => {
     try {
-      // Fetch connections directly associated with this family tree
-      const { data: treeConnections, error: treeError } = await supabase
-        .from('connections')
-        .select('*')
-        .eq('family_tree_id', familyTreeId);
-
-      if (treeError) throw treeError;
-
-      // Get person IDs who are members of this family tree
-      const { data: treeMembers, error: membersError } = await supabase
-        .from('family_tree_members')
-        .select('person_id')
-        .eq('family_tree_id', familyTreeId);
-
-      if (membersError) throw membersError;
-
-      const personIds = (treeMembers || []).map(m => m.person_id);
-
-      // Fetch connections between people who are members of this tree (but don't have family_tree_id set)
-      const { data: memberConnections, error: memberError } = await supabase
-        .from('connections')
-        .select('*')
-        .is('family_tree_id', null)
-        .in('from_person_id', personIds)
-        .in('to_person_id', personIds);
-
-      if (memberError) throw memberError;
-
-      // Combine and deduplicate connections
-      const allConnections = [...(treeConnections || []), ...(memberConnections || [])];
-      const uniqueConnections = allConnections.filter((conn, index, self) => 
-        index === self.findIndex(c => c.id === conn.id)
-      );
-
-      setConnections(uniqueConnections);
+      const connectionsData = await ConnectionService.getConnectionsForFamilyTree(familyTreeId);
+      setConnections(connectionsData);
     } catch (error) {
       console.error('Error fetching connections:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load connections",
+        variant: "destructive",
+      });
     }
   };
 
   const handleAddPerson = async (personData: any) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('No user found');
-
-      const { error } = await supabase
-        .from('persons')
-        .insert({
-          ...personData,
-          family_tree_id: familyTreeId,
-          user_id: userData.user.id,
-        });
-
-      if (error) throw error;
+      await PersonService.createPersonAndAddToTree(personData, familyTreeId);
 
       toast({
         title: "Success",

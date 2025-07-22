@@ -152,13 +152,41 @@ export class ConnectionService {
    * Get connections for a family tree
    */
   static async getConnectionsForFamilyTree(familyTreeId: string): Promise<Connection[]> {
-    const { data, error } = await supabase
+    // Fetch connections directly associated with this family tree
+    const { data: treeConnections, error: treeError } = await supabase
       .from('connections')
       .select('*')
       .eq('family_tree_id', familyTreeId);
 
-    if (error) throw error;
-    return (data || []) as Connection[];
+    if (treeError) throw treeError;
+
+    // Get person IDs who are members of this family tree
+    const { data: treeMembers, error: membersError } = await supabase
+      .from('family_tree_members')
+      .select('person_id')
+      .eq('family_tree_id', familyTreeId);
+
+    if (membersError) throw membersError;
+
+    const personIds = (treeMembers || []).map(m => m.person_id);
+
+    // Fetch connections between people who are members of this tree (but don't have family_tree_id set)
+    const { data: memberConnections, error: memberError } = await supabase
+      .from('connections')
+      .select('*')
+      .is('family_tree_id', null)
+      .in('from_person_id', personIds)
+      .in('to_person_id', personIds);
+
+    if (memberError) throw memberError;
+
+    // Combine and deduplicate connections
+    const allConnections = [...(treeConnections || []), ...(memberConnections || [])];
+    const uniqueConnections = allConnections.filter((conn, index, self) => 
+      index === self.findIndex(c => c.id === conn.id)
+    );
+
+    return uniqueConnections as Connection[];
   }
 
   /**
