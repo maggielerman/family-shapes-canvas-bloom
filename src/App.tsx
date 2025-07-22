@@ -12,7 +12,7 @@ import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Organizations from "./pages/Organizations";
-import OrganizationDetails from "./pages/OrganizationDetails";
+import OrganizationDashboard from "./pages/OrganizationDashboard";
 import InvitationPage from "./pages/InvitationPage";
 import UserProfile from "./pages/UserProfile";
 import FamilyTrees from "./pages/FamilyTrees";
@@ -58,7 +58,7 @@ const App = () => (
             <Route path="/media" element={<SidebarLayout><Media /></SidebarLayout>} />
             <Route path="/share" element={<SidebarLayout><Share /></SidebarLayout>} />
             <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
-            <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDetails /></SidebarLayout>} />
+            <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDashboard /></SidebarLayout>} />
             <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
