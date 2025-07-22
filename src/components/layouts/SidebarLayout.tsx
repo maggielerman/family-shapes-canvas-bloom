@@ -16,7 +16,9 @@ import {
   Share2,
   Menu,
   X,
-  Image
+  Image,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 interface SidebarLayoutProps {
@@ -29,6 +31,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const { toast } = useToast();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -68,41 +71,56 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 sm:w-72 bg-card border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+        ${sidebarCollapsed ? 'w-16 lg:w-16' : 'w-64 sm:w-72 lg:w-64'}
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 sm:p-6 border-b">
             <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center flex-shrink-0">
                 <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               </div>
-              <span className="text-lg sm:text-xl font-light tracking-wide">Family Shapes</span>
+              {!sidebarCollapsed && (
+                <span className="text-lg sm:text-xl font-light tracking-wide">Family Shapes</span>
+              )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden p-2"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden lg:flex p-2"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              >
+                {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden p-2"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           {/* User Info */}
           <div className="p-4 sm:p-6 border-b">
             <div className="flex items-center space-x-3">
-              <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+              <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
                 <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email} />
                 <AvatarFallback className="bg-coral-600 text-white text-sm">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{displayName}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-              </div>
+              {!sidebarCollapsed && (
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{displayName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -117,15 +135,19 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
                       to={item.path}
                       className={`
                         flex items-center space-x-3 px-3 py-3 sm:py-2 rounded-lg transition-colors min-h-[44px] sm:min-h-[auto]
+                        ${sidebarCollapsed ? 'justify-center' : ''}
                         ${isActive 
                           ? 'bg-coral-100 text-coral-700 font-medium' 
                           : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         }
                       `}
                       onClick={() => setSidebarOpen(false)}
+                      title={sidebarCollapsed ? item.label : undefined}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="text-sm sm:text-base">{item.label}</span>
+                      {!sidebarCollapsed && (
+                        <span className="text-sm sm:text-base">{item.label}</span>
+                      )}
                     </Link>
                   </li>
                 );
@@ -139,20 +161,26 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start py-3 sm:py-2 min-h-[44px] sm:min-h-[auto]"
+                className={`w-full justify-start py-3 sm:py-2 min-h-[44px] sm:min-h-[auto] ${sidebarCollapsed ? 'justify-center' : ''}`}
                 onClick={() => navigate("/settings")}
+                title={sidebarCollapsed ? "Settings" : undefined}
               >
-                <Settings className="w-4 h-4 mr-3 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Settings</span>
+                <Settings className="w-4 h-4 flex-shrink-0" />
+                {!sidebarCollapsed && (
+                  <span className="text-sm sm:text-base ml-3">Settings</span>
+                )}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start py-3 sm:py-2 min-h-[44px] sm:min-h-[auto]"
+                className={`w-full justify-start py-3 sm:py-2 min-h-[44px] sm:min-h-[auto] ${sidebarCollapsed ? 'justify-center' : ''}`}
                 onClick={handleSignOut}
+                title={sidebarCollapsed ? "Sign Out" : undefined}
               >
-                <LogOut className="w-4 h-4 mr-3 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Sign Out</span>
+                <LogOut className="w-4 h-4 flex-shrink-0" />
+                {!sidebarCollapsed && (
+                  <span className="text-sm sm:text-base ml-3">Sign Out</span>
+                )}
               </Button>
             </div>
           </div>
