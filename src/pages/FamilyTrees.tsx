@@ -120,14 +120,14 @@ export default function FamilyTrees() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex justify-between items-center">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Family Trees</h1>
-            <p className="text-muted-foreground">Create and manage your family trees</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Family Trees</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">Create and manage your family trees</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
@@ -145,13 +145,13 @@ export default function FamilyTrees() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Family Trees</h1>
-          <p className="text-muted-foreground">Create and manage your family trees</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Family Trees</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Create and manage your family trees</p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => setCreateDialogOpen(true)} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Create Tree
         </Button>
@@ -172,7 +172,7 @@ export default function FamilyTrees() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {familyTrees.map((tree) => (
             <Card key={tree.id} className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader className="pb-3">
