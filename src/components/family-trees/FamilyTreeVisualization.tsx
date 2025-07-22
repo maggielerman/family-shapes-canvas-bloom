@@ -268,6 +268,9 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
               familyTreeId={familyTreeId}
               persons={persons}
               connections={connections}
+              relationshipTypes={relationshipTypes}
+              width={dimensions.width}
+              height={dimensions.height}
               onPersonClick={handlePersonClick}
             />
           </Suspense>
