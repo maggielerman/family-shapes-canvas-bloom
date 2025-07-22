@@ -73,7 +73,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
     <SidebarProvider>
       <Sidebar variant="inset">
         <SidebarHeader className="border-b px-2 py-2">
-          <div className="flex items-center gap-2 px-4 py-2">
+          <Link to="/" className="flex items-center gap-2 px-4 py-2 hover:bg-sidebar-accent rounded-md transition-colors">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
               <Heart className="w-4 h-4 text-white" />
             </div>
@@ -81,7 +81,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
               <span className="truncate font-semibold">Family Shapes</span>
               <span className="truncate text-xs">Family Tree Management</span>
             </div>
-          </div>
+          </Link>
         </SidebarHeader>
         <SidebarContent className="px-2 py-2">
           <SidebarGroup>

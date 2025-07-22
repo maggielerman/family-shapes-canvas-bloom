@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Heart, Eye, EyeOff, Building2, User } from "lucide-react";
 
 const Auth = () => {
@@ -173,14 +173,14 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
-        <div className="flex items-center justify-center space-x-3">
+        <Link to="/" className="flex items-center justify-center space-x-3 hover:opacity-80 transition-opacity">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
             <Heart className="w-6 h-6 text-white" />
           </div>
           <span className="text-3xl font-light tracking-wide text-foreground">
             Family Shapes
           </span>
-        </div>
+        </Link>
 
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
