@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,12 +13,25 @@ import {
   TreePine,
   Users,
   Share2,
-  Menu,
-  X,
   Image,
-  ChevronLeft,
-  ChevronRight
+  Search
 } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar
+} from "@/components/ui/sidebar";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -30,8 +42,6 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -60,164 +70,96 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
-        ${sidebarCollapsed ? 'w-16 lg:w-16' : 'w-64 sm:w-72 lg:w-64'}
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 sm:p-6 border-b">
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center flex-shrink-0">
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-              </div>
-              {!sidebarCollapsed && (
-                <span className="text-lg sm:text-xl font-light tracking-wide">Family Shapes</span>
-              )}
+    <SidebarProvider>
+      <Sidebar variant="inset">
+        <SidebarHeader className="border-b px-2 py-2">
+          <div className="flex items-center gap-2 px-4 py-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
+              <Heart className="w-4 h-4 text-white" />
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hidden lg:flex p-2"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              >
-                {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden p-2"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold">Family Shapes</span>
+              <span className="truncate text-xs">Family Tree Management</span>
             </div>
           </div>
-
-          {/* User Info */}
-          <div className="p-4 sm:p-6 border-b">
-            <div className="flex items-center space-x-3">
-              <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+        </SidebarHeader>
+        <SidebarContent className="px-2 py-2">
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {sidebarItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.label}
+                      >
+                        <Link to={item.path}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter className="border-t px-2 py-2">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => navigate("/settings")}
+                    tooltip="Settings"
+                  >
+                    <Settings />
+                    <span>Settings</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={handleSignOut}
+                    tooltip="Sign Out"
+                  >
+                    <LogOut />
+                    <span>Sign Out</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="h-4 w-px bg-sidebar-border" />
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8">
                 <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email} />
                 <AvatarFallback className="bg-coral-600 text-white text-sm">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              {!sidebarCollapsed && (
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{displayName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-3 sm:p-4">
-            <ul className="space-y-1 sm:space-y-2">
-              {sidebarItems.map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className={`
-                        flex items-center space-x-3 px-3 py-3 sm:py-2 rounded-lg transition-colors min-h-[44px] sm:min-h-[auto]
-                        ${sidebarCollapsed ? 'justify-center' : ''}
-                        ${isActive 
-                          ? 'bg-coral-100 text-coral-700 font-medium' 
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                        }
-                      `}
-                      onClick={() => setSidebarOpen(false)}
-                      title={sidebarCollapsed ? item.label : undefined}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!sidebarCollapsed && (
-                        <span className="text-sm sm:text-base">{item.label}</span>
-                      )}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-
-          {/* Footer */}
-          <div className="p-3 sm:p-4 border-t">
-            <div className="space-y-1 sm:space-y-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`w-full justify-start py-3 sm:py-2 min-h-[44px] sm:min-h-[auto] ${sidebarCollapsed ? 'justify-center' : ''}`}
-                onClick={() => navigate("/settings")}
-                title={sidebarCollapsed ? "Settings" : undefined}
-              >
-                <Settings className="w-4 h-4 flex-shrink-0" />
-                {!sidebarCollapsed && (
-                  <span className="text-sm sm:text-base ml-3">Settings</span>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`w-full justify-start py-3 sm:py-2 min-h-[44px] sm:min-h-[auto] ${sidebarCollapsed ? 'justify-center' : ''}`}
-                onClick={handleSignOut}
-                title={sidebarCollapsed ? "Sign Out" : undefined}
-              >
-                <LogOut className="w-4 h-4 flex-shrink-0" />
-                {!sidebarCollapsed && (
-                  <span className="text-sm sm:text-base ml-3">Sign Out</span>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col lg:ml-0">
-        {/* Mobile header */}
-        <header className="lg:hidden bg-card border-b p-3 sm:p-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-2 min-h-[44px] min-w-[44px]"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-                <Heart className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">{displayName}</span>
+                <span className="truncate text-xs">{user?.email}</span>
               </div>
-              <span className="text-base sm:text-lg font-light">Family Shapes</span>
             </div>
-            <div className="w-11" /> {/* Spacer for balance */}
           </div>
         </header>
-
-        {/* Main content area */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-4 sm:p-6 lg:p-8">
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          {children}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
-import SidebarLayout2 from "@/components/layouts/SidebarLayout2";
 
 // Lazy load heavy components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -72,7 +71,7 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               
               {/* Protected routes with sidebar layout */}
-              <Route path="/dashboard" element={<SidebarLayout2><Dashboard /></SidebarLayout2>} />
+              <Route path="/dashboard" element={<SidebarLayout><Dashboard /></SidebarLayout>} />
               <Route path="/profile" element={<SidebarLayout><UserProfile /></SidebarLayout>} />
               <Route path="/people" element={<SidebarLayout><People /></SidebarLayout>} />
               <Route path="/family-trees" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
@@ -83,8 +82,7 @@ const App = () => (
               <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDashboard /></SidebarLayout>} />
               <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
               
-              {/* Test route for SidebarLayout2 */}
-              <Route path="/dashboard2" element={<SidebarLayout2><Dashboard /></SidebarLayout2>} />
+
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
