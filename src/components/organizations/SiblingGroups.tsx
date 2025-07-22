@@ -144,7 +144,19 @@ export function SiblingGroups({ organizationId, canManage }: SiblingGroupsProps)
 
   const toggleNotifications = async (groupId: string, enabled: boolean) => {
     try {
-      // Update user's notification preferences for this group
+      // First, get the person_id associated with the current user
+      const { data: personData, error: personError } = await supabase
+        .from('persons')
+        .select('id')
+        .eq('user_id', user?.id)
+        .eq('is_self', true)
+        .single();
+
+      if (personError || !personData) {
+        throw new Error('Could not find person record for current user');
+      }
+
+      // Update user's notification preferences for this group using the correct person_id
       const { error } = await supabase
         .from('sibling_group_memberships')
         .update({
@@ -155,7 +167,7 @@ export function SiblingGroups({ organizationId, canManage }: SiblingGroupsProps)
           }
         })
         .eq('sibling_group_id', groupId)
-        .eq('person_id', user?.id); // Assuming user has a person record
+        .eq('person_id', personData.id);
 
       if (error) throw error;
 
