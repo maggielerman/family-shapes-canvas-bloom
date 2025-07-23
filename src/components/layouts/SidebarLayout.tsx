@@ -45,15 +45,35 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const location = useLocation();
 
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
+    console.log('Sidebar sign out clicked');
+    try {
+      const { error } = await signOut();
+      console.log('Sidebar sign out result:', { error });
+      
+      // Treat session_not_found as success
+      const isSuccess = !error || (error && error.message && error.message.includes('session_not_found'));
+      
+      if (!isSuccess) {
+        toast({
+          title: "Error signing out",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Sidebar sign out successful, navigating to home');
+        navigate("/");
+        // Force a page reload to ensure clean state
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    } catch (err) {
+      console.error('Sidebar sign out error:', err);
       toast({
         title: "Error signing out",
-        description: error.message,
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
-    } else {
-      navigate("/");
     }
   };
 

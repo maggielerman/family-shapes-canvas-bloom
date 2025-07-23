@@ -2,8 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { Menu, Heart, User, Settings, LogOut, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +17,42 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    console.log('Header sign out clicked');
+    try {
+      const { error } = await signOut();
+      console.log('Header sign out result:', { error });
+      
+      // Treat session_not_found as success
+      const isSuccess = !error || (error && error.message && error.message.includes('session_not_found'));
+      
+      if (!isSuccess) {
+        toast({
+          title: "Error signing out",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Header sign out successful, navigating to home');
+        navigate("/");
+        // Force a page reload to ensure clean state
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    } catch (err) {
+      console.error('Header sign out error:', err);
+      toast({
+        title: "Error signing out",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  };
 
   const navigationItems = [
     { href: "#features", label: "Features" },
@@ -105,7 +141,7 @@ const Header = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

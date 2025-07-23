@@ -32,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
+        console.log('Event details:', { event, hasSession: !!session, hasUser: !!session?.user });
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -90,11 +91,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     console.log('Attempting signout');
     try {
-      const { error } = await supabase.auth.signOut();
-      console.log('Signout response:', { error });
+      console.log('Current user before signout:', user?.email);
+      console.log('Current session before signout:', session?.access_token ? 'exists' : 'none');
+      
+      // Try multiple approaches to sign out
+      let error = null;
+      
+      // Approach 1: Try the official sign out
+      try {
+        const result = await supabase.auth.signOut();
+        error = result.error;
+        console.log('Official signout result:', result);
+        
+        // If we get a session_not_found error, treat it as success
+        if (error && error.message && error.message.includes('session_not_found')) {
+          console.log('Session not found - treating as successful logout');
+          error = null; // Clear the error since this is actually success
+        }
+      } catch (signOutErr) {
+        console.log('Official signout failed:', signOutErr);
+        // Check if it's a session_not_found error in the catch block too
+        if (signOutErr.message && signOutErr.message.includes('session_not_found')) {
+          console.log('Session not found in catch - treating as successful logout');
+          error = null;
+        } else {
+          error = signOutErr;
+        }
+      }
+      
+      // Approach 2: Clear local storage manually
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('sb-nhkufibfwskdpzdjwirr-auth-token');
+          localStorage.removeItem('supabase.auth.token');
+          console.log('Local storage cleared');
+        } catch (storageErr) {
+          console.log('Failed to clear local storage:', storageErr);
+        }
+      }
+      
+      // Approach 3: Clear local state regardless
+      console.log('Clearing local state');
+      setUser(null);
+      setSession(null);
+      
       return { error };
     } catch (err) {
       console.error('Signout error:', err);
+      // Clear local state even if there's an error
+      setUser(null);
+      setSession(null);
       return { error: err };
     }
   };
