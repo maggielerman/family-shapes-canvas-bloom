@@ -4,6 +4,7 @@ import { processConnections } from '@/utils/connectionProcessing';
 import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
 import { TreeToolbar } from './TreeToolbar';
+import { RelationshipFilter, RELATIONSHIP_CATEGORIES, RelationshipCategory } from './RelationshipFilter';
 
 interface RelationshipType {
   value: string;
@@ -22,19 +23,6 @@ interface ForceDirectedLayoutProps {
   onLayoutToggle: () => void;
 }
 
-interface ForceNode extends d3.SimulationNodeDatum, Person {
-  x?: number;
-  y?: number;
-  generation?: number;
-  generationColor?: string;
-}
-
-interface ForceLink extends d3.SimulationLinkDatum<ForceNode> {
-  source: string | ForceNode;
-  target: string | ForceNode;
-  relationship_type: string;
-}
-
 export function ForceDirectedLayout({ 
   persons, 
   connections, 
@@ -47,9 +35,61 @@ export function ForceDirectedLayout({
 }: ForceDirectedLayoutProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [simulation, setSimulation] = useState<d3.Simulation<ForceNode, ForceLink> | null>(null);
-  const [nodes, setNodes] = useState<ForceNode[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [relationshipFilters, setRelationshipFilters] = useState({
+    generational: true,
+    lateral: true,
+    donor: true
+  });
+
+  // Filter connections based on relationship type filters
+  const getFilteredConnections = (connections: Connection[]) => {
+    return connections.filter(connection => {
+      const relType = connection.relationship_type;
+      
+      // Check each category
+      if (RELATIONSHIP_CATEGORIES.generational.includes(relType as any)) {
+        return relationshipFilters.generational;
+      }
+      if (RELATIONSHIP_CATEGORIES.lateral.includes(relType as any)) {
+        return relationshipFilters.lateral;
+      }
+      if (RELATIONSHIP_CATEGORIES.donor.includes(relType as any)) {
+        return relationshipFilters.donor;
+      }
+      
+      // Default to showing unknown relationship types
+      return true;
+    });
+  };
+
+  // Get persons who should be visible (have at least one connection or are marked as self)
+  const getVisiblePersons = (persons: Person[], filteredConnections: Connection[]) => {
+    const connectedPersonIds = new Set<string>();
+    
+    // Add all persons who have connections
+    filteredConnections.forEach(connection => {
+      connectedPersonIds.add(connection.from_person_id);
+      connectedPersonIds.add(connection.to_person_id);
+    });
+
+    // Always include the "self" person even if they have no connections
+    const selfPerson = persons.find(p => p.is_self === true);
+    if (selfPerson) {
+      connectedPersonIds.add(selfPerson.id);
+    }
+
+    // Return only persons who are connected or are self
+    return persons.filter(person => connectedPersonIds.has(person.id));
+  };
+
+  // Handle relationship filter changes
+  const handleRelationshipFilterChange = (category: RelationshipCategory, enabled: boolean) => {
+    setRelationshipFilters(prev => ({
+      ...prev,
+      [category]: enabled
+    }));
+  };
 
   useEffect(() => {
     if (!svgRef.current || persons.length === 0) return;
@@ -59,57 +99,77 @@ export function ForceDirectedLayout({
 
     // Use shared connection processing utility
     const processed = processConnections(persons, connections);
-    const { generationalConnections, generationMap } = processed;
+    const { validConnections, generationMap } = processed;
 
-    // Prepare data for force simulation
-    const nodeData: ForceNode[] = persons.map(p => {
-      const generationInfo = generationMap.get(p.id);
-      return { 
-        ...p, 
+    // Filter connections based on relationship type filters
+    const filteredConnections = getFilteredConnections(validConnections);
+    
+    // Get visible persons (those with connections or marked as self)
+    const visiblePersons = getVisiblePersons(persons, filteredConnections);
+
+    // Create nodes data from visible persons only
+    const nodes = visiblePersons.map(person => {
+      const generationInfo = generationMap.get(person.id);
+      return {
+        id: person.id,
+        name: person.name,
+        person,
         generation: generationInfo?.generation,
-        generationColor: generationInfo?.color
+        generationColor: generationInfo?.color,
+        profile_photo_url: person.profile_photo_url,
+        gender: person.gender,
+        x: width / 2 + (Math.random() - 0.5) * 200,
+        y: height / 2 + (Math.random() - 0.5) * 200,
+        fx: null as number | null,
+        fy: null as number | null
       };
     });
-    
-    const links: ForceLink[] = generationalConnections.map(c => ({
-      source: c.from_person_id,
-      target: c.to_person_id,
-      relationship_type: c.relationship_type
-    }));
 
-    setNodes(nodeData);
+    // Create links data from filtered connections (only between visible persons)
+    const links = filteredConnections
+      .filter(connection => 
+        visiblePersons.some(p => p.id === connection.from_person_id) &&
+        visiblePersons.some(p => p.id === connection.to_person_id)
+      )
+      .map(connection => ({
+        source: connection.from_person_id,
+        target: connection.to_person_id,
+        type: connection.relationship_type,
+        connection
+      }));
 
-    // Create force simulation
-    const sim = d3.forceSimulation(nodeData)
-      .force('link', d3.forceLink<ForceNode, ForceLink>(links).id(d => d.id).distance(100))
+    // Create simulation
+    const simulation = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id((d: any) => d.id).distance(120))
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(40));
-
-    setSimulation(sim);
+      .force('collision', d3.forceCollide().radius(50));
 
     const g = svg.append('g');
 
-    // Create links (only for generational connections)
-    const link = g.selectAll('.link')
+    // Create links
+    const link = g.append('g')
+      .attr('class', 'links')
+      .selectAll('line')
       .data(links)
       .enter()
       .append('line')
-      .attr('class', 'link')
       .attr('stroke', 'hsl(var(--border))')
-      .attr('stroke-width', 2)
-      .attr('stroke-opacity', 0.6);
+      .attr('stroke-opacity', 0.6)
+      .attr('stroke-width', 2);
 
-    // Create nodes with generation-based coloring
-    const node = g.selectAll('.node')
-      .data(nodeData)
+    // Create nodes
+    const node = g.append('g')
+      .attr('class', 'nodes')
+      .selectAll('g')
+      .data(nodes)
       .enter()
       .append('g')
       .attr('class', 'node')
       .style('cursor', 'pointer')
-      .call(d3.drag<SVGGElement, ForceNode>()
+      .call(d3.drag<any, any>()
         .on('start', (event, d) => {
-          if (!event.active) sim.alphaTarget(0.3).restart();
+          if (!event.active) simulation.alphaTarget(0.3).restart();
           d.fx = d.x;
           d.fy = d.y;
         })
@@ -118,108 +178,121 @@ export function ForceDirectedLayout({
           d.fy = event.y;
         })
         .on('end', (event, d) => {
-          if (!event.active) sim.alphaTarget(0);
+          if (!event.active) simulation.alphaTarget(0);
           d.fx = null;
           d.fy = null;
         })
       )
       .on('click', (event, d) => {
-        onPersonClick?.(d);
+        if (onPersonClick) {
+          onPersonClick(d.person);
+        }
       });
 
-    // Add circles for nodes with generation colors
-    node.append('circle')
-      .attr('r', 25)
+    // Add node containers
+    node.append('rect')
+      .attr('width', 120)
+      .attr('height', 80)
+      .attr('x', -60)
+      .attr('y', -40)
+      .attr('rx', 8)
+      .attr('ry', 8)
       .attr('fill', d => d.generationColor || 'hsl(var(--chart-1))')
       .attr('stroke', d => d.generationColor || 'hsl(var(--border))')
-      .attr('stroke-width', 3)
-      .attr('opacity', 0.8);
+      .attr('stroke-width', 2)
+      .attr('opacity', 0.9);
 
     // Add profile images if available
     node.filter(d => d.profile_photo_url)
       .append('image')
-      .attr('x', -20)
-      .attr('y', -20)
-      .attr('width', 40)
-      .attr('height', 40)
+      .attr('x', -25)
+      .attr('y', -25)
+      .attr('width', 50)
+      .attr('height', 50)
       .attr('href', d => d.profile_photo_url!)
-      .attr('clip-path', 'circle(20px)');
+      .attr('clip-path', 'circle(25px)');
 
     // Add names
     node.append('text')
-      .attr('dy', 35)
       .attr('text-anchor', 'middle')
-      .attr('font-size', '12px')
+      .attr('dy', '0.35em')
+      .attr('font-size', '11px')
+      .attr('font-weight', 'bold')
       .attr('fill', 'hsl(var(--foreground))')
-      .text(d => d.name);
+      .text(d => d.name.length > 12 ? d.name.substring(0, 10) + '...' : d.name);
 
     // Add generation labels
     node.append('text')
-      .attr('dy', -30)
       .attr('text-anchor', 'middle')
-      .attr('font-size', '10px')
+      .attr('dy', '20px')
+      .attr('font-size', '9px')
       .attr('fill', d => d.generationColor || 'hsl(var(--muted-foreground))')
-      .attr('font-weight', 'bold')
-      .text(d => d.generation !== undefined ? `Gen ${d.generation}` : '');
+      .text(d => d.generation ? `Gen ${d.generation}` : '');
 
-    // Update positions on simulation tick
-    sim.on('tick', () => {
-      link
-        .attr('x1', d => (d.source as ForceNode).x!)
-        .attr('y1', d => (d.source as ForceNode).y!)
-        .attr('x2', d => (d.target as ForceNode).x!)
-        .attr('y2', d => (d.target as ForceNode).y!);
+    // Add gender indicators
+    node.append('text')
+      .attr('x', -45)
+      .attr('y', -25)
+      .attr('font-size', '12px')
+      .attr('fill', 'hsl(var(--muted-foreground))')
+      .text(d => d.gender === 'male' ? '♂' : d.gender === 'female' ? '♀' : '');
 
-      node.attr('transform', d => `translate(${d.x},${d.y})`);
-    });
-
-    // Add zoom behavior
+    // Add zoom and pan
     const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.1, 4])
+      .scaleExtent([0.1, 3])
       .on('zoom', (event) => {
-        g.attr('transform', event.transform);
         setZoomLevel(event.transform.k);
+        g.attr('transform', event.transform);
       });
 
     svg.call(zoom);
 
-    // Store zoom behavior for external access
+    // Store zoom behavior and simulation for external access
     (svg.node() as any).__zoom__ = zoom;
     (svg.node() as any).__zoomGroup__ = g;
+    (svg.node() as any).__simulation__ = simulation;
 
-    // Auto-fit to all nodes after simulation stabilizes (for initial load)
-    if (isInitialLoad && nodeData.length > 0) {
-      sim.on('end', () => {
-        setTimeout(() => {
-          handleZoomToFit();
-          setIsInitialLoad(false);
-        }, 500); // Small delay to ensure positions are stable
-      });
+    // Update positions on simulation tick
+    simulation.on('tick', () => {
+      link
+        .attr('x1', (d: any) => d.source.x)
+        .attr('y1', (d: any) => d.source.y)
+        .attr('x2', (d: any) => d.target.x)
+        .attr('y2', (d: any) => d.target.y);
+
+      node.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+    });
+
+    // Auto-fit to all nodes on initial load
+    if (isInitialLoad && visiblePersons.length > 0) {
+      setTimeout(() => {
+        handleZoomToFit();
+        setIsInitialLoad(false);
+      }, 500); // Wait for simulation to stabilize
     }
 
-    // Cleanup
-    return () => {
-      sim.stop();
-    };
-  }, [persons, connections, width, height, onPersonClick]);
+  }, [persons, connections, width, height, onPersonClick, relationshipFilters]);
 
   const handleCenterSelf = () => {
-    if (!svgRef.current || !simulation || nodes.length === 0) return;
+    if (!svgRef.current) return;
 
     const selfPerson = persons.find(person => person.is_self === true);
     if (!selfPerson) return;
 
-    const selfNode = nodes.find(node => node.id === selfPerson.id);
-    if (!selfNode || selfNode.x === undefined || selfNode.y === undefined) return;
-
     const svg = d3.select(svgRef.current);
     const zoom = (svg.node() as any).__zoom__;
     const g = (svg.node() as any).__zoomGroup__;
+    const simulation = (svg.node() as any).__simulation__;
 
-    if (zoom && g) {
+    if (zoom && g && simulation) {
+      // Find the node in the simulation
+      const selfNode = simulation.nodes().find((node: any) => node.id === selfPerson.id);
+      if (!selfNode) return;
+
       // Calculate transform to center the self node
       const centerX = width / 2;
       const centerY = height / 2;
+      
       const transform = d3.zoomIdentity
         .translate(centerX - selfNode.x, centerY - selfNode.y);
 
@@ -228,24 +301,23 @@ export function ForceDirectedLayout({
   };
 
   const handleZoomToFit = () => {
-    if (!svgRef.current || nodes.length === 0) return;
+    if (!svgRef.current) return;
 
     const svg = d3.select(svgRef.current);
     const zoom = (svg.node() as any).__zoom__;
     const g = (svg.node() as any).__zoomGroup__;
+    const simulation = (svg.node() as any).__simulation__;
 
-    if (zoom && g) {
+    if (zoom && g && simulation) {
+      const nodes = simulation.nodes();
+      
+      if (nodes.length === 0) return;
+
       // Calculate bounding box of all nodes
-      const validNodes = nodes.filter(node => 
-        node.x !== undefined && node.y !== undefined
-      );
-
-      if (validNodes.length === 0) return;
-
-      const minX = Math.min(...validNodes.map(node => node.x!)) - 50;
-      const maxX = Math.max(...validNodes.map(node => node.x!)) + 50;
-      const minY = Math.min(...validNodes.map(node => node.y!)) - 50;
-      const maxY = Math.max(...validNodes.map(node => node.y!)) + 50;
+      const minX = Math.min(...nodes.map((node: any) => node.x)) - 60;
+      const maxX = Math.max(...nodes.map((node: any) => node.x)) + 60;
+      const minY = Math.min(...nodes.map((node: any) => node.y)) - 40;
+      const maxY = Math.max(...nodes.map((node: any) => node.y)) + 40;
 
       const nodeWidth = maxX - minX;
       const nodeHeight = maxY - minY;
@@ -275,7 +347,7 @@ export function ForceDirectedLayout({
 
   return (
     <div className="relative">
-      {/* Vertical Toolbar - top right */}
+      {/* Simplified Toolbar - top right */}
       <div className="absolute top-4 right-4 z-10">
         <TreeToolbar
           persons={persons}
@@ -283,14 +355,31 @@ export function ForceDirectedLayout({
           onCenterSelf={handleCenterSelf}
           onZoomToFit={handleZoomToFit}
           onLayoutToggle={onLayoutToggle}
-          className="bg-background/80 backdrop-blur-sm rounded-lg p-2"
+          className="bg-background/80 backdrop-blur-sm rounded-lg p-3"
+        />
+      </div>
+
+      {/* Relationship Filter - bottom right */}
+      <div className="absolute bottom-4 right-4 z-10">
+        <RelationshipFilter
+          relationshipFilters={relationshipFilters}
+          onRelationshipFilterChange={handleRelationshipFilterChange}
+          className="bg-background/80 backdrop-blur-sm rounded-lg p-3"
         />
       </div>
 
       {/* Info Panel - top left */}
       <div className="absolute top-4 left-4 z-10">
-        <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm">
+        <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm space-y-1">
+          <div>Layout: Force</div>
           <div>{Math.round(zoomLevel * 100)}%</div>
+          <div className="text-xs text-muted-foreground">
+            Showing: {Object.entries(relationshipFilters).filter(([_, enabled]) => enabled).map(([category]) => 
+              category === 'generational' ? 'Parent-Child' : 
+              category === 'lateral' ? 'Siblings & Partners' : 
+              'Donors'
+            ).join(', ')}
+          </div>
         </div>
       </div>
 

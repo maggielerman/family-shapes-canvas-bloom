@@ -7,6 +7,7 @@ import { Connection } from '@/types/connection';
 import { GenerationInfo } from '@/utils/generationUtils';
 import { LayoutRelationshipType } from '@/types/layoutTypes';
 import { TreeToolbar } from './TreeToolbar';
+import { RelationshipFilter, RELATIONSHIP_CATEGORIES, RelationshipCategory } from './RelationshipFilter';
 
 interface DagreLayoutProps {
   persons: Person[];
@@ -50,6 +51,60 @@ export function DagreLayout({
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR' | 'BT' | 'RL'>('TB');
   const [dagreGraph, setDagreGraph] = useState<dagre.graphlib.Graph | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [relationshipFilters, setRelationshipFilters] = useState({
+    generational: true,
+    lateral: true,
+    donor: true
+  });
+
+  // Filter connections based on relationship type filters
+  const getFilteredConnections = (connections: Connection[]) => {
+    return connections.filter(connection => {
+      const relType = connection.relationship_type;
+      
+      // Check each category
+      if (RELATIONSHIP_CATEGORIES.generational.includes(relType as any)) {
+        return relationshipFilters.generational;
+      }
+      if (RELATIONSHIP_CATEGORIES.lateral.includes(relType as any)) {
+        return relationshipFilters.lateral;
+      }
+      if (RELATIONSHIP_CATEGORIES.donor.includes(relType as any)) {
+        return relationshipFilters.donor;
+      }
+      
+      // Default to showing unknown relationship types
+      return true;
+    });
+  };
+
+  // Get persons who should be visible (have at least one connection or are marked as self)
+  const getVisiblePersons = (persons: Person[], filteredConnections: Connection[]) => {
+    const connectedPersonIds = new Set<string>();
+    
+    // Add all persons who have connections
+    filteredConnections.forEach(connection => {
+      connectedPersonIds.add(connection.from_person_id);
+      connectedPersonIds.add(connection.to_person_id);
+    });
+
+    // Always include the "self" person even if they have no connections
+    const selfPerson = persons.find(p => p.is_self === true);
+    if (selfPerson) {
+      connectedPersonIds.add(selfPerson.id);
+    }
+
+    // Return only persons who are connected or are self
+    return persons.filter(person => connectedPersonIds.has(person.id));
+  };
+
+  // Handle relationship filter changes
+  const handleRelationshipFilterChange = (category: RelationshipCategory, enabled: boolean) => {
+    setRelationshipFilters(prev => ({
+      ...prev,
+      [category]: enabled
+    }));
+  };
 
   useEffect(() => {
     if (!svgRef.current || persons.length === 0) return;
@@ -60,6 +115,12 @@ export function DagreLayout({
     // Use shared connection processing utility
     const processed = processConnections(persons, connections);
     const { generationalConnections, generationMap } = processed;
+
+    // Filter connections based on relationship type filters
+    const filteredConnections = getFilteredConnections(generationalConnections);
+    
+    // Get visible persons (those with connections or marked as self)
+    const visiblePersons = getVisiblePersons(persons, filteredConnections);
 
     // Create Dagre graph
     const g = new dagre.graphlib.Graph();
@@ -73,8 +134,8 @@ export function DagreLayout({
     });
     g.setDefaultEdgeLabel(() => ({}));
 
-    // Add nodes to the graph
-    persons.forEach(person => {
+    // Add only visible nodes to the graph
+    visiblePersons.forEach(person => {
       const generationInfo = generationMap.get(person.id);
       g.setNode(person.id, {
         label: person.name,
@@ -87,11 +148,15 @@ export function DagreLayout({
       });
     });
 
-    // Add edges to the graph (only generational connections)
-    generationalConnections.forEach(connection => {
-      g.setEdge(connection.from_person_id, connection.to_person_id, {
-        relationship_type: connection.relationship_type
-      });
+    // Add edges to the graph (only filtered connections between visible persons)
+    filteredConnections.forEach(connection => {
+      // Only add edge if both persons are visible
+      if (visiblePersons.some(p => p.id === connection.from_person_id) &&
+          visiblePersons.some(p => p.id === connection.to_person_id)) {
+        g.setEdge(connection.from_person_id, connection.to_person_id, {
+          relationship_type: connection.relationship_type
+        });
+      }
     });
 
     // Calculate the layout
@@ -101,27 +166,37 @@ export function DagreLayout({
     const g_svg = svg.append('g')
       .attr('transform', 'translate(50,50)');
 
-    // Create edges
+    // Create edges with smooth transitions
     const edges = g_svg.selectAll('.edge')
-      .data(g.edges())
-      .enter()
-      .append('g')
-      .attr('class', 'edge');
+      .data(g.edges(), (d: any) => `${d.v}-${d.w}`); // Use edge ID as key
 
-    edges.append('path')
+    // Handle entering edges
+    const edgeEnter = edges.enter()
+      .append('g')
+      .attr('class', 'edge')
+      .style('opacity', 0); // Start invisible
+
+    edgeEnter.append('path')
       .attr('d', (d) => {
         const edge = g.edge(d);
         return `M ${edge.points[0].x} ${edge.points[0].y} ${edge.points.map(p => `L ${p.x} ${p.y}`).join(' ')}`;
       })
       .attr('fill', 'none')
       .attr('stroke', 'hsl(var(--border))')
-      .attr('stroke-width', 2)
-      .attr('opacity', 0.6);
+      .attr('stroke-width', 2);
 
-    // Create nodes
+    // Transition edges to visible
+    edgeEnter.merge(edges as any)
+      .transition()
+      .duration(500)
+      .style('opacity', 0.6);
+
+    // Create nodes with smooth transitions
     const nodes = g_svg.selectAll('.node')
-      .data(g.nodes())
-      .enter()
+      .data(g.nodes(), (d: any) => d); // Use node ID as key for consistent transitions
+
+    // Handle entering nodes (newly visible)
+    const nodeEnter = nodes.enter()
       .append('g')
       .attr('class', 'node')
       .attr('transform', (d) => {
@@ -129,6 +204,7 @@ export function DagreLayout({
         return `translate(${node.x - node.width / 2},${node.y - node.height / 2})`;
       })
       .style('cursor', 'pointer')
+      .style('opacity', 0) // Start invisible for smooth fade-in
       .on('click', (event, d) => {
         const person = persons.find(p => p.id === d);
         if (person) {
@@ -136,8 +212,21 @@ export function DagreLayout({
         }
       });
 
+    // Handle updating nodes (position changes)
+    const nodeUpdate = nodeEnter.merge(nodes as any)
+      .transition()
+      .duration(500)
+      .attr('transform', (d) => {
+        const node = g.node(d);
+        return `translate(${node.x - node.width / 2},${node.y - node.height / 2})`;
+      })
+      .style('opacity', 1);
+
+    // Use nodeEnter for adding elements, nodeUpdate for final merged selection
+    const allNodes = nodeEnter;
+
     // Add node containers (cards)
-    nodes.append('rect')
+    allNodes.append('rect')
       .attr('width', 140)
       .attr('height', 100)
       .attr('rx', 8)
@@ -154,7 +243,7 @@ export function DagreLayout({
       .attr('opacity', 0.9);
 
     // Add profile images if available
-    nodes.filter((d) => {
+    allNodes.filter((d) => {
       const node = g.node(d) as DagreNodeData;
       return node.profile_photo_url;
     })
@@ -170,7 +259,7 @@ export function DagreLayout({
       .attr('clip-path', 'circle(25px)');
 
     // Add names
-    nodes.append('text')
+    allNodes.append('text')
       .attr('x', 70)
       .attr('y', 45)
       .attr('text-anchor', 'middle')
@@ -184,7 +273,7 @@ export function DagreLayout({
       });
 
     // Add generation labels
-    nodes.append('text')
+    allNodes.append('text')
       .attr('x', 70)
       .attr('y', 65)
       .attr('text-anchor', 'middle')
@@ -199,7 +288,7 @@ export function DagreLayout({
       });
 
     // Add gender indicators
-    nodes.append('text')
+    allNodes.append('text')
       .attr('x', 15)
       .attr('y', 25)
       .attr('font-size', '12px')
@@ -224,7 +313,7 @@ export function DagreLayout({
     (svg.node() as any).__zoomGroup__ = g_svg;
 
     // Auto-fit to all nodes on initial load
-    if (isInitialLoad && persons.length > 0) {
+    if (isInitialLoad && visiblePersons.length > 0) {
       setTimeout(() => {
         handleZoomToFit();
         setIsInitialLoad(false);
@@ -232,9 +321,9 @@ export function DagreLayout({
     }
 
     // Store references for update function
-    window.dagreData = { g, svg, g_svg, generationMap, persons };
+    window.dagreData = { g, svg, g_svg, generationMap, persons: visiblePersons };
 
-  }, [persons, connections, width, height, onPersonClick, layoutDirection]);
+  }, [persons, connections, width, height, onPersonClick, layoutDirection, relationshipFilters]);
 
   const handleLayoutChange = () => {
     const directions: Array<'TB' | 'LR' | 'BT' | 'RL'> = ['TB', 'LR', 'BT', 'RL'];
@@ -279,7 +368,7 @@ export function DagreLayout({
     const g = (svg.node() as any).__zoomGroup__;
 
     if (zoom && g) {
-      // Calculate bounding box of all nodes
+      // Calculate bounding box of all visible nodes
       const nodes = dagreGraph.nodes().map(nodeId => dagreGraph.node(nodeId));
       
       if (nodes.length === 0) return;
@@ -317,17 +406,26 @@ export function DagreLayout({
 
   return (
     <div className="relative">
-      {/* Vertical Toolbar - top right */}
+            {/* Simplified Toolbar - top right */}
       <div className="absolute top-4 right-4 z-10">
         <TreeToolbar
           persons={persons}
-          currentLayout={currentLayout}
+          currentLayout="dagre"
           layoutDirection={layoutDirection}
           onCenterSelf={handleCenterSelf}
           onZoomToFit={handleZoomToFit}
-          onLayoutToggle={onLayoutToggle}
+          onLayoutToggle={() => onLayoutToggle()}
           onLayoutDirectionChange={handleLayoutChange}
-          className="bg-background/80 backdrop-blur-sm rounded-lg p-2"
+          className="bg-background/80 backdrop-blur-sm rounded-lg p-3"
+        />
+      </div>
+
+      {/* Relationship Filter - bottom right */}
+      <div className="absolute bottom-4 right-4 z-10">
+        <RelationshipFilter
+          relationshipFilters={relationshipFilters}
+          onRelationshipFilterChange={handleRelationshipFilterChange}
+          className="bg-background/80 backdrop-blur-sm rounded-lg p-3"
         />
       </div>
 
@@ -336,6 +434,13 @@ export function DagreLayout({
         <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm space-y-1">
           <div>Layout: {layoutDirection}</div>
           <div>{Math.round(zoomLevel * 100)}%</div>
+          <div className="text-xs text-muted-foreground">
+            Showing: {Object.entries(relationshipFilters).filter(([_, enabled]) => enabled).map(([category]) => 
+              category === 'generational' ? 'Parent-Child' : 
+              category === 'lateral' ? 'Siblings' : 
+              'Donors'
+            ).join(', ')}
+          </div>
         </div>
       </div>
 
