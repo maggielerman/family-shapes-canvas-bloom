@@ -6,53 +6,21 @@ The XYFlow component now supports multiple layout algorithms to help visualize f
 
 ## Available Layout Algorithms
 
-### 1. Manual Layout
-- **Type**: `manual`
-- **Description**: Drag nodes to position them manually
-- **Best for**: Precise positioning and small family trees
-- **Icon**: Network
-
-### 2. Dagre Layout
+### 1. Dagre Layout
 - **Type**: `dagre`
 - **Description**: Directed graph layout with hierarchical positioning
 - **Best for**: Hierarchical family structures with clear parent-child relationships
 - **Icon**: GitBranch
 - **Library**: Dagre (JavaScript port of Graphviz)
 
-### 3. ELK Layout
+### 2. ELK Layout
 - **Type**: `elk`
 - **Description**: Advanced layout engine with multiple algorithms
 - **Best for**: Complex graphs with many nodes and relationships
 - **Icon**: Target
 - **Library**: ELK (Eclipse Layout Kernel)
 
-### 4. D3 Hierarchy Layout
-- **Type**: `d3-hierarchy`
-- **Description**: Hierarchical tree layout using D3
-- **Best for**: Traditional family tree visualization
-- **Icon**: Users
-- **Library**: D3.js
 
-### 5. D3 Force Layout
-- **Type**: `d3-force`
-- **Description**: Force-directed layout for interactive graphs
-- **Best for**: Exploring relationships interactively
-- **Icon**: Zap
-- **Library**: D3.js Force Simulation
-
-### 6. D3 Cluster Layout
-- **Type**: `d3-cluster`
-- **Description**: Cluster layout for grouped hierarchies
-- **Best for**: Grouping related family members
-- **Icon**: Layers
-- **Library**: D3.js
-
-### 7. D3 Tree Layout
-- **Type**: `d3-tree`
-- **Description**: Traditional tree layout using D3
-- **Best for**: Classic family tree visualization
-- **Icon**: GitBranch
-- **Library**: D3.js
 
 ## Implementation Details
 
@@ -92,8 +60,7 @@ The layout selector is automatically integrated into the XYFlow component. Users
 1. Select a layout algorithm from the dropdown
 2. View detailed descriptions and tips
 3. Apply layouts automatically
-4. Reset to manual layout when needed
-5. See loading indicators during layout application
+4. See loading indicators during layout application
 
 ### Technical Implementation
 
@@ -121,7 +88,7 @@ class XYFlowLayoutService {
 
 #### Error Handling
 
-- Graceful fallback to manual layout on errors
+- Graceful fallback to dagre layout on errors
 - User-friendly error messages
 - Console logging for debugging
 

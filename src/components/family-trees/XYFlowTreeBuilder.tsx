@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, Users, Network, RotateCcw } from 'lucide-react';
 import { AddPersonDialog } from './AddPersonDialog';
 import { PersonCardDialog } from '@/components/people/PersonCard';
-import { ConnectionManager } from '@/components/connections/ConnectionManager';
 import { XYFlowLegend } from './XYFlowLegend';
 import { XYFlowLayoutSelector, LayoutType } from './XYFlowLayoutSelector';
 import { XYFlowLayoutService, LayoutResult } from './layouts/XYFlowLayoutService';
@@ -60,8 +59,9 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [currentLayout, setCurrentLayout] = useState<LayoutType>('manual');
+  const [currentLayout, setCurrentLayout] = useState<LayoutType>('dagre');
   const [isLayoutLoading, setIsLayoutLoading] = useState(false);
+  const [hasAppliedInitialLayout, setHasAppliedInitialLayout] = useState(false);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
   const { toast } = useToast();
 
@@ -134,9 +134,9 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     setEdges(connectionEdges);
   }, [connections, relationshipTypes, setEdges]);
 
-  // Apply layout when layout type changes
+  // Apply layout when layout type changes or when nodes are first loaded
   useEffect(() => {
-    if (nodes.length === 0 || currentLayout === 'manual') return;
+    if (nodes.length === 0) return;
 
     let isCancelled = false;
 
@@ -164,6 +164,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
         if (!isCancelled) {
           setNodes(result.nodes);
           setEdges(result.edges);
+          setHasAppliedInitialLayout(true);
           
           // Fit view after layout is applied
           setTimeout(() => {
@@ -183,8 +184,8 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
               : "Failed to apply layout. Please try again.",
             variant: "destructive",
           });
-          // Fallback to manual layout on error
-          setCurrentLayout('manual');
+          // Fallback to dagre layout on error
+          setCurrentLayout('dagre');
         }
       } finally {
         if (!isCancelled) {
@@ -198,7 +199,18 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     return () => {
       isCancelled = true;
     };
-  }, [currentLayout]); // Only depend on currentLayout, not nodes/edges
+  }, [currentLayout]); // Only depend on currentLayout
+
+  // Apply initial layout when nodes are first loaded
+  useEffect(() => {
+    if (nodes.length > 0 && edges.length > 0 && !hasAppliedInitialLayout && !isLayoutLoading) {
+      // Force trigger the layout by temporarily changing the layout
+      const tempLayout = currentLayout === 'dagre' ? 'elk' : 'dagre';
+      setCurrentLayout(tempLayout);
+      // Change back immediately to trigger the layout effect
+      setTimeout(() => setCurrentLayout(currentLayout), 10);
+    }
+  }, [nodes.length, edges.length, hasAppliedInitialLayout, isLayoutLoading, currentLayout]);
 
   const fetchConnections = async () => {
     try {
@@ -281,16 +293,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
             <Plus className="w-4 h-4 mr-2" />
             Add Person
           </Button>
-          {currentLayout !== 'manual' && (
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentLayout('manual')}
-              disabled={isLayoutLoading}
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset Layout
-            </Button>
-          )}
+
         </div>
         
         <div className="text-sm text-muted-foreground">
@@ -308,14 +311,6 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
       {/* Legend */}
       <XYFlowLegend />
 
-      {/* Connection Manager */}
-      <ConnectionManager
-        familyTreeId={familyTreeId}
-        persons={persons}
-        onConnectionUpdated={fetchConnections}
-        title="Connections"
-        subtitle="Manage all relationships (sibling connections shown here but hidden from tree lines)"
-      />
 
       {/* XYFlow Canvas */}
       {persons.length === 0 ? (
