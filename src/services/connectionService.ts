@@ -164,7 +164,6 @@ export class ConnectionService {
       .from('connections')
       .update({
         relationship_type: data.relationship_type,
-        family_tree_id: data.family_tree_id,
         group_id: data.group_id,
         organization_id: data.organization_id,
         notes: data.notes,
