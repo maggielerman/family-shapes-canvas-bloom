@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { processConnections } from '@/utils/connectionProcessing';
 import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
+import { Button } from '@/components/ui/button';
+import { Share2 } from 'lucide-react';
 
 interface RelationshipType {
   value: string;
@@ -17,6 +19,8 @@ interface ForceDirectedLayoutProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
+  currentLayout: 'force' | 'dagre';
+  onLayoutToggle: () => void;
 }
 
 interface ForceNode extends d3.SimulationNodeDatum, Person {
@@ -32,8 +36,18 @@ interface ForceLink extends d3.SimulationLinkDatum<ForceNode> {
   relationship_type: string;
 }
 
-export function ForceDirectedLayout({ persons, connections, relationshipTypes, width, height, onPersonClick }: ForceDirectedLayoutProps) {
+export function ForceDirectedLayout({ 
+  persons, 
+  connections, 
+  relationshipTypes, 
+  width, 
+  height, 
+  onPersonClick,
+  currentLayout,
+  onLayoutToggle
+}: ForceDirectedLayoutProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
     if (!svgRef.current || persons.length === 0) return;
@@ -150,71 +164,54 @@ export function ForceDirectedLayout({ persons, connections, relationshipTypes, w
         .attr('x2', d => (d.target as ForceNode).x!)
         .attr('y2', d => (d.target as ForceNode).y!);
 
-      node
-        .attr('transform', d => `translate(${d.x},${d.y})`);
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
     });
 
-    // Add zoom and pan
+    // Add zoom behavior
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
+        setZoomLevel(event.transform.k);
       });
 
     svg.call(zoom);
 
-    // Add legend for generation colors
-    const legend = svg.append('g')
-      .attr('class', 'legend')
-      .attr('transform', 'translate(20, 20)');
-
-    const uniqueGenerations = Array.from(generationMap.values())
-      .sort((a, b) => a.generation - b.generation)
-      .filter((gen, index, arr) => 
-        index === arr.findIndex(g => g.generation === gen.generation)
-      );
-
-    legend.selectAll('.legend-item')
-      .data(uniqueGenerations.slice(0, 6)) // Show first 6 generations
-      .enter()
-      .append('g')
-      .attr('class', 'legend-item')
-      .attr('transform', (d, i) => `translate(0, ${i * 20})`)
-      .each(function(d) {
-        const item = d3.select(this);
-        
-        item.append('circle')
-          .attr('r', 8)
-          .attr('fill', d.color)
-          .attr('stroke', d.color)
-          .attr('stroke-width', 2)
-          .attr('opacity', 0.8);
-        
-        item.append('text')
-          .attr('x', 15)
-          .attr('y', 4)
-          .attr('font-size', '12px')
-          .attr('fill', 'hsl(var(--foreground))')
-          .text(`Generation ${d.generation}`);
-      });
-
-    // Stop simulation after some time to improve performance
-    setTimeout(() => {
-      simulation.stop();
-    }, 5000);
-
+    // Cleanup
     return () => {
       simulation.stop();
     };
-
   }, [persons, connections, width, height, onPersonClick]);
 
   return (
-    <svg
-      ref={svgRef}
-      width={width}
-      height={height}
-      className="border rounded-lg bg-background"
-    />
+    <div className="relative">
+      {/* Layout Toggle - bottom left */}
+      <div className="absolute bottom-4 left-4 z-10">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onLayoutToggle}
+          className="h-8 px-3"
+          title="Switch to Tree view"
+        >
+          <Share2 className="h-4 w-4 mr-2" />
+          Tree
+        </Button>
+      </div>
+
+      {/* Info Panel - top left */}
+      <div className="absolute top-4 left-4 z-10">
+        <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm">
+          <div>{Math.round(zoomLevel * 100)}%</div>
+        </div>
+      </div>
+
+      <svg
+        ref={svgRef}
+        width={width}
+        height={height}
+        className="border rounded-lg bg-background"
+      />
+    </div>
   );
 }

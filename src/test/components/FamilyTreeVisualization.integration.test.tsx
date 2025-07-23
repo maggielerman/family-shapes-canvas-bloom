@@ -117,8 +117,7 @@ describe('FamilyTreeVisualization', () => {
 
   it('renders without crashing', () => {
     render(<FamilyTreeVisualization {...defaultProps} />);
-    expect(screen.getByText('Force')).toBeInTheDocument();
-    expect(screen.getByText('Dagre')).toBeInTheDocument();
+    expect(screen.getByTestId('force-directed-layout')).toBeInTheDocument();
   });
 
   it('shows empty state when no persons', () => {
@@ -152,14 +151,38 @@ describe('FamilyTreeVisualization', () => {
     expect(screen.getByTestId('force-directed-layout')).toBeInTheDocument();
   });
 
-  it('renders dagre layout when dagre tab is selected', async () => {
+  it('switches to dagre layout when toggle is clicked', async () => {
     render(<FamilyTreeVisualization {...defaultProps} />);
     
-    const dagreTab = screen.getByText('Dagre');
-    dagreTab.click();
+    // Initially shows force layout
+    expect(screen.getByTestId('force-directed-layout')).toBeInTheDocument();
+    
+    // Find and click the toggle button (it's an icon button)
+    const toggleButton = screen.getByTitle('Switch to Tree view');
+    toggleButton.click();
     
     await waitFor(() => {
       expect(screen.getByTestId('dagre-layout')).toBeInTheDocument();
+    });
+  });
+
+  it('switches back to force layout when toggle is clicked again', async () => {
+    render(<FamilyTreeVisualization {...defaultProps} />);
+    
+    // Click toggle to switch to dagre
+    const toggleButton = screen.getByTitle('Switch to Tree view');
+    toggleButton.click();
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('dagre-layout')).toBeInTheDocument();
+    });
+    
+    // Click toggle again to switch back to force
+    const forceViewButton = screen.getByTitle('Switch to Force view');
+    forceViewButton.click();
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('force-directed-layout')).toBeInTheDocument();
     });
   });
 

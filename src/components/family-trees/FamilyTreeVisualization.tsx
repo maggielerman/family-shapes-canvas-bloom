@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Users, Network, Share2 } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { PersonCardDialog } from '@/components/people/PersonCard';
 import { EditPersonDialog } from '@/components/people/EditPersonDialog';
 import { AddPersonDialog } from './AddPersonDialog';
@@ -32,6 +31,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [currentLayout, setCurrentLayout] = useState<'force' | 'dagre'>('force');
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -73,9 +73,13 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     setViewingPerson(person);
   };
 
+  const toggleLayout = () => {
+    setCurrentLayout(currentLayout === 'force' ? 'dagre' : 'force');
+  };
+
   return (
     <div ref={containerRef} className="space-y-6">
-      {/* Visualization Tabs */}
+      {/* Visualization Canvas */}
       {persons.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Users className="w-12 h-12 text-muted-foreground mb-4" />
@@ -89,44 +93,36 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
           </Button>
         </div>
       ) : (
-        <Tabs defaultValue="force" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="force" className="flex items-center gap-2">
-              <Network className="w-4 h-4" />
-              <span className="hidden lg:inline">Force</span>
-            </TabsTrigger>
-            <TabsTrigger value="dagre" className="flex items-center gap-2">
-              <Share2 className="w-4 h-4" />
-              <span className="hidden lg:inline">Dagre</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="force" className="mt-6">
+        <div className="relative">
+          {/* Canvas */}
+          <div className="border rounded-lg bg-card">
             <Suspense fallback={<ChartLoadingSpinner />}>
-              <ForceDirectedLayout
-                persons={persons}
-                connections={connections}
-                relationshipTypes={relationshipTypes}
-                width={dimensions.width}
-                height={dimensions.height}
-                onPersonClick={handlePersonClick}
-              />
+              {currentLayout === 'force' ? (
+                <ForceDirectedLayout
+                  persons={persons}
+                  connections={connections}
+                  relationshipTypes={relationshipTypes}
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  onPersonClick={handlePersonClick}
+                  currentLayout={currentLayout}
+                  onLayoutToggle={toggleLayout}
+                />
+              ) : (
+                <DagreLayout
+                  persons={persons}
+                  connections={connections}
+                  relationshipTypes={relationshipTypes}
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  onPersonClick={handlePersonClick}
+                  currentLayout={currentLayout}
+                  onLayoutToggle={toggleLayout}
+                />
+              )}
             </Suspense>
-          </TabsContent>
-
-          <TabsContent value="dagre" className="mt-6">
-            <Suspense fallback={<ChartLoadingSpinner />}>
-              <DagreLayout
-                persons={persons}
-                connections={connections}
-                relationshipTypes={relationshipTypes}
-                width={dimensions.width}
-                height={dimensions.height}
-                onPersonClick={handlePersonClick}
-              />
-            </Suspense>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       )}
 
       {/* Dialogs */}

@@ -7,7 +7,7 @@ import { Connection } from '@/types/connection';
 import { GenerationInfo } from '@/utils/generationUtils';
 import { LayoutRelationshipType } from '@/types/layoutTypes';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, ZoomOut, RotateCcw, Grid3X3 } from 'lucide-react';
+import { Grid3X3, Network } from 'lucide-react';
 
 interface DagreLayoutProps {
   persons: Person[];
@@ -16,6 +16,8 @@ interface DagreLayoutProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
+  currentLayout: 'force' | 'dagre';
+  onLayoutToggle: () => void;
 }
 
 interface DagreNodeData {
@@ -40,7 +42,9 @@ export function DagreLayout({
   relationshipTypes, 
   width, 
   height, 
-  onPersonClick 
+  onPersonClick,
+  currentLayout,
+  onLayoutToggle
 }: DagreLayoutProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -213,77 +217,10 @@ export function DagreLayout({
 
     svg.call(zoom);
 
-    // Add legend
-    const legend = svg.append('g')
-      .attr('class', 'legend')
-      .attr('transform', 'translate(20, 20)');
-
-    const uniqueGenerations = Array.from(generationMap.values())
-      .sort((a, b) => a.generation - b.generation)
-      .filter((gen, index, arr) => 
-        index === arr.findIndex(g => g.generation === gen.generation)
-      );
-
-    legend.selectAll('.legend-item')
-      .data(uniqueGenerations.slice(0, 6))
-      .enter()
-      .append('g')
-      .attr('class', 'legend-item')
-      .attr('transform', (d, i) => `translate(0, ${i * 25})`)
-      .each(function(d) {
-        const item = d3.select(this);
-        
-        item.append('rect')
-          .attr('width', 16)
-          .attr('height', 16)
-          .attr('rx', 3)
-          .attr('fill', d.color)
-          .attr('stroke', d.color)
-          .attr('stroke-width', 1);
-        
-        item.append('text')
-          .attr('x', 25)
-          .attr('y', 12)
-          .attr('font-size', '12px')
-          .attr('fill', 'hsl(var(--foreground))')
-          .text(`Generation ${d.generation}`);
-      });
-
     // Store references for update function
     window.dagreData = { g, svg, g_svg, generationMap, persons };
 
   }, [persons, connections, width, height, onPersonClick, layoutDirection]);
-
-  const handleZoomIn = () => {
-    if (svgRef.current) {
-      const zoom = d3.zoomTransform(svgRef.current);
-      const newZoom = zoom.scale(1.2);
-      d3.select(svgRef.current).transition().duration(300).call(
-        d3.zoom<SVGSVGElement, unknown>().transform,
-        newZoom
-      );
-    }
-  };
-
-  const handleZoomOut = () => {
-    if (svgRef.current) {
-      const zoom = d3.zoomTransform(svgRef.current);
-      const newZoom = zoom.scale(0.8);
-      d3.select(svgRef.current).transition().duration(300).call(
-        d3.zoom<SVGSVGElement, unknown>().transform,
-        newZoom
-      );
-    }
-  };
-
-  const handleReset = () => {
-    if (svgRef.current) {
-      d3.select(svgRef.current).transition().duration(300).call(
-        d3.zoom<SVGSVGElement, unknown>().transform,
-        d3.zoomIdentity
-      );
-    }
-  };
 
   const handleLayoutChange = () => {
     const directions: Array<'TB' | 'LR' | 'BT' | 'RL'> = ['TB', 'LR', 'BT', 'RL'];
@@ -294,8 +231,8 @@ export function DagreLayout({
 
   return (
     <div className="relative">
-      {/* Controls */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
+      {/* Layout Direction Toggle - top right */}
+      <div className="absolute top-4 right-4 z-10">
         <Button
           variant="outline"
           size="sm"
@@ -305,33 +242,23 @@ export function DagreLayout({
         >
           <Grid3X3 className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* Layout Toggle - bottom left */}
+      <div className="absolute bottom-4 left-4 z-10">
         <Button
           variant="outline"
           size="sm"
-          onClick={handleZoomIn}
-          className="h-8 w-8 p-0"
+          onClick={onLayoutToggle}
+          className="h-8 px-3"
+          title="Switch to Force view"
         >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleZoomOut}
-          className="h-8 w-8 p-0"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleReset}
-          className="h-8 w-8 p-0"
-        >
-          <RotateCcw className="h-4 w-4" />
+          <Network className="h-4 w-4 mr-2" />
+          Force
         </Button>
       </div>
 
-      {/* Layout and zoom indicators */}
+      {/* Layout and zoom indicators - top left */}
       <div className="absolute top-4 left-4 z-10">
         <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm space-y-1">
           <div>Layout: {layoutDirection}</div>
