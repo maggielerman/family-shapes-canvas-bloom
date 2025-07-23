@@ -158,7 +158,7 @@ const Dashboard = () => {
 
       // Check if organization needs onboarding
       if (org.type === 'fertility_clinic' && 
-          org.description === 'Organization created by user') {
+          org.description === 'Organization created during signup') {
         navigate(`/organizations/${organizationId}/onboarding`);
       } else {
         navigate(`/organizations/${organizationId}`);
