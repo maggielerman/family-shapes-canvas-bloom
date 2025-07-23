@@ -56,45 +56,6 @@ const Dashboard = () => {
     }
   }, [user, fetchUserData]);
 
-  const fetchUserData = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      setIsLoadingData(true);
-
-      // Fetch user profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('id, full_name, avatar_url, bio')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-        toast({
-          title: "Error loading profile",
-          description: "There was an issue loading your profile data.",
-          variant: "destructive",
-        });
-      } else {
-        setProfile(profileData);
-      }
-
-      // Fetch user organizations
-      await fetchOrganizations();
-
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingData(false);
-    }
-  }, [user, toast, fetchOrganizations]);
-
   const fetchOrganizations = useCallback(async () => {
     if (!user) return;
 
@@ -146,6 +107,45 @@ const Dashboard = () => {
       console.error('Error fetching organizations:', error);
     }
   }, [user]);
+
+  const fetchUserData = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      setIsLoadingData(true);
+
+      // Fetch user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, avatar_url, bio')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        toast({
+          title: "Error loading profile",
+          description: "There was an issue loading your profile data.",
+          variant: "destructive",
+        });
+      } else {
+        setProfile(profileData);
+      }
+
+      // Fetch user organizations
+      await fetchOrganizations();
+
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [user, toast, fetchOrganizations]);
 
   const checkOrganizationSetup = useCallback(async (organizationId: string) => {
     try {
