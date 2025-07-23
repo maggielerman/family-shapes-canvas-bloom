@@ -132,7 +132,7 @@ export default function People() {
         const { data: connectionsData, error: connectionsError } = await supabase
           .from('connections')
           .select('from_person_id, to_person_id')
-          .or(`from_person_id.in.(${personIds.join(',')}),to_person_id.in.(${personIds.join(',')})`);
+          .or(`from_person_id.in.(${personIds.map(id => `"${id}"`).join(',')}),to_person_id.in.(${personIds.map(id => `"${id}"`).join(',')})`);
 
         if (connectionsError) throw connectionsError;
         allConnections = connectionsData || [];
@@ -183,7 +183,7 @@ export default function People() {
       await supabase
         .from('connections')
         .delete()
-        .or(`from_person_id.eq.${personId},to_person_id.eq.${personId}`);
+        .or(`from_person_id.eq."${personId}",to_person_id.eq."${personId}"`);
 
       // Delete the person
       const { error } = await supabase
