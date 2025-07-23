@@ -28,8 +28,7 @@ export function processConnections(
     id: c.id,
     from_person_id: c.from_person_id,
     to_person_id: c.to_person_id,
-    relationship_type: c.relationship_type,
-    family_tree_id: c.family_tree_id
+    relationship_type: c.relationship_type
   })));
 
   // Use only generational connections for tree structure
@@ -37,8 +36,7 @@ export function processConnections(
     id: c.id,
     from_person_id: c.from_person_id,
     to_person_id: c.to_person_id,
-    relationship_type: c.relationship_type,
-    family_tree_id: c.family_tree_id
+    relationship_type: c.relationship_type
   })));
 
   return {
