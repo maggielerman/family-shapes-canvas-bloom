@@ -88,7 +88,8 @@ export default function People() {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
+      // First, get all persons
+      const { data: personsData, error: personsError } = await supabase
         .from('persons')
         .select(`
           id,
@@ -113,32 +114,49 @@ export default function People() {
         .order('is_self', { ascending: false })
         .order('name');
 
-      if (error) throw error;
+      if (personsError) throw personsError;
 
-      // Get counts for each person
-      const personsWithCounts = await Promise.all(
-        (data || []).map(async (person) => {
-          // Count family trees this person is in using the family_tree_members junction table
-          const { count: treeCount } = await supabase
-            .from('family_tree_members')
-            .select('*', { count: 'exact', head: true })
-            .eq('person_id', person.id);
+      // Get all family tree member counts in a single query
+      const { data: treeCounts, error: treeError } = await supabase
+        .from('family_tree_members')
+        .select('person_id, count')
+        .in('person_id', (personsData || []).map(p => p.id));
 
-          // Count connections
-          const { count: connectionCount } = await supabase
-            .from('connections')
-            .select('*', { count: 'exact', head: true })
-            .or(`from_person_id.eq.${person.id},to_person_id.eq.${person.id}`);
+      if (treeError) throw treeError;
 
-          return {
-            ...person,
-            _count: {
-              family_trees: treeCount || 0,
-              connections: connectionCount || 0
-            }
-          };
-        })
-      );
+      // Get all connection counts in a single query
+      const personIds = (personsData || []).map(p => p.id);
+      const { data: connectionCounts, error: connectionError } = await supabase
+        .from('connections')
+        .select('from_person_id, to_person_id')
+        .or(`from_person_id.in.(${personIds.join(',')}),to_person_id.in.(${personIds.join(',')})`);
+
+      if (connectionError) throw connectionError;
+
+      // Create lookup maps for efficient counting
+      const treeCountMap = new Map();
+      (treeCounts || []).forEach(item => {
+        treeCountMap.set(item.person_id, (treeCountMap.get(item.person_id) || 0) + 1);
+      });
+
+      const connectionCountMap = new Map();
+      (connectionCounts || []).forEach(connection => {
+        if (connection.from_person_id) {
+          connectionCountMap.set(connection.from_person_id, (connectionCountMap.get(connection.from_person_id) || 0) + 1);
+        }
+        if (connection.to_person_id) {
+          connectionCountMap.set(connection.to_person_id, (connectionCountMap.get(connection.to_person_id) || 0) + 1);
+        }
+      });
+
+      // Combine the data
+      const personsWithCounts = (personsData || []).map(person => ({
+        ...person,
+        _count: {
+          family_trees: treeCountMap.get(person.id) || 0,
+          connections: connectionCountMap.get(person.id) || 0
+        }
+      }));
 
       setPersons(personsWithCounts);
     } catch (error) {
