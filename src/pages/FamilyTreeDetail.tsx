@@ -315,6 +315,7 @@ export default function FamilyTreeDetail() {
             <h2 className="text-xl font-semibold">Family Connections</h2>
           </div>
           <ConnectionManager 
+            familyTreeId={familyTree.id}
             persons={persons}
             onConnectionUpdated={fetchConnections}
           />

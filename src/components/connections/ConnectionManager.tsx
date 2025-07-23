@@ -54,6 +54,8 @@ import { RelationshipAttributeSelector } from '@/components/family-trees/Relatio
 import { RelationshipAttributeHelpers } from '@/types/relationshipAttributes';
 
 interface ConnectionManagerProps {
+  // Family tree context (for tree-specific connections)
+  familyTreeId?: string;
   // Person context (for person-specific connections)
   personId?: string;
   // Available persons for selection
@@ -67,6 +69,7 @@ interface ConnectionManagerProps {
 }
 
 export function ConnectionManager({
+  familyTreeId,
   personId,
   persons,
   onConnectionUpdated,
@@ -90,7 +93,7 @@ export function ConnectionManager({
 
   useEffect(() => {
     fetchConnections();
-  }, [personId]);
+  }, [personId, familyTreeId]);
 
   const fetchConnections = async () => {
     try {
@@ -100,6 +103,15 @@ export function ConnectionManager({
       if (personId) {
         // Get connections for a specific person
         fetchedConnections = await ConnectionService.getConnectionsForPerson(personId);
+      } else if (familyTreeId) {
+        // Get connections for a specific family tree
+        const treeConnections = await ConnectionService.getConnectionsForFamilyTree(familyTreeId);
+        fetchedConnections = treeConnections.map(conn => ({
+          ...conn,
+          direction: 'outgoing' as const,
+          other_person_name: getPersonName(conn.to_person_id),
+          other_person_id: conn.to_person_id
+        }));
       } else {
         // Get all connections between the provided persons
         const allConnections = await ConnectionService.getAllConnections();

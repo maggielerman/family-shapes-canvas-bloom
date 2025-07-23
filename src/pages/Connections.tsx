@@ -130,6 +130,11 @@ export default function Connections() {
 
   const handleConnectionUpdated = () => {
     fetchAllConnections();
+    fetchFamilyTreeMembers();
+    toast({
+      title: "Success",
+      description: "Connections updated successfully",
+    });
   };
 
   // Calculate statistics
@@ -243,52 +248,16 @@ export default function Connections() {
                 All Family Connections
               </CardTitle>
               <CardDescription>
-                View all connections between people in your family trees
+                View and manage all connections between people in your family trees
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {connections.length === 0 ? (
-                <div className="text-center py-8">
-                  <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Connections Yet</h3>
-                  <p className="text-muted-foreground">
-                    Start building your family tree by adding connections between people.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground mb-4">
-                    Showing {connections.length} connections between {persons.length} people
-                  </div>
-                  <div className="grid gap-4">
-                    {connections.map((connection) => {
-                      const fromPerson = persons.find(p => p.id === connection.from_person_id);
-                      const toPerson = persons.find(p => p.id === connection.to_person_id);
-                      const relationshipType = connection.relationship_type;
-                      
-                      return (
-                        <div key={connection.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{fromPerson?.name || 'Unknown'}</span>
-                              <span className="text-muted-foreground">→</span>
-                              <span className="font-medium">{toPerson?.name || 'Unknown'}</span>
-                            </div>
-                            <Badge variant="outline" className="ml-2">
-                              {relationshipType}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {connection.notes && (
-                              <span className="italic">"{connection.notes}"</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              <ConnectionManager 
+                persons={persons}
+                onConnectionUpdated={handleConnectionUpdated}
+                title="All Connections"
+                subtitle={`Showing all ${connections.length} connections between ${persons.length} people`}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -296,7 +265,7 @@ export default function Connections() {
         <TabsContent value="by-tree" className="space-y-6">
           <div className="space-y-6">
             {familyTrees.map((tree) => {
-              // Get people in this family tree
+              // Get people in this family tree for count display
               const treePersonIds = new Set();
               const treeConnections = connections.filter(conn => {
                 const fromPerson = persons.find(p => p.id === conn.from_person_id);
@@ -338,38 +307,13 @@ export default function Connections() {
                     )}
                   </CardHeader>
                   <CardContent>
-                    {treeConnections.length === 0 ? (
-                      <div className="text-center py-4 text-muted-foreground">
-                        No connections in this family tree yet
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {treeConnections.map((connection) => {
-                          const fromPerson = persons.find(p => p.id === connection.from_person_id);
-                          const toPerson = persons.find(p => p.id === connection.to_person_id);
-                          
-                          return (
-                            <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{fromPerson?.name || 'Unknown'}</span>
-                                  <span className="text-muted-foreground">→</span>
-                                  <span className="font-medium">{toPerson?.name || 'Unknown'}</span>
-                                </div>
-                                <Badge variant="outline" className="ml-2">
-                                  {connection.relationship_type}
-                                </Badge>
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {connection.notes && (
-                                  <span className="italic">"{connection.notes}"</span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <ConnectionManager 
+                      familyTreeId={tree.id}
+                      persons={persons}
+                      onConnectionUpdated={handleConnectionUpdated}
+                      title={`${tree.name} Connections`}
+                      subtitle={`${treeConnections.length} connections between ${treePersonIds.size} people`}
+                    />
                   </CardContent>
                 </Card>
               );
@@ -407,32 +351,12 @@ export default function Connections() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {orphanedConnections.map((connection) => {
-                        const fromPerson = persons.find(p => p.id === connection.from_person_id);
-                        const toPerson = persons.find(p => p.id === connection.to_person_id);
-                        
-                        return (
-                          <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{fromPerson?.name || 'Unknown'}</span>
-                                <span className="text-muted-foreground">→</span>
-                                <span className="font-medium">{toPerson?.name || 'Unknown'}</span>
-                              </div>
-                              <Badge variant="outline" className="ml-2">
-                                {connection.relationship_type}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {connection.notes && (
-                                <span className="italic">"{connection.notes}"</span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <ConnectionManager 
+                      persons={persons}
+                      onConnectionUpdated={handleConnectionUpdated}
+                      title="Other Connections"
+                      subtitle={`${orphanedConnections.length} connections between people not in any family tree`}
+                    />
                   </CardContent>
                 </Card>
               );
