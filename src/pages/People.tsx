@@ -89,6 +89,7 @@ export default function People() {
       setLoading(true);
 
       // Use the persons_with_trees view to get persons and their tree counts in one query
+      // The view uses SECURITY INVOKER, so RLS policies automatically filter by user_id
       const { data: personsData, error: personsError } = await supabase
         .from('persons_with_trees')
         .select(`
@@ -111,7 +112,6 @@ export default function People() {
           created_at,
           family_trees
         `)
-        .eq('user_id', user.id)
         .order('is_self', { ascending: false })
         .order('name');
 
