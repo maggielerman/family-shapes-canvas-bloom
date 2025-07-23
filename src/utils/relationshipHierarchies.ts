@@ -96,14 +96,18 @@ export function getChildren(personId: string, hierarchy: RelationshipHierarchy):
  */
 export function getSiblings(personId: string, hierarchy: RelationshipHierarchy): Person[] {
   const parents = getParents(personId, hierarchy);
-  const siblings: Person[] = [];
+  const siblingIds = new Set<string>();
   
   parents.forEach(parent => {
     const parentChildren = getChildren(parent.id, hierarchy);
-    siblings.push(...parentChildren.filter(child => child.id !== personId));
+    parentChildren.forEach(child => {
+      if (child.id !== personId) {
+        siblingIds.add(child.id);
+      }
+    });
   });
   
-  return siblings;
+  return hierarchy.persons.filter(person => siblingIds.has(person.id));
 }
 
 /**
