@@ -142,18 +142,25 @@ export default function People() {
       const connectionCountMap = new Map();
       allConnections.forEach(connection => {
         // Count connections where the person is either the from_person_id or to_person_id
+        // Avoid double-counting self-connections by checking if from_person_id equals to_person_id
         if (personIds.includes(connection.from_person_id)) {
           connectionCountMap.set(connection.from_person_id, (connectionCountMap.get(connection.from_person_id) || 0) + 1);
         }
-        if (personIds.includes(connection.to_person_id)) {
+        if (personIds.includes(connection.to_person_id) && connection.from_person_id !== connection.to_person_id) {
+          // Only count to_person_id if it's not a self-connection (already counted above)
           connectionCountMap.set(connection.to_person_id, (connectionCountMap.get(connection.to_person_id) || 0) + 1);
         }
       });
 
       // Combine the data
       const personsWithCounts = personsData.map(person => {
-        // Count family trees from the family_trees JSON array
-        const familyTreesCount = Array.isArray(person.family_trees) ? person.family_trees.length : 0;
+        // Count family trees - handle both array and number cases
+        let familyTreesCount = 0;
+        if (Array.isArray(person.family_trees)) {
+          familyTreesCount = person.family_trees.length;
+        } else if (typeof person.family_trees === 'number') {
+          familyTreesCount = person.family_trees;
+        }
         
         return {
           ...person,
@@ -183,7 +190,7 @@ export default function People() {
       await supabase
         .from('connections')
         .delete()
-        .or(`from_person_id.eq."${personId}",to_person_id.eq."${personId}"`);
+        .or(`from_person_id.eq.${personId},to_person_id.eq.${personId}`);
 
       // Delete the person
       const { error } = await supabase
