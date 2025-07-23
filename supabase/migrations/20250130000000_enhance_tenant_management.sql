@@ -130,9 +130,14 @@ DROP POLICY IF EXISTS "Users can insert own profile" ON public.user_profiles;
 CREATE POLICY "Users can insert own profile" ON public.user_profiles
     FOR INSERT WITH CHECK (id = auth.uid());
 
--- Allow organization owners to view their organization
+-- Allow organization owners to view and update their organization
+DROP POLICY IF EXISTS "Organization owners can view their organization" ON public.organizations;
 CREATE POLICY "Organization owners can view their organization" ON public.organizations
     FOR SELECT USING (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS "Organization owners can update their organization" ON public.organizations;
+CREATE POLICY "Organization owners can update their organization" ON public.organizations
+    FOR UPDATE USING (owner_id = auth.uid());
 
 -- Update existing users to have account_type if not set
 UPDATE public.user_profiles 
