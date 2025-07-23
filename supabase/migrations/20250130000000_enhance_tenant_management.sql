@@ -1,5 +1,5 @@
 -- Migration: Enhanced Tenant Management System
--- Adds proper organization signup flow and account type tracking
+-- Adds organization management for existing users
 
 -- Add account_type to user_profiles to track individual vs organization accounts
 ALTER TABLE public.user_profiles 
@@ -13,93 +13,90 @@ ADD COLUMN IF NOT EXISTS organization_id uuid REFERENCES public.organizations(id
 CREATE INDEX IF NOT EXISTS idx_user_profiles_organization_id ON public.user_profiles(organization_id);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_account_type ON public.user_profiles(account_type);
 
--- Function to automatically create organization during signup for organization accounts
-CREATE OR REPLACE FUNCTION handle_organization_signup()
-RETURNS TRIGGER AS $$
+-- Function to create organization for existing user
+CREATE OR REPLACE FUNCTION create_organization_for_user(
+    org_name text,
+    org_type text DEFAULT 'fertility_clinic',
+    org_description text DEFAULT NULL
+)
+RETURNS uuid AS $$
 DECLARE
-    org_name text;
     org_slug text;
     org_subdomain text;
     new_org_id uuid;
+    current_user_id uuid;
 BEGIN
-    -- Only process if this is an organization account
-    IF NEW.account_type = 'organization' AND NEW.full_name IS NOT NULL THEN
-        -- Extract organization name from full_name
-        org_name := NEW.full_name;
-        
-        -- Generate slug and subdomain from organization name
-        org_slug := lower(regexp_replace(org_name, '[^a-zA-Z0-9]+', '-', 'g'));
-        org_slug := trim(both '-' from org_slug);
-        
-        -- Ensure slug uniqueness by appending random suffix if needed
-        WHILE EXISTS (SELECT 1 FROM public.organizations WHERE slug = org_slug) LOOP
-            org_slug := org_slug || '-' || substr(gen_random_uuid()::text, 1, 8);
-        END LOOP;
-        
-        org_subdomain := org_slug;
-        
-        -- Ensure subdomain uniqueness
-        WHILE EXISTS (SELECT 1 FROM public.organizations WHERE subdomain = org_subdomain) LOOP
-            org_subdomain := org_subdomain || '-' || substr(gen_random_uuid()::text, 1, 8);
-        END LOOP;
-        
-        -- Create the organization
-        INSERT INTO public.organizations (
-            name,
-            slug,
-            subdomain,
-            type,
-            description,
-            visibility,
-            owner_id
-        ) VALUES (
-            org_name,
-            org_slug,
-            org_subdomain,
-            'fertility_clinic', -- Default type, can be changed later
-            'Organization created during signup',
-            'private',
-            NEW.id
-        ) RETURNING id INTO new_org_id;
-        
-        -- Link the user profile to the organization
-        NEW.organization_id := new_org_id;
+    -- Get current user ID
+    current_user_id := auth.uid();
+    
+    -- Ensure user is authenticated
+    IF current_user_id IS NULL THEN
+        RAISE EXCEPTION 'User must be authenticated to create an organization';
     END IF;
     
-    RETURN NEW;
+    -- Ensure organization name is provided
+    IF org_name IS NULL OR trim(org_name) = '' THEN
+        RAISE EXCEPTION 'Organization name is required';
+    END IF;
+    
+    -- Generate slug and subdomain from organization name
+    org_slug := lower(regexp_replace(org_name, '[^a-zA-Z0-9]+', '-', 'g'));
+    org_slug := trim(both '-' from org_slug);
+    
+    -- Ensure slug uniqueness by appending random suffix if needed
+    WHILE EXISTS (SELECT 1 FROM public.organizations WHERE slug = org_slug) LOOP
+        org_slug := org_slug || '-' || substr(gen_random_uuid()::text, 1, 8);
+    END LOOP;
+    
+    org_subdomain := org_slug;
+    
+    -- Ensure subdomain uniqueness
+    WHILE EXISTS (SELECT 1 FROM public.organizations WHERE subdomain = org_subdomain) LOOP
+        org_subdomain := org_subdomain || '-' || substr(gen_random_uuid()::text, 1, 8);
+    END LOOP;
+    
+    -- Create the organization
+    INSERT INTO public.organizations (
+        name,
+        slug,
+        subdomain,
+        type,
+        description,
+        visibility,
+        owner_id
+    ) VALUES (
+        org_name,
+        org_slug,
+        org_subdomain,
+        org_type,
+        COALESCE(org_description, 'Organization created by user'),
+        'private',
+        current_user_id
+    ) RETURNING id INTO new_org_id;
+    
+    -- Update user profile to link to organization and change account type
+    UPDATE public.user_profiles 
+    SET organization_id = new_org_id,
+        account_type = 'organization'
+    WHERE id = current_user_id;
+    
+    RETURN new_org_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger for organization signup
-DROP TRIGGER IF EXISTS trigger_handle_organization_signup ON public.user_profiles;
-CREATE TRIGGER trigger_handle_organization_signup
-    BEFORE INSERT ON public.user_profiles
-    FOR EACH ROW
-    EXECUTE FUNCTION handle_organization_signup();
-
--- Function to handle organization signup from Auth metadata
+-- Function to handle new user signup (simplified - no organization logic)
 CREATE OR REPLACE FUNCTION handle_new_user() 
 RETURNS TRIGGER AS $$
-DECLARE
-    account_type_value text;
-    org_name text;
 BEGIN
-    -- Extract account type and organization name from user metadata
-    account_type_value := COALESCE(NEW.raw_user_meta_data->>'account_type', 'individual');
-    org_name := NEW.raw_user_meta_data->>'organization_name';
-    
-    -- Create user profile
+    -- Create user profile for new auth user
     INSERT INTO public.user_profiles (
         id,
         full_name,
         account_type
     ) VALUES (
         NEW.id,
-        CASE 
-            WHEN account_type_value = 'organization' AND org_name IS NOT NULL THEN org_name
-            ELSE NEW.raw_user_meta_data->>'full_name'
-        END,
-        account_type_value
+        NEW.raw_user_meta_data->>'full_name',
+        'individual' -- Default to individual account
     );
     
     RETURN NEW;
@@ -114,10 +111,10 @@ CREATE TRIGGER on_auth_user_created
     EXECUTE FUNCTION handle_new_user();
 
 -- Grant necessary permissions
-GRANT EXECUTE ON FUNCTION handle_organization_signup() TO authenticated;
+GRANT EXECUTE ON FUNCTION create_organization_for_user(text, text, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION handle_new_user() TO authenticated;
 
--- Update RLS policies for user_profiles to handle organization accounts
+-- Update RLS policies for user_profiles
 DROP POLICY IF EXISTS "Users can view own profile" ON public.user_profiles;
 CREATE POLICY "Users can view own profile" ON public.user_profiles
     FOR SELECT USING (id = auth.uid());
@@ -130,9 +127,14 @@ DROP POLICY IF EXISTS "Users can insert own profile" ON public.user_profiles;
 CREATE POLICY "Users can insert own profile" ON public.user_profiles
     FOR INSERT WITH CHECK (id = auth.uid());
 
--- Allow organization owners to view their organization
+-- Allow organization owners to view and update their organization
+DROP POLICY IF EXISTS "Organization owners can view their organization" ON public.organizations;
 CREATE POLICY "Organization owners can view their organization" ON public.organizations
     FOR SELECT USING (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS "Organization owners can update their organization" ON public.organizations;
+CREATE POLICY "Organization owners can update their organization" ON public.organizations
+    FOR UPDATE USING (owner_id = auth.uid());
 
 -- Update existing users to have account_type if not set
 UPDATE public.user_profiles 
