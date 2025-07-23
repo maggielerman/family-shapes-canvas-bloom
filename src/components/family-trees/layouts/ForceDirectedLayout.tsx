@@ -1,24 +1,8 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { 
-  calculateGenerations, 
-  getGenerationalConnections, 
-  GenerationInfo 
-} from '@/utils/generationUtils';
-
-interface Person {
-  id: string;
-  name: string;
-  gender?: string | null;
-  profile_photo_url?: string | null;
-}
-
-interface Connection {
-  id: string;
-  from_person_id: string;
-  to_person_id: string;
-  relationship_type: string;
-}
+import { processConnections } from '@/utils/connectionProcessing';
+import { Person } from '@/types/person';
+import { Connection } from '@/types/connection';
 
 interface RelationshipType {
   value: string;
@@ -57,19 +41,9 @@ export function ForceDirectedLayout({ persons, connections, relationshipTypes, w
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
-    // Create a set of valid person IDs for quick lookup
-    const validPersonIds = new Set(persons.map(p => p.id));
-    
-    // Filter out connections that reference non-existent persons
-    const validConnections = connections.filter(c => 
-      validPersonIds.has(c.from_person_id) && validPersonIds.has(c.to_person_id)
-    );
-
-    // Calculate generations for color coding
-    const generationMap = calculateGenerations(persons, validConnections);
-
-    // Use only generational connections for visible links
-    const generationalConnections = getGenerationalConnections(validConnections);
+    // Use shared connection processing utility
+    const processed = processConnections(persons, connections);
+    const { generationalConnections, generationMap } = processed;
 
     // Prepare data for force simulation
     const nodes: ForceNode[] = persons.map(p => {

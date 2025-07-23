@@ -2,17 +2,15 @@ import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers, TreePine } from "lucide-react";
+import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers, TreePine, Building2, Share2 } from "lucide-react";
 import { AddPersonDialog } from "./AddPersonDialog";
 import { PersonCardDialog } from "@/components/people/PersonCard";
-import { ConnectionManager } from "@/components/connections/ConnectionManager";
 
 // Lazy load heavy chart components for better performance
-const TreeLayout = lazy(() => import("./layouts/TreeLayout").then(module => ({ default: module.TreeLayout })));
-const RadialTreeLayout = lazy(() => import("./layouts/RadialTreeLayout").then(module => ({ default: module.RadialTreeLayout })));
+
 const ForceDirectedLayout = lazy(() => import("./layouts/ForceDirectedLayout").then(module => ({ default: module.ForceDirectedLayout })));
-const ReactD3TreeLayout = lazy(() => import("./layouts/ReactD3TreeLayout").then(module => ({ default: module.ReactD3TreeLayout })));
-const ClusterLayout = lazy(() => import("./layouts/ClusterLayout").then(module => ({ default: module.ClusterLayout })));
+
+const DagreLayout = lazy(() => import("./layouts/DagreLayout").then(module => ({ default: module.DagreLayout })));
 const XYFlowTreeBuilder = lazy(() => import("./XYFlowTreeBuilder").then(module => ({ default: module.XYFlowTreeBuilder })));
 
 import { supabase } from "@/integrations/supabase/client";
@@ -40,11 +38,12 @@ const ChartLoadingSpinner = () => (
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
   persons: Person[];
+  connections: Connection[];
   onPersonAdded: () => void;
+  onConnectionsUpdated: () => void;
 }
 
-export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }: FamilyTreeVisualizationProps) {
-  const [connections, setConnections] = useState<Connection[]>([]);
+export function FamilyTreeVisualization({ familyTreeId, persons, connections, onPersonAdded, onConnectionsUpdated }: FamilyTreeVisualizationProps) {
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -56,21 +55,17 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
     onPersonAdded: () => {
       setAddPersonDialogOpen(false);
       // Refresh the tree data
-      fetchConnections();
+      onConnectionsUpdated();
     },
     onDonorAdded: () => {
       setAddPersonDialogOpen(false);
       // Refresh the tree data
-      fetchConnections();
+      onConnectionsUpdated();
     },
   });
 
   // Use centralized relationship types
   const relationshipTypes = RelationshipTypeHelpers.getForSelection();
-
-  useEffect(() => {
-    fetchConnections();
-  }, [familyTreeId]);
 
   // Handle responsive dimensions
   useEffect(() => {
@@ -88,20 +83,6 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
-
-  const fetchConnections = async () => {
-    try {
-      const connectionsData = await ConnectionService.getConnectionsForFamilyTree(familyTreeId);
-      setConnections(connectionsData);
-    } catch (error) {
-      console.error('Error fetching connections:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load connections",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handlePersonClick = (person: Person) => {
     setViewingPerson(person);
@@ -126,13 +107,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </Button>
         </div>
         
-        <div className="flex gap-2">
-          <ConnectionManager 
-            familyTreeId={familyTreeId}
-            persons={persons}
-            onConnectionUpdated={fetchConnections}
-          />
-        </div>
+        
       </div>
 
       {/* Generation Stats */}
@@ -181,27 +156,15 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </Button>
         </div>
       ) : (
-        <Tabs defaultValue="tree" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
-            <TabsTrigger value="tree" className="flex items-center gap-2">
-              <GitBranch className="w-4 h-4" />
-              <span className="hidden lg:inline">Tree</span>
-            </TabsTrigger>
-            <TabsTrigger value="radial" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              <span className="hidden lg:inline">Radial</span>
-            </TabsTrigger>
+        <Tabs defaultValue="force" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3">
             <TabsTrigger value="force" className="flex items-center gap-2">
               <Network className="w-4 h-4" />
               <span className="hidden lg:inline">Force</span>
             </TabsTrigger>
-            <TabsTrigger value="d3tree" className="flex items-center gap-2">
-              <TreePine className="w-4 h-4" />
-              <span className="hidden lg:inline">D3 Tree</span>
-            </TabsTrigger>
-            <TabsTrigger value="cluster" className="flex items-center gap-2">
-              <Layers className="w-4 h-4" />
-              <span className="hidden lg:inline">Cluster</span>
+            <TabsTrigger value="dagre" className="flex items-center gap-2">
+              <Share2 className="w-4 h-4" />
+              <span className="hidden lg:inline">Dagre</span>
             </TabsTrigger>
             <TabsTrigger value="xyflow" className="flex items-center gap-2">
               <Zap className="w-4 h-4" />
@@ -209,31 +172,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
             </TabsTrigger>
           </TabsList>
 
-        <TabsContent value="tree" className="mt-6">
-          <Suspense fallback={<ChartLoadingSpinner />}>
-            <TreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={dimensions.width}
-              height={dimensions.height}
-              onPersonClick={handlePersonClick}
-            />
-          </Suspense>
-        </TabsContent>
 
-        <TabsContent value="radial" className="mt-6">
-          <Suspense fallback={<ChartLoadingSpinner />}>
-            <RadialTreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={dimensions.width}
-              height={dimensions.height}
-              onPersonClick={handlePersonClick}
-            />
-          </Suspense>
-        </TabsContent>
 
         <TabsContent value="force" className="mt-6">
           <Suspense fallback={<ChartLoadingSpinner />}>
@@ -248,22 +187,11 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
           </Suspense>
         </TabsContent>
 
-        <TabsContent value="d3tree" className="mt-6">
-          <Suspense fallback={<ChartLoadingSpinner />}>
-            <ReactD3TreeLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={dimensions.width}
-              height={dimensions.height}
-              onPersonClick={handlePersonClick}
-            />
-          </Suspense>
-        </TabsContent>
 
-        <TabsContent value="cluster" className="mt-6">
+
+        <TabsContent value="dagre" className="mt-6">
           <Suspense fallback={<ChartLoadingSpinner />}>
-            <ClusterLayout
+            <DagreLayout
               persons={persons}
               connections={connections}
               relationshipTypes={relationshipTypes}

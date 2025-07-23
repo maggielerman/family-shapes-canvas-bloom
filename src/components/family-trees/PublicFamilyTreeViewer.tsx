@@ -18,8 +18,9 @@ import {
   Lock,
   Globe
 } from "lucide-react";
-import { TreeLayout } from "./layouts/TreeLayout";
+
 import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
+import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -308,7 +309,7 @@ export function PublicFamilyTreeViewer({
                     </AlertDescription>
                   </Alert>
                 </div>
-                <TreeLayout
+                <ForceDirectedLayout
                   persons={persons as any[]}
                   connections={connections as any[]}
                   relationshipTypes={relationshipTypes}
