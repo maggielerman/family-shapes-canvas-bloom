@@ -7,6 +7,7 @@ import { Connection } from '@/types/connection';
 import { GenerationInfo } from '@/utils/generationUtils';
 import { LayoutRelationshipType } from '@/types/layoutTypes';
 import { TreeToolbar } from './TreeToolbar';
+import { LayoutSwitcher } from './LayoutSwitcher';
 import { RelationshipFilter, RELATIONSHIP_CATEGORIES, RelationshipCategory } from './RelationshipFilter';
 
 interface DagreLayoutProps {
@@ -16,8 +17,8 @@ interface DagreLayoutProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
-  currentLayout: 'force' | 'dagre';
-  onLayoutToggle: () => void;
+  currentLayout: 'force' | 'radial' | 'dagre';
+  onLayoutChange: (layout: 'force' | 'radial' | 'dagre') => void;
 }
 
 interface DagreNodeData {
@@ -44,7 +45,7 @@ export function DagreLayout({
   height, 
   onPersonClick,
   currentLayout,
-  onLayoutToggle
+  onLayoutChange
 }: DagreLayoutProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -410,11 +411,10 @@ export function DagreLayout({
       <div className="absolute top-4 right-4 z-10">
         <TreeToolbar
           persons={persons}
-          currentLayout="dagre"
+          currentLayout={currentLayout}
           layoutDirection={layoutDirection}
           onCenterSelf={handleCenterSelf}
           onZoomToFit={handleZoomToFit}
-          onLayoutToggle={() => onLayoutToggle()}
           onLayoutDirectionChange={handleLayoutChange}
           className="bg-background/80 backdrop-blur-sm rounded-lg p-3"
         />
@@ -429,8 +429,17 @@ export function DagreLayout({
         />
       </div>
 
-      {/* Info Panel - top left */}
+      {/* Layout Switcher - top left */}
       <div className="absolute top-4 left-4 z-10">
+        <LayoutSwitcher
+          currentLayout={currentLayout}
+          onLayoutChange={onLayoutChange}
+          className="mb-3"
+        />
+      </div>
+
+      {/* Info Panel - top left below layout switcher */}
+      <div className="absolute top-20 left-4 z-10">
         <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm space-y-1">
           <div>Layout: {layoutDirection}</div>
           <div>{Math.round(zoomLevel * 100)}%</div>

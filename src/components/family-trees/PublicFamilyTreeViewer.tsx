@@ -21,6 +21,7 @@ import {
 
 import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
 import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
+import { RadialLayout } from "./layouts/RadialLayout";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -74,9 +75,14 @@ export function PublicFamilyTreeViewer({
   const [connections, setConnections] = useState<PublicConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre'>('force');
 
   // Use centralized relationship types
   const relationshipTypes = RelationshipTypeHelpers.getForSelection();
+
+  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre') => {
+    setCurrentLayout(layout);
+  };
 
   useEffect(() => {
     if (familyTreeId) {
@@ -313,14 +319,33 @@ export function PublicFamilyTreeViewer({
                     </AlertDescription>
                   </Alert>
                 </div>
-                <ForceDirectedLayout
-                  persons={persons as any[]}
-                  connections={connections as any[]}
-                  relationshipTypes={relationshipTypes}
-                  width={800}
-                  height={600}
-                  onPersonClick={() => {}}
-                />
+                {currentLayout === 'force' ? (
+                  <ForceDirectedLayout
+                    persons={persons as any[]}
+                    connections={connections as any[]}
+                    relationshipTypes={relationshipTypes}
+                    width={800}
+                    height={600}
+                    onPersonClick={() => {}}
+                    currentLayout={currentLayout}
+                    onLayoutChange={handleLayoutChange}
+                  />
+                ) : currentLayout === 'radial' ? (
+                  <RadialLayout
+                    persons={persons as any[]}
+                    connections={connections as any[]}
+                    relationshipTypes={relationshipTypes}
+                    width={800}
+                    height={600}
+                    onPersonClick={() => {}}
+                    currentLayout={currentLayout}
+                    onLayoutChange={handleLayoutChange}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-96">
+                    <div className="text-muted-foreground">Dagre layout not available in public view</div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

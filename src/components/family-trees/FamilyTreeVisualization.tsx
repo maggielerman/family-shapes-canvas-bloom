@@ -5,6 +5,7 @@ import { PersonCardDialog } from '@/components/people/PersonCard';
 import { EditPersonDialog } from '@/components/people/EditPersonDialog';
 import { AddPersonDialog } from './AddPersonDialog';
 import { ForceDirectedLayout } from './layouts/ForceDirectedLayout';
+import { RadialLayout } from './layouts/RadialLayout';
 import { DagreLayout } from './layouts/DagreLayout';
 import { usePersonManagement } from '@/hooks/use-person-management';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +32,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [currentLayout, setCurrentLayout] = useState<'force' | 'dagre'>('force');
+  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre'>('force');
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -73,8 +74,8 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     setViewingPerson(person);
   };
 
-  const toggleLayout = () => {
-    setCurrentLayout(currentLayout === 'force' ? 'dagre' : 'force');
+  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre') => {
+    setCurrentLayout(layout);
   };
 
   return (
@@ -106,7 +107,18 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                   height={dimensions.height}
                   onPersonClick={handlePersonClick}
                   currentLayout={currentLayout}
-                  onLayoutToggle={toggleLayout}
+                  onLayoutChange={handleLayoutChange}
+                />
+              ) : currentLayout === 'radial' ? (
+                <RadialLayout
+                  persons={persons}
+                  connections={connections}
+                  relationshipTypes={relationshipTypes}
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  onPersonClick={handlePersonClick}
+                  currentLayout={currentLayout}
+                  onLayoutChange={handleLayoutChange}
                 />
               ) : (
                 <DagreLayout
@@ -117,7 +129,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                   height={dimensions.height}
                   onPersonClick={handlePersonClick}
                   currentLayout={currentLayout}
-                  onLayoutToggle={toggleLayout}
+                  onLayoutChange={handleLayoutChange}
                 />
               )}
             </Suspense>

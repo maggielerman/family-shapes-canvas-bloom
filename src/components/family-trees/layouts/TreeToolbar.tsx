@@ -1,14 +1,13 @@
 import { Button } from '@/components/ui/button';
-import { User, Maximize2, Share2, Network, Grid3X3 } from 'lucide-react';
+import { User, Maximize2, Grid3X3 } from 'lucide-react';
 import { Person } from '@/types/person';
 
 interface TreeToolbarProps {
   persons: Person[];
-  currentLayout: 'force' | 'dagre';
+  currentLayout: 'force' | 'radial' | 'dagre';
   layoutDirection?: 'TB' | 'LR' | 'BT' | 'RL';
   onCenterSelf: () => void;
   onZoomToFit: () => void;
-  onLayoutToggle: () => void;
   onLayoutDirectionChange?: () => void;
   className?: string;
 }
@@ -19,7 +18,6 @@ export function TreeToolbar({
   layoutDirection,
   onCenterSelf,
   onZoomToFit,
-  onLayoutToggle,
   onLayoutDirectionChange,
   className = ''
 }: TreeToolbarProps) {
@@ -60,32 +58,17 @@ export function TreeToolbar({
 
       {/* Layout Controls */}
       <div className="flex flex-col gap-2">
-        {/* Layout Toggle Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onLayoutToggle}
-          className="h-8 w-8 p-0"
-          title={`Switch to ${currentLayout === 'force' ? 'Tree' : 'Force'} view`}
-        >
-          {currentLayout === 'force' ? (
-            <Share2 className="h-4 w-4" />
-          ) : (
-            <Network className="h-4 w-4" />
-          )}
-        </Button>
-
         {/* Layout Direction Toggle - only enabled in dagre mode */}
         <Button
           variant="outline"
           size="sm"
           onClick={onLayoutDirectionChange}
-          disabled={currentLayout === 'force' || !onLayoutDirectionChange}
+          disabled={currentLayout !== 'dagre' || !onLayoutDirectionChange}
           className="h-8 w-8 p-0"
           title={
-            currentLayout === 'force' 
-              ? 'Direction control only available in Tree view'
-              : `Current: ${layoutDirection}. Click to cycle through layouts.`
+            currentLayout !== 'dagre' 
+              ? 'Direction control only available in Tree layout'
+              : `Current: ${layoutDirection}. Click to cycle through orientations.`
           }
         >
           <Grid3X3 className="h-4 w-4" />

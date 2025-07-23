@@ -13,7 +13,7 @@ interface RelationshipType {
   color: string;
 }
 
-interface ForceDirectedLayoutProps {
+interface RadialLayoutProps {
   persons: Person[];
   connections: Connection[];
   relationshipTypes: RelationshipType[];
@@ -24,7 +24,26 @@ interface ForceDirectedLayoutProps {
   onLayoutChange: (layout: 'force' | 'radial' | 'dagre') => void;
 }
 
-export function ForceDirectedLayout({ 
+// Radial layout configuration
+interface RadialConfig {
+  centerRadius: number;
+  generationSpacing: number;
+  maxRadius: number;
+  linkDistance: number;
+  chargeStrength: number;
+  collisionRadius: number;
+}
+
+const RADIAL_CONFIG: RadialConfig = {
+  centerRadius: 80,
+  generationSpacing: 120,
+  maxRadius: 400,
+  linkDistance: 100,
+  chargeStrength: -200,
+  collisionRadius: 45
+};
+
+export function RadialLayout({ 
   persons, 
   connections, 
   relationshipTypes, 
@@ -33,7 +52,7 @@ export function ForceDirectedLayout({
   onPersonClick,
   currentLayout,
   onLayoutChange
-}: ForceDirectedLayoutProps) {
+}: RadialLayoutProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -92,6 +111,46 @@ export function ForceDirectedLayout({
     }));
   };
 
+  // Create radial force for generation-based circular arrangement
+  const createRadialForce = (generationMap: Map<string, any>) => {
+    return (alpha: number) => {
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      return (node: any) => {
+        const generation = generationMap.get(node.id)?.generation;
+        
+        if (generation !== undefined) {
+          // Calculate target radius based on generation
+          let targetRadius = RADIAL_CONFIG.centerRadius + (Math.abs(generation) * RADIAL_CONFIG.generationSpacing);
+          
+          // Cap the radius to prevent nodes from going off-screen
+          targetRadius = Math.min(targetRadius, RADIAL_CONFIG.maxRadius);
+          
+          // If this is generation 0 (self), keep closer to center
+          if (generation === 0) {
+            targetRadius = RADIAL_CONFIG.centerRadius / 2;
+          }
+
+          // Calculate current distance from center
+          const dx = node.x - centerX;
+          const dy = node.y - centerY;
+          const currentRadius = Math.sqrt(dx * dx + dy * dy);
+
+          if (currentRadius > 0) {
+            // Apply radial force toward target radius
+            const targetX = centerX + (dx / currentRadius) * targetRadius;
+            const targetY = centerY + (dy / currentRadius) * targetRadius;
+            
+            const forceStrength = alpha * 0.1;
+            node.vx += (targetX - node.x) * forceStrength;
+            node.vy += (targetY - node.y) * forceStrength;
+          }
+        }
+      };
+    };
+  };
+
   useEffect(() => {
     if (!svgRef.current || persons.length === 0) return;
 
@@ -111,6 +170,20 @@ export function ForceDirectedLayout({
     // Create nodes data from visible persons only
     const nodes = visiblePersons.map(person => {
       const generationInfo = generationMap.get(person.id);
+      
+      // For radial layout, start nodes at their target positions
+      let initialX = width / 2;
+      let initialY = height / 2;
+      
+      if (generationInfo?.generation !== undefined) {
+        const generation = generationInfo.generation;
+        const radius = RADIAL_CONFIG.centerRadius + (Math.abs(generation) * RADIAL_CONFIG.generationSpacing);
+        const angle = Math.random() * 2 * Math.PI;
+        
+        initialX = width / 2 + Math.cos(angle) * radius;
+        initialY = height / 2 + Math.sin(angle) * radius;
+      }
+
       return {
         id: person.id,
         name: person.name,
@@ -119,8 +192,8 @@ export function ForceDirectedLayout({
         generationColor: generationInfo?.color,
         profile_photo_url: person.profile_photo_url,
         gender: person.gender,
-        x: width / 2 + (Math.random() - 0.5) * 200,
-        y: height / 2 + (Math.random() - 0.5) * 200,
+        x: initialX,
+        y: initialY,
         fx: null as number | null,
         fy: null as number | null
       };
@@ -139,25 +212,56 @@ export function ForceDirectedLayout({
         connection
       }));
 
-    // Create simulation
+    // Create simulation with radial-specific forces
     const simulation = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id((d: any) => d.id).distance(120))
-      .force('charge', d3.forceManyBody().strength(-300))
+      .force('link', d3.forceLink(links).id((d: any) => d.id).distance(RADIAL_CONFIG.linkDistance))
+      .force('charge', d3.forceManyBody().strength(RADIAL_CONFIG.chargeStrength))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(50));
+      .force('collision', d3.forceCollide().radius(RADIAL_CONFIG.collisionRadius))
+      .force('radial', createRadialForce(generationMap));
 
     const g = svg.append('g');
 
-    // Create links
+    // Add generation circles for radial layout
+    const generations = Array.from(new Set(nodes.map(n => n.generation).filter(g => g !== undefined)));
+    
+    g.append('g')
+      .attr('class', 'generation-circles')
+      .selectAll('circle')
+      .data(generations)
+      .enter()
+      .append('circle')
+      .attr('cx', width / 2)
+      .attr('cy', height / 2)
+      .attr('r', generation => {
+        const absGen = Math.abs(generation!);
+        return RADIAL_CONFIG.centerRadius + (absGen * RADIAL_CONFIG.generationSpacing);
+      })
+      .attr('fill', 'none')
+      .attr('stroke', 'hsl(var(--border))')
+      .attr('stroke-opacity', 0.2)
+      .attr('stroke-dasharray', '2,2');
+
+    // Create links with enhanced styling for radial layout
     const link = g.append('g')
       .attr('class', 'links')
       .selectAll('line')
       .data(links)
       .enter()
       .append('line')
-      .attr('stroke', 'hsl(var(--border))')
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', 2);
+      .attr('stroke', d => {
+        // Different colors for different relationship types in radial layout
+        if (RELATIONSHIP_CATEGORIES.generational.includes(d.type as any)) {
+          return 'hsl(var(--chart-1))';
+        } else if (RELATIONSHIP_CATEGORIES.lateral.includes(d.type as any)) {
+          return 'hsl(var(--chart-2))';
+        } else if (RELATIONSHIP_CATEGORIES.donor.includes(d.type as any)) {
+          return 'hsl(var(--chart-3))';
+        }
+        return 'hsl(var(--border))';
+      })
+      .attr('stroke-opacity', 0.4)
+      .attr('stroke-width', 1.5);
 
     // Create nodes
     const node = g.append('g')
@@ -190,12 +294,14 @@ export function ForceDirectedLayout({
         }
       });
 
-    // Add node containers
+    // Add node containers with radial-optimized size
+    const nodeSize = { width: 100, height: 70 };
+    
     node.append('rect')
-      .attr('width', 120)
-      .attr('height', 80)
-      .attr('x', -60)
-      .attr('y', -40)
+      .attr('width', nodeSize.width)
+      .attr('height', nodeSize.height)
+      .attr('x', -nodeSize.width / 2)
+      .attr('y', -nodeSize.height / 2)
       .attr('rx', 8)
       .attr('ry', 8)
       .attr('fill', d => d.generationColor || 'hsl(var(--chart-1))')
@@ -204,36 +310,37 @@ export function ForceDirectedLayout({
       .attr('opacity', 0.9);
 
     // Add profile images if available
+    const imageSize = 40;
     node.filter(d => d.profile_photo_url)
       .append('image')
-      .attr('x', -25)
-      .attr('y', -25)
-      .attr('width', 50)
-      .attr('height', 50)
+      .attr('x', -imageSize / 2)
+      .attr('y', -imageSize / 2)
+      .attr('width', imageSize)
+      .attr('height', imageSize)
       .attr('href', d => d.profile_photo_url!)
-      .attr('clip-path', 'circle(25px)');
+      .attr('clip-path', `circle(${imageSize / 2}px)`);
 
-    // Add names
+    // Add names with radial-optimized sizing
     node.append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')
-      .attr('font-size', '11px')
+      .attr('font-size', '10px')
       .attr('font-weight', 'bold')
       .attr('fill', 'hsl(var(--foreground))')
-      .text(d => d.name.length > 12 ? d.name.substring(0, 10) + '...' : d.name);
+      .text(d => d.name.length > 10 ? d.name.substring(0, 8) + '...' : d.name);
 
     // Add generation labels
     node.append('text')
       .attr('text-anchor', 'middle')
-      .attr('dy', '20px')
+      .attr('dy', '18px')
       .attr('font-size', '9px')
       .attr('fill', d => d.generationColor || 'hsl(var(--muted-foreground))')
       .text(d => d.generation ? `Gen ${d.generation}` : '');
 
     // Add gender indicators
     node.append('text')
-      .attr('x', -45)
-      .attr('y', -25)
+      .attr('x', -35)
+      .attr('y', -20)
       .attr('font-size', '12px')
       .attr('fill', 'hsl(var(--muted-foreground))')
       .text(d => d.gender === 'male' ? '♂' : d.gender === 'female' ? '♀' : '');
@@ -315,10 +422,10 @@ export function ForceDirectedLayout({
       if (nodes.length === 0) return;
 
       // Calculate bounding box of all nodes
-      const minX = Math.min(...nodes.map((node: any) => node.x)) - 60;
-      const maxX = Math.max(...nodes.map((node: any) => node.x)) + 60;
-      const minY = Math.min(...nodes.map((node: any) => node.y)) - 40;
-      const maxY = Math.max(...nodes.map((node: any) => node.y)) + 40;
+      const minX = Math.min(...nodes.map((node: any) => node.x)) - 50;
+      const maxX = Math.max(...nodes.map((node: any) => node.x)) + 50;
+      const minY = Math.min(...nodes.map((node: any) => node.y)) - 35;
+      const maxY = Math.max(...nodes.map((node: any) => node.y)) + 35;
 
       const nodeWidth = maxX - minX;
       const nodeHeight = maxY - minY;
@@ -380,7 +487,7 @@ export function ForceDirectedLayout({
       {/* Info Panel - top left below layout switcher */}
       <div className="absolute top-20 left-4 z-10">
         <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm space-y-1">
-          <div>Layout: Force</div>
+          <div>Layout: Radial</div>
           <div>{Math.round(zoomLevel * 100)}%</div>
           <div className="text-xs text-muted-foreground">
             Showing: {Object.entries(relationshipFilters).filter(([_, enabled]) => enabled).map(([category]) => 
