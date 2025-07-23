@@ -17,19 +17,14 @@ import {
   Home,
   Share2,
   TreePine,
-  User,
-  Settings,
-  ArrowRight
+  User
 } from "lucide-react";
 
-// Fixed: Removed non-existent 'Family' icon import
 interface UserProfile {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
-  account_type: string;
-  organization_id: string | null;
 }
 
 interface Organization {
@@ -60,59 +55,16 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const checkOrganizationSetup = useCallback(async (organizationId: string) => {
-    try {
-      const { data: org, error } = await supabase
-        .from('organizations')
-        .select('type, description')
-        .eq('id', organizationId)
-        .single();
-
-      if (error) throw error;
-
-      // If organization type is still the default 'fertility_clinic' and has default description,
-      // redirect to onboarding
-      if (org.type === 'fertility_clinic' && 
-          org.description === 'Organization created during signup') {
-        navigate(`/organizations/${organizationId}/onboarding`);
-      } else {
-        navigate(`/organizations/${organizationId}`);
-      }
-    } catch (error) {
-      console.error('Error checking organization setup:', error);
-      // Fallback to organization dashboard
-      navigate(`/organizations/${organizationId}`);
-    }
-  }, [navigate]);
-
-  // Redirect organization accounts to their organization dashboard or onboarding
-  useEffect(() => {
-    if (profile && profile.account_type === 'organization') {
-      if (profile.organization_id) {
-        // Check if organization setup is complete by looking at the type
-        checkOrganizationSetup(profile.organization_id);
-      } else {
-        // Handle organization accounts with null organization_id
-        // This could happen if the organization was deleted or there's a data inconsistency
-        toast({
-          title: "Organization Access Issue",
-          description: "Your organization account is not properly linked. Please contact support.",
-          variant: "destructive",
-        });
-      }
-    }
-  }, [profile, checkOrganizationSetup]);
-
   const fetchUserData = async () => {
     if (!user) return;
 
     try {
       setIsLoadingData(true);
 
-      // Fetch user profile with account type and organization info
+      // Fetch user profile
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
-        .select('id, full_name, avatar_url, bio, account_type, organization_id')
+        .select('id, full_name, avatar_url, bio')
         .eq('id', user.id)
         .single();
 
@@ -127,10 +79,8 @@ const Dashboard = () => {
         setProfile(profileData);
       }
 
-      // Only fetch organizations for individual accounts
-      if (profileData?.account_type === 'individual') {
-        await fetchOrganizations();
-      }
+      // Fetch user organizations
+      await fetchOrganizations();
 
     } catch (error) {
       console.error('Error fetching user data:', error);

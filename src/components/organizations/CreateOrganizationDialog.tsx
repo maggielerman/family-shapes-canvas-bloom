@@ -65,17 +65,12 @@ const CreateOrganizationDialog = ({ onOrganizationCreated }: CreateOrganizationD
     setLoading(true);
     
     try {
-      const { error } = await supabase
-        .from('organizations')
-        .insert({
-          name: formData.name,
-          slug: formData.slug,
-          subdomain: formData.subdomain,
-          type: formData.type,
-          description: formData.description || null,
-          visibility: formData.visibility,
-          owner_id: user.id
-        });
+      // Use the new database function to create organization
+      const { data, error } = await supabase.rpc('create_organization_for_user', {
+        org_name: formData.name,
+        org_type: formData.type,
+        org_description: formData.description || `${formData.type.replace('_', ' ')} organization`
+      });
 
       if (error) throw error;
 

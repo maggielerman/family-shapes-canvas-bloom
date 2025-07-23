@@ -8,12 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Heart, Eye, EyeOff, Building2, User } from "lucide-react";
+import { Heart, Eye, EyeOff } from "lucide-react";
 
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [accountType, setAccountType] = useState<'individual' | 'organization'>('individual');
   const { toast } = useToast();
   const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
@@ -27,8 +26,7 @@ const Auth = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    fullName: "",
-    organizationName: ""
+    fullName: ""
   });
 
   // Redirect if already authenticated
@@ -78,8 +76,7 @@ const Auth = () => {
 
     console.log('Signing up user:', {
       email: signUpData.email,
-      accountType,
-      name: accountType === 'individual' ? signUpData.fullName : signUpData.organizationName
+      name: signUpData.fullName
     });
 
     if (signUpData.password !== signUpData.confirmPassword) {
@@ -102,12 +99,10 @@ const Auth = () => {
       return;
     }
 
-    const displayName = accountType === 'individual' ? signUpData.fullName : signUpData.organizationName;
-    
-    if (!displayName.trim()) {
+    if (!signUpData.fullName.trim()) {
       toast({
         title: "Name required",
-        description: `Please enter a ${accountType === 'individual' ? 'full name' : 'organization name'}.`,
+        description: "Please enter your full name.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -118,8 +113,7 @@ const Auth = () => {
       const { error } = await signUp(
         signUpData.email, 
         signUpData.password,
-        displayName,
-        accountType
+        signUpData.fullName
       );
 
       if (error) {
@@ -132,9 +126,7 @@ const Auth = () => {
       } else {
         toast({
           title: "Account created!",
-          description: accountType === 'organization' 
-            ? "Your organization account has been created. Please check your email to verify your account."
-            : "Please check your email to verify your account.",
+          description: "Please check your email to verify your account.",
         });
         
         // Clear form after successful signup
@@ -142,8 +134,7 @@ const Auth = () => {
           email: "",
           password: "",
           confirmPassword: "",
-          fullName: "",
-          organizationName: ""
+          fullName: ""
         });
       }
     } catch (err) {
@@ -256,117 +247,86 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="signup">
-                <div className="space-y-4">
-                  {/* Account Type Selection */}
-                  <div className="space-y-3">
-                    <Label>Account Type</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={signUpData.email}
+                      onChange={handleSignUpChange}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      name="fullName"
+                      type="text"
+                      placeholder="John Doe"
+                      value={signUpData.fullName}
+                      onChange={handleSignUpChange}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="signup-password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Create a password"
+                        value={signUpData.password}
+                        onChange={handleSignUpChange}
+                        required
+                        disabled={isLoading}
+                        className="pr-10"
+                      />
+                      <button
                         type="button"
-                        variant={accountType === 'individual' ? 'default' : 'outline'}
-                        onClick={() => setAccountType('individual')}
-                        className="h-12 flex items-center gap-2"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() => setShowPassword(!showPassword)}
                         disabled={isLoading}
                       >
-                        <User className="h-4 w-4" />
-                        Individual
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={accountType === 'organization' ? 'default' : 'outline'}
-                        onClick={() => setAccountType('organization')}
-                        className="h-12 flex items-center gap-2"
-                        disabled={isLoading}
-                      >
-                        <Building2 className="h-4 w-4" />
-                        Organization
-                      </Button>
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input
-                        id="signup-email"
-                        name="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={signUpData.email}
-                        onChange={handleSignUpChange}
-                        required
-                        disabled={isLoading}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name">
-                        {accountType === 'individual' ? 'Full Name' : 'Organization Name'}
-                      </Label>
-                      <Input
-                        id="signup-name"
-                        name={accountType === 'individual' ? 'fullName' : 'organizationName'}
-                        type="text"
-                        placeholder={accountType === 'individual' ? 'John Doe' : 'Acme Fertility Center'}
-                        value={accountType === 'individual' ? signUpData.fullName : signUpData.organizationName}
-                        onChange={handleSignUpChange}
-                        required
-                        disabled={isLoading}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="signup-password"
-                          name="password"
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Create a password"
-                          value={signUpData.password}
-                          onChange={handleSignUpChange}
-                          required
-                          disabled={isLoading}
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          onClick={() => setShowPassword(!showPassword)}
-                          disabled={isLoading}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-                      <Input
-                        id="signup-confirm-password"
-                        name="confirmPassword"
-                        type="password"
-                        placeholder="Confirm your password"
-                        value={signUpData.confirmPassword}
-                        onChange={handleSignUpChange}
-                        required
-                        disabled={isLoading}
-                      />
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                    <Input
+                      id="signup-confirm-password"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={signUpData.confirmPassword}
+                      onChange={handleSignUpChange}
+                      required
                       disabled={isLoading}
-                    >
-                      {isLoading ? "Creating account..." : "Create Account"}
-                    </Button>
-                  </form>
-                </div>
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Creating account..." : "Create Account"}
+                  </Button>
+                </form>
               </TabsContent>
             </Tabs>
           </CardContent>

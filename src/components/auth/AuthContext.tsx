@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName?: string, accountType?: 'individual' | 'organization') => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
 }
@@ -49,28 +49,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName?: string, accountType: 'individual' | 'organization' = 'individual') => {
-    console.log('Attempting signup for:', email, 'with name:', fullName, 'account type:', accountType);
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    console.log('Attempting signup for:', email, 'with name:', fullName);
     const redirectUrl = `${window.location.origin}/`;
     
     try {
-      // Prepare user metadata based on account type
-      const userMetadata: { full_name?: string; account_type: string; organization_name?: string } = {
-        account_type: accountType
-      };
-
-      if (accountType === 'organization') {
-        userMetadata.organization_name = fullName;
-      } else {
-        userMetadata.full_name = fullName;
-      }
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: userMetadata
+          data: fullName ? { full_name: fullName } : undefined
         }
       });
       
