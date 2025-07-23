@@ -176,24 +176,31 @@ const Dashboard = () => {
     // Only redirect on initial load and if user hasn't explicitly navigated to personal dashboard
     const hasExplicitlyNavigatedToPersonal = sessionStorage.getItem('explicit-personal-dashboard');
     
-    if (profile && organizations.length > 0 && !hasExplicitlyNavigatedToPersonal && !hasRedirectedRef.current) {
-      // Check if user owns any organization that might need onboarding
-      const ownedOrganizations = organizations.filter(org => org.role === 'owner');
-      
-      // Only auto-redirect if this is the first load (not a subsequent data refresh)
-      // and user has owned organizations
-      if (ownedOrganizations.length > 0) {
-        hasRedirectedRef.current = true;
-        // For now, redirect to the first owned organization
-        // In the future, this could be enhanced to remember the last used organization
-        const primaryOrg = ownedOrganizations[0];
-        checkOrganizationSetup(primaryOrg.id);
+    // Only proceed if we have the necessary data to make a redirect decision
+    if (profile && organizations.length >= 0 && !hasRedirectedRef.current) {
+      if (!hasExplicitlyNavigatedToPersonal && organizations.length > 0) {
+        // Check if user owns any organization that might need onboarding
+        const ownedOrganizations = organizations.filter(org => org.role === 'owner');
+        
+        // Only auto-redirect if this is the first load (not a subsequent data refresh)
+        // and user has owned organizations
+        if (ownedOrganizations.length > 0) {
+          hasRedirectedRef.current = true;
+          // For now, redirect to the first owned organization
+          // In the future, this could be enhanced to remember the last used organization
+          const primaryOrg = ownedOrganizations[0];
+          checkOrganizationSetup(primaryOrg.id);
+          return; // Exit early, don't clear the flag since we're redirecting
+        }
       }
-    }
-    
-    // Clear the session flag after check
-    if (hasExplicitlyNavigatedToPersonal) {
-      sessionStorage.removeItem('explicit-personal-dashboard');
+      
+      // If we reach here, no redirect will occur - mark that we've completed the redirect check
+      hasRedirectedRef.current = true;
+      
+      // Clear the session flag now that we've determined no redirect is needed
+      if (hasExplicitlyNavigatedToPersonal) {
+        sessionStorage.removeItem('explicit-personal-dashboard');
+      }
     }
   }, [profile, organizations, checkOrganizationSetup]);
 
