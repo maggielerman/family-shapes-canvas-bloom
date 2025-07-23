@@ -1138,6 +1138,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          account_type: string | null
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
@@ -1145,6 +1146,7 @@ export type Database = {
           full_name: string | null
           id: string
           location: string | null
+          organization_id: string | null
           phone: string | null
           preferred_contact: string | null
           settings: Json | null
@@ -1152,6 +1154,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          account_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
@@ -1159,6 +1162,7 @@ export type Database = {
           full_name?: string | null
           id: string
           location?: string | null
+          organization_id?: string | null
           phone?: string | null
           preferred_contact?: string | null
           settings?: Json | null
@@ -1166,6 +1170,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          account_type?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
@@ -1173,6 +1178,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           location?: string | null
+          organization_id?: string | null
           phone?: string | null
           preferred_contact?: string | null
           settings?: Json | null
