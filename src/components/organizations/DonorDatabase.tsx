@@ -39,6 +39,7 @@ import {
 import { Donor, DonorUtils } from "@/types/donor";
 import { Person } from "@/types/person";
 import { OrganizationDonorDatabase } from "@/types/organization";
+import { DonorDetailsDialog } from "./DonorDetailsDialog";
 
 interface DonorDatabaseProps {
   organizationId: string;
@@ -459,31 +460,6 @@ function AddDonorDialog({ open, onOpenChange, organizationId, onDonorAdded }: Ad
   );
 }
 
-interface DonorDetailsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  donor: DonorWithDatabase | null;
-  canManage: boolean;
-  onUpdate: () => void;
-}
 
-function DonorDetailsDialog({ open, onOpenChange, donor, canManage, onUpdate }: DonorDetailsDialogProps) {
-  // Implementation for viewing donor details
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>
-            {donor?.person?.name || `Donor ${donor?.donor_number || 'Details'}`}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="text-center py-8">
-          <Eye className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Detailed donor view coming soon</p>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export default DonorDatabase;
