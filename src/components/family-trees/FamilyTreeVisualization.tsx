@@ -1,20 +1,16 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Network, Share2, Zap } from 'lucide-react';
+import { Plus, Users, Network, Share2 } from 'lucide-react';
 import { PersonCardDialog } from '@/components/people/PersonCard';
 import { EditPersonDialog } from '@/components/people/EditPersonDialog';
 import { AddPersonDialog } from './AddPersonDialog';
 import { ForceDirectedLayout } from './layouts/ForceDirectedLayout';
 import { DagreLayout } from './layouts/DagreLayout';
-import { XYFlowTreeBuilder } from './XYFlowTreeBuilder';
 import { usePersonManagement } from '@/hooks/use-person-management';
 import { useToast } from '@/hooks/use-toast';
 import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
-import { calculateGenerations, getGenerationStats, getGenerationalConnections, getSiblingConnections } from '@/utils/generationUtils';
 import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
 
 interface FamilyTreeVisualizationProps {
@@ -77,48 +73,8 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     setViewingPerson(person);
   };
 
-  // Calculate generation statistics
-  const generationMap = persons.length > 0 && connections.length > 0 
-    ? calculateGenerations(persons, connections) 
-    : new Map();
-  const generationStats = getGenerationStats(generationMap);
-  const generationalConnections = getGenerationalConnections(connections);
-  const siblingConnections = getSiblingConnections(connections);
-
   return (
     <div ref={containerRef} className="space-y-6">
-      {/* Generation Statistics */}
-      {persons.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Family Tree Statistics
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{persons.length}</div>
-                <div className="text-sm text-muted-foreground">People</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{generationalConnections.length}</div>
-                <div className="text-sm text-muted-foreground">Generational</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{siblingConnections.length}</div>
-                <div className="text-sm text-muted-foreground">Siblings</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-navy-600">{generationStats.maxGeneration}</div>
-                <div className="text-sm text-muted-foreground">Max Gen</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Visualization Tabs */}
       {persons.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -134,7 +90,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
         </div>
       ) : (
         <Tabs defaultValue="force" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="force" className="flex items-center gap-2">
               <Network className="w-4 h-4" />
               <span className="hidden lg:inline">Force</span>
@@ -142,10 +98,6 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
             <TabsTrigger value="dagre" className="flex items-center gap-2">
               <Share2 className="w-4 h-4" />
               <span className="hidden lg:inline">Dagre</span>
-            </TabsTrigger>
-            <TabsTrigger value="xyflow" className="flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              <span className="hidden lg:inline">XY Flow</span>
             </TabsTrigger>
           </TabsList>
 
@@ -171,16 +123,6 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                 width={dimensions.width}
                 height={dimensions.height}
                 onPersonClick={handlePersonClick}
-              />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="xyflow" className="mt-6">
-            <Suspense fallback={<ChartLoadingSpinner />}>
-              <XYFlowTreeBuilder
-                familyTreeId={familyTreeId}
-                persons={persons}
-                onPersonAdded={onPersonAdded}
               />
             </Suspense>
           </TabsContent>

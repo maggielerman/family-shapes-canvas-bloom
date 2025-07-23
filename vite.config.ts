@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
           // Vendor chunks for better caching
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
-          charts: ['d3', '@xyflow/react', 'react-d3-tree'],
+          charts: ['d3', 'react-d3-tree'],
           utils: ['date-fns', 'zod', 'clsx', 'tailwind-merge'],
         },
       },
