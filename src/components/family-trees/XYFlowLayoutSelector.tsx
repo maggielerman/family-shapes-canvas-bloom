@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Network, GitBranch, Users, Zap, Layers, Target } from 'lucide-react';
 
-export type LayoutType = 'manual' | 'dagre' | 'elk' | 'd3-hierarchy' | 'd3-force' | 'd3-cluster' | 'd3-tree';
+export type LayoutType = 'dagre' | 'elk';
 
 export interface LayoutOption {
   value: LayoutType;
@@ -14,12 +14,6 @@ export interface LayoutOption {
 }
 
 export const layoutOptions: LayoutOption[] = [
-  {
-    value: 'manual',
-    label: 'Manual',
-    description: 'Drag nodes to position them manually',
-    icon: Network,
-  },
   {
     value: 'dagre',
     label: 'Dagre',
@@ -31,30 +25,6 @@ export const layoutOptions: LayoutOption[] = [
     label: 'ELK',
     description: 'Advanced layout engine with multiple algorithms',
     icon: Target,
-  },
-  {
-    value: 'd3-hierarchy',
-    label: 'D3 Hierarchy',
-    description: 'Hierarchical tree layout using D3',
-    icon: Users,
-  },
-  {
-    value: 'd3-force',
-    label: 'D3 Force',
-    description: 'Force-directed layout for interactive graphs',
-    icon: Zap,
-  },
-  {
-    value: 'd3-cluster',
-    label: 'D3 Cluster',
-    description: 'Cluster layout for grouped hierarchies',
-    icon: Layers,
-  },
-  {
-    value: 'd3-tree',
-    label: 'D3 Tree',
-    description: 'Traditional tree layout using D3',
-    icon: GitBranch,
   },
 ];
 
@@ -152,9 +122,7 @@ export function XYFlowLayoutSelector({
               <strong>Tips:</strong>
             </p>
             <ul className="space-y-1 list-disc list-inside">
-              <li>Use <strong>Manual</strong> for precise positioning</li>
               <li>Use <strong>Dagre</strong> for hierarchical family trees</li>
-              <li>Use <strong>D3 Force</strong> for interactive exploration</li>
               <li>Use <strong>ELK</strong> for complex layouts with many nodes</li>
             </ul>
           </div>

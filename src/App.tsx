@@ -21,6 +21,7 @@ const UserProfile = lazy(() => import("./pages/UserProfile"));
 const FamilyTrees = lazy(() => import("./pages/FamilyTrees"));
 const People = lazy(() => import("./pages/People"));
 const FamilyTreeDetail = lazy(() => import("./pages/FamilyTreeDetail"));
+const Connections = lazy(() => import("./pages/Connections"));
 const OrganizationInvitePage = lazy(() => import("./pages/OrganizationInvitePage"));
 const PublicFamilyTree = lazy(() => import("./pages/PublicFamilyTree"));
 const Media = lazy(() => import("./pages/Media"));
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/people" element={<SidebarLayout><People /></SidebarLayout>} />
               <Route path="/family-trees" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
               <Route path="/family-trees/:id" element={<SidebarLayout><FamilyTreeDetail /></SidebarLayout>} />
+              <Route path="/connections" element={<SidebarLayout><Connections /></SidebarLayout>} />
               <Route path="/media" element={<SidebarLayout><Media /></SidebarLayout>} />
               <Route path="/share" element={<SidebarLayout><Share /></SidebarLayout>} />
               <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />

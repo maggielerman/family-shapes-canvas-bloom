@@ -14,7 +14,8 @@ import {
   Users,
   Share2,
   Image,
-  Search
+  Search,
+  Network
 } from "lucide-react";
 import {
   Sidebar,
@@ -61,6 +62,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
     { icon: User, label: "Profile", path: "/profile" },
     { icon: Users, label: "People", path: "/people" },
     { icon: TreePine, label: "Family Trees", path: "/family-trees" },
+    { icon: Network, label: "Connections", path: "/connections" },
     { icon: Image, label: "Media", path: "/media" },
     { icon: Share2, label: "Share", path: "/share" },
     { icon: Building2, label: "Organizations", path: "/organizations" },

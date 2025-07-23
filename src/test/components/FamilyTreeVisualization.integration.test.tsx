@@ -21,25 +21,13 @@ vi.mock('@xyflow/react', () => ({
 }));
 
 // Mock the layout components
-vi.mock('@/components/family-trees/layouts/TreeLayout', () => ({
-  TreeLayout: () => <div data-testid="tree-layout">Tree Layout</div>
-}));
 
-vi.mock('@/components/family-trees/layouts/RadialTreeLayout', () => ({
-  RadialTreeLayout: () => <div data-testid="radial-layout">Radial Layout</div>
-}));
 
 vi.mock('@/components/family-trees/layouts/ForceDirectedLayout', () => ({
   ForceDirectedLayout: () => <div data-testid="force-layout">Force Layout</div>
 }));
 
-vi.mock('@/components/family-trees/layouts/ReactD3TreeLayout', () => ({
-  ReactD3TreeLayout: () => <div data-testid="d3-tree-layout">D3 Tree Layout</div>
-}));
 
-vi.mock('@/components/family-trees/layouts/ClusterLayout', () => ({
-  ClusterLayout: () => <div data-testid="cluster-layout">Cluster Layout</div>
-}));
 
 vi.mock('@/components/family-trees/XYFlowTreeBuilder', () => ({
   XYFlowTreeBuilder: () => <div data-testid="xyflow-builder">XYFlow Builder</div>
@@ -310,39 +298,7 @@ describe('FamilyTreeVisualization Integration', () => {
     });
   });
 
-  it('should pass correct props to layout components', async () => {
-    const mockOnPersonAdded = vi.fn();
 
-    const TreeLayoutSpy = vi.fn(() => <div data-testid="tree-layout">Tree Layout</div>);
-    vi.doMock('@/components/family-trees/layouts/TreeLayout', () => ({
-      TreeLayout: TreeLayoutSpy
-    }));
-
-    render(
-      <FamilyTreeVisualization
-        familyTreeId="tree-1"
-        persons={mockPersons}
-        onPersonAdded={mockOnPersonAdded}
-      />
-    );
-
-    // Switch to Tree tab
-    fireEvent.click(screen.getByText('Tree'));
-
-    await waitFor(() => {
-      expect(TreeLayoutSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          persons: mockPersons,
-          connections: expect.any(Array),
-          relationshipTypes: expect.any(Array),
-          width: 800,
-          height: 600,
-          onPersonClick: expect.any(Function)
-        }),
-        expect.any(Object)
-      );
-    });
-  });
 
   it('should use centralized relationship types', () => {
     const mockOnPersonAdded = vi.fn();
