@@ -14,11 +14,15 @@ import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { FamilyTreeVisualization } from "@/components/family-trees/FamilyTreeVisualization";
 import { SharingSettingsDialog } from "@/components/family-trees/SharingSettingsDialog";
 import { FamilyTreeDocumentManager } from "@/components/family-trees/FamilyTreeDocumentManager";
+import { ConnectionManager } from "@/components/connections/ConnectionManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PersonService } from "@/services/personService";
 import { Person } from "@/types/person";
+import { Connection } from "@/types/connection";
+import { ConnectionService } from "@/services/connectionService";
 import { usePersonManagement } from '@/hooks/use-person-management';
+
 
 interface FamilyTree {
   id: string;
@@ -37,6 +41,7 @@ export default function FamilyTreeDetail() {
   
   const [familyTree, setFamilyTree] = useState<FamilyTree | null>(null);
   const [persons, setPersons] = useState<Person[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [addExistingPersonDialogOpen, setAddExistingPersonDialogOpen] = useState(false);
@@ -48,6 +53,7 @@ export default function FamilyTreeDetail() {
     if (id) {
       fetchFamilyTree();
       fetchPersons();
+      fetchConnections();
     }
   }, [id]);
 
@@ -120,6 +126,20 @@ export default function FamilyTreeDetail() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchConnections = async () => {
+    try {
+      const connectionsData = await ConnectionService.getConnectionsForFamilyTree(id!);
+      setConnections(connectionsData);
+    } catch (error) {
+      console.error('Error fetching connections:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load connections",
+        variant: "destructive",
+      });
     }
   };
 
@@ -201,9 +221,10 @@ export default function FamilyTreeDetail() {
         </div>
       </div>
 
-      <Tabs defaultValue="people" className="space-y-6">
+      <Tabs defaultValue="tree" className="space-y-6">
         <TabsList>
           <TabsTrigger value="people">People</TabsTrigger>
+          <TabsTrigger value="connections">Connections</TabsTrigger>
           <TabsTrigger value="tree">Tree View</TabsTrigger>
           <TabsTrigger value="documents">Media</TabsTrigger>
         </TabsList>
@@ -289,11 +310,24 @@ export default function FamilyTreeDetail() {
           )}
         </TabsContent>
 
+        <TabsContent value="connections" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Family Connections</h2>
+          </div>
+          <ConnectionManager 
+            familyTreeId={familyTree.id}
+            persons={persons}
+            onConnectionUpdated={fetchConnections}
+          />
+        </TabsContent>
+
         <TabsContent value="tree" className="space-y-6">
           <FamilyTreeVisualization
             familyTreeId={familyTree.id}
             persons={persons}
+            connections={connections}
             onPersonAdded={fetchPersons}
+            onConnectionsUpdated={fetchConnections}
           />
         </TabsContent>
 
