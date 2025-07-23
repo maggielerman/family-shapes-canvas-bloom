@@ -1,0 +1,90 @@
+import { Button } from '@/components/ui/button';
+import { Target, ZoomIn, Share2, Network, Grid3X3 } from 'lucide-react';
+import { Person } from '@/types/person';
+
+interface TreeToolbarProps {
+  persons: Person[];
+  currentLayout: 'force' | 'dagre';
+  layoutDirection?: 'TB' | 'LR' | 'BT' | 'RL';
+  onCenterSelf: () => void;
+  onZoomToFit: () => void;
+  onLayoutToggle: () => void;
+  onLayoutDirectionChange?: () => void;
+  className?: string;
+}
+
+export function TreeToolbar({
+  persons,
+  currentLayout,
+  layoutDirection,
+  onCenterSelf,
+  onZoomToFit,
+  onLayoutToggle,
+  onLayoutDirectionChange,
+  className = ''
+}: TreeToolbarProps) {
+  // Find if there's a person designated as "self"
+  const selfPerson = persons.find(person => person.is_self === true);
+  const hasSelf = !!selfPerson;
+
+  return (
+    <div className={`flex flex-col gap-2 ${className}`}>
+      {/* Center-Self Button */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onCenterSelf}
+        disabled={!hasSelf}
+        className="h-8 w-8 p-0"
+        title={hasSelf ? `Center on ${selfPerson?.name}` : 'No person designated as self'}
+      >
+        <Target className="h-4 w-4" />
+      </Button>
+
+      {/* Zoom to Fit Button */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onZoomToFit}
+        className="h-8 w-8 p-0"
+        title="Zoom to fit all nodes"
+      >
+        <ZoomIn className="h-4 w-4" />
+      </Button>
+
+      {/* Separator */}
+      <div className="border-t border-border w-8" />
+
+      {/* Layout Toggle Button */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onLayoutToggle}
+        className="h-8 w-8 p-0"
+        title={`Switch to ${currentLayout === 'force' ? 'Tree' : 'Force'} view`}
+      >
+        {currentLayout === 'force' ? (
+          <Share2 className="h-4 w-4" />
+        ) : (
+          <Network className="h-4 w-4" />
+        )}
+      </Button>
+
+      {/* Layout Direction Toggle - only enabled in dagre mode */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onLayoutDirectionChange}
+        disabled={currentLayout === 'force' || !onLayoutDirectionChange}
+        className="h-8 w-8 p-0"
+        title={
+          currentLayout === 'force' 
+            ? 'Direction control only available in Tree view'
+            : `Current: ${layoutDirection}. Click to cycle through layouts.`
+        }
+      >
+        <Grid3X3 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+} 

@@ -6,8 +6,7 @@ import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
 import { GenerationInfo } from '@/utils/generationUtils';
 import { LayoutRelationshipType } from '@/types/layoutTypes';
-import { Button } from '@/components/ui/button';
-import { Grid3X3, Network } from 'lucide-react';
+import { TreeToolbar } from './TreeToolbar';
 
 interface DagreLayoutProps {
   persons: Person[];
@@ -49,6 +48,8 @@ export function DagreLayout({
   const svgRef = useRef<SVGSVGElement>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [layoutDirection, setLayoutDirection] = useState<'TB' | 'LR' | 'BT' | 'RL'>('TB');
+  const [dagreGraph, setDagreGraph] = useState<dagre.graphlib.Graph | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     if (!svgRef.current || persons.length === 0) return;
@@ -95,6 +96,7 @@ export function DagreLayout({
 
     // Calculate the layout
     dagre.layout(g);
+    setDagreGraph(g);
 
     const g_svg = svg.append('g')
       .attr('transform', 'translate(50,50)');
@@ -217,6 +219,18 @@ export function DagreLayout({
 
     svg.call(zoom);
 
+    // Store zoom behavior for external access
+    (svg.node() as any).__zoom__ = zoom;
+    (svg.node() as any).__zoomGroup__ = g_svg;
+
+    // Auto-fit to all nodes on initial load
+    if (isInitialLoad && persons.length > 0) {
+      setTimeout(() => {
+        handleZoomToFit();
+        setIsInitialLoad(false);
+      }, 100); // Small delay to ensure layout is complete
+    }
+
     // Store references for update function
     window.dagreData = { g, svg, g_svg, generationMap, persons };
 
@@ -229,36 +243,95 @@ export function DagreLayout({
     setLayoutDirection(directions[nextIndex]);
   };
 
+  const handleCenterSelf = () => {
+    if (!svgRef.current || !dagreGraph) return;
+
+    const selfPerson = persons.find(person => person.is_self === true);
+    if (!selfPerson) return;
+
+    const selfNode = dagreGraph.node(selfPerson.id);
+    if (!selfNode) return;
+
+    const svg = d3.select(svgRef.current);
+    const zoom = (svg.node() as any).__zoom__;
+    const g = (svg.node() as any).__zoomGroup__;
+
+    if (zoom && g) {
+      // Calculate transform to center the self node
+      // Account for the initial translate(50,50) offset
+      const nodeX = selfNode.x + 50;
+      const nodeY = selfNode.y + 50;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      const transform = d3.zoomIdentity
+        .translate(centerX - nodeX, centerY - nodeY);
+
+      svg.transition().duration(750).call(zoom.transform, transform);
+    }
+  };
+
+  const handleZoomToFit = () => {
+    if (!svgRef.current || !dagreGraph) return;
+
+    const svg = d3.select(svgRef.current);
+    const zoom = (svg.node() as any).__zoom__;
+    const g = (svg.node() as any).__zoomGroup__;
+
+    if (zoom && g) {
+      // Calculate bounding box of all nodes
+      const nodes = dagreGraph.nodes().map(nodeId => dagreGraph.node(nodeId));
+      
+      if (nodes.length === 0) return;
+
+      const minX = Math.min(...nodes.map(node => node.x - node.width / 2)) - 50;
+      const maxX = Math.max(...nodes.map(node => node.x + node.width / 2)) + 50;
+      const minY = Math.min(...nodes.map(node => node.y - node.height / 2)) - 50;
+      const maxY = Math.max(...nodes.map(node => node.y + node.height / 2)) + 50;
+
+      const nodeWidth = maxX - minX;
+      const nodeHeight = maxY - minY;
+
+      if (nodeWidth === 0 || nodeHeight === 0) return;
+
+      // Calculate scale to fit all nodes with padding
+      const scale = Math.min(
+        width / nodeWidth,
+        height / nodeHeight,
+        2 // Max scale
+      ) * 0.9; // Add some padding
+
+      // Calculate center of nodes
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+
+      // Calculate transform - account for the initial translate(50,50) offset
+      const transform = d3.zoomIdentity
+        .translate(width / 2, height / 2)
+        .scale(scale)
+        .translate(-centerX - 50, -centerY - 50);
+
+      svg.transition().duration(750).call(zoom.transform, transform);
+    }
+  };
+
   return (
     <div className="relative">
-      {/* Layout Direction Toggle - top right */}
+      {/* Vertical Toolbar - top right */}
       <div className="absolute top-4 right-4 z-10">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLayoutChange}
-          className="h-8 w-8 p-0"
-          title={`Current: ${layoutDirection}. Click to cycle through layouts.`}
-        >
-          <Grid3X3 className="h-4 w-4" />
-        </Button>
+        <TreeToolbar
+          persons={persons}
+          currentLayout={currentLayout}
+          layoutDirection={layoutDirection}
+          onCenterSelf={handleCenterSelf}
+          onZoomToFit={handleZoomToFit}
+          onLayoutToggle={onLayoutToggle}
+          onLayoutDirectionChange={handleLayoutChange}
+          className="bg-background/80 backdrop-blur-sm rounded-lg p-2"
+        />
       </div>
 
-      {/* Layout Toggle - bottom left */}
-      <div className="absolute bottom-4 left-4 z-10">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onLayoutToggle}
-          className="h-8 px-3"
-          title="Switch to Force view"
-        >
-          <Network className="h-4 w-4 mr-2" />
-          Force
-        </Button>
-      </div>
-
-      {/* Layout and zoom indicators - top left */}
+      {/* Info Panel - top left */}
       <div className="absolute top-4 left-4 z-10">
         <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm space-y-1">
           <div>Layout: {layoutDirection}</div>

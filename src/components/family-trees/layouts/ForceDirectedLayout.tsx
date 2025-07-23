@@ -3,8 +3,7 @@ import * as d3 from 'd3';
 import { processConnections } from '@/utils/connectionProcessing';
 import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
-import { Button } from '@/components/ui/button';
-import { Share2 } from 'lucide-react';
+import { TreeToolbar } from './TreeToolbar';
 
 interface RelationshipType {
   value: string;
@@ -48,6 +47,9 @@ export function ForceDirectedLayout({
 }: ForceDirectedLayoutProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [simulation, setSimulation] = useState<d3.Simulation<ForceNode, ForceLink> | null>(null);
+  const [nodes, setNodes] = useState<ForceNode[]>([]);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     if (!svgRef.current || persons.length === 0) return;
@@ -60,7 +62,7 @@ export function ForceDirectedLayout({
     const { generationalConnections, generationMap } = processed;
 
     // Prepare data for force simulation
-    const nodes: ForceNode[] = persons.map(p => {
+    const nodeData: ForceNode[] = persons.map(p => {
       const generationInfo = generationMap.get(p.id);
       return { 
         ...p, 
@@ -75,12 +77,16 @@ export function ForceDirectedLayout({
       relationship_type: c.relationship_type
     }));
 
+    setNodes(nodeData);
+
     // Create force simulation
-    const simulation = d3.forceSimulation(nodes)
+    const sim = d3.forceSimulation(nodeData)
       .force('link', d3.forceLink<ForceNode, ForceLink>(links).id(d => d.id).distance(100))
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide().radius(40));
+
+    setSimulation(sim);
 
     const g = svg.append('g');
 
@@ -96,14 +102,14 @@ export function ForceDirectedLayout({
 
     // Create nodes with generation-based coloring
     const node = g.selectAll('.node')
-      .data(nodes)
+      .data(nodeData)
       .enter()
       .append('g')
       .attr('class', 'node')
       .style('cursor', 'pointer')
       .call(d3.drag<SVGGElement, ForceNode>()
         .on('start', (event, d) => {
-          if (!event.active) simulation.alphaTarget(0.3).restart();
+          if (!event.active) sim.alphaTarget(0.3).restart();
           d.fx = d.x;
           d.fy = d.y;
         })
@@ -112,7 +118,7 @@ export function ForceDirectedLayout({
           d.fy = event.y;
         })
         .on('end', (event, d) => {
-          if (!event.active) simulation.alphaTarget(0);
+          if (!event.active) sim.alphaTarget(0);
           d.fx = null;
           d.fy = null;
         })
@@ -157,7 +163,7 @@ export function ForceDirectedLayout({
       .text(d => d.generation !== undefined ? `Gen ${d.generation}` : '');
 
     // Update positions on simulation tick
-    simulation.on('tick', () => {
+    sim.on('tick', () => {
       link
         .attr('x1', d => (d.source as ForceNode).x!)
         .attr('y1', d => (d.source as ForceNode).y!)
@@ -177,26 +183,108 @@ export function ForceDirectedLayout({
 
     svg.call(zoom);
 
+    // Store zoom behavior for external access
+    (svg.node() as any).__zoom__ = zoom;
+    (svg.node() as any).__zoomGroup__ = g;
+
+    // Auto-fit to all nodes after simulation stabilizes (for initial load)
+    if (isInitialLoad && nodeData.length > 0) {
+      sim.on('end', () => {
+        setTimeout(() => {
+          handleZoomToFit();
+          setIsInitialLoad(false);
+        }, 500); // Small delay to ensure positions are stable
+      });
+    }
+
     // Cleanup
     return () => {
-      simulation.stop();
+      sim.stop();
     };
   }, [persons, connections, width, height, onPersonClick]);
 
+  const handleCenterSelf = () => {
+    if (!svgRef.current || !simulation || nodes.length === 0) return;
+
+    const selfPerson = persons.find(person => person.is_self === true);
+    if (!selfPerson) return;
+
+    const selfNode = nodes.find(node => node.id === selfPerson.id);
+    if (!selfNode || selfNode.x === undefined || selfNode.y === undefined) return;
+
+    const svg = d3.select(svgRef.current);
+    const zoom = (svg.node() as any).__zoom__;
+    const g = (svg.node() as any).__zoomGroup__;
+
+    if (zoom && g) {
+      // Calculate transform to center the self node
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const transform = d3.zoomIdentity
+        .translate(centerX - selfNode.x, centerY - selfNode.y);
+
+      svg.transition().duration(750).call(zoom.transform, transform);
+    }
+  };
+
+  const handleZoomToFit = () => {
+    if (!svgRef.current || nodes.length === 0) return;
+
+    const svg = d3.select(svgRef.current);
+    const zoom = (svg.node() as any).__zoom__;
+    const g = (svg.node() as any).__zoomGroup__;
+
+    if (zoom && g) {
+      // Calculate bounding box of all nodes
+      const validNodes = nodes.filter(node => 
+        node.x !== undefined && node.y !== undefined
+      );
+
+      if (validNodes.length === 0) return;
+
+      const minX = Math.min(...validNodes.map(node => node.x!)) - 50;
+      const maxX = Math.max(...validNodes.map(node => node.x!)) + 50;
+      const minY = Math.min(...validNodes.map(node => node.y!)) - 50;
+      const maxY = Math.max(...validNodes.map(node => node.y!)) + 50;
+
+      const nodeWidth = maxX - minX;
+      const nodeHeight = maxY - minY;
+
+      if (nodeWidth === 0 || nodeHeight === 0) return;
+
+      // Calculate scale to fit all nodes with padding
+      const scale = Math.min(
+        width / nodeWidth,
+        height / nodeHeight,
+        2 // Max scale
+      ) * 0.9; // Add some padding
+
+      // Calculate center of nodes
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+
+      // Calculate transform
+      const transform = d3.zoomIdentity
+        .translate(width / 2, height / 2)
+        .scale(scale)
+        .translate(-centerX, -centerY);
+
+      svg.transition().duration(750).call(zoom.transform, transform);
+    }
+  };
+
   return (
     <div className="relative">
-      {/* Layout Toggle - bottom left */}
-      <div className="absolute bottom-4 left-4 z-10">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onLayoutToggle}
-          className="h-8 px-3"
-          title="Switch to Tree view"
-        >
-          <Share2 className="h-4 w-4 mr-2" />
-          Tree
-        </Button>
+      {/* Vertical Toolbar - top right */}
+      <div className="absolute top-4 right-4 z-10">
+        <TreeToolbar
+          persons={persons}
+          currentLayout={currentLayout}
+          onCenterSelf={handleCenterSelf}
+          onZoomToFit={handleZoomToFit}
+          onLayoutToggle={onLayoutToggle}
+          className="bg-background/80 backdrop-blur-sm rounded-lg p-2"
+        />
       </div>
 
       {/* Info Panel - top left */}
