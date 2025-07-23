@@ -8,9 +8,10 @@ import { ConnectionManager } from "@/components/connections/ConnectionManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Person } from "@/types/person";
-import { Connection } from "@/types/connection";
+import { Connection, ConnectionUtils } from "@/types/connection";
 import { ConnectionService } from "@/services/connectionService";
 import { PersonService } from "@/services/personService";
+import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
 
 interface FamilyTree {
   id: string;
@@ -347,8 +348,11 @@ export default function Connections() {
                 conn.from_person_id === person.id || conn.to_person_id === person.id
               );
 
+              // Deduplicate bidirectional connections to avoid showing both directions
+              const deduplicatedPersonConnections = ConnectionUtils.deduplicate(personConnections);
+
               // Get the other person in each connection
-              const personConnectionsWithDetails = personConnections.map(conn => {
+              const personConnectionsWithDetails = deduplicatedPersonConnections.map(conn => {
                 const otherPersonId = conn.from_person_id === person.id 
                   ? conn.to_person_id 
                   : conn.from_person_id;
@@ -414,7 +418,7 @@ export default function Connections() {
                         <div>
                           <CardTitle className="text-lg">{person.name}</CardTitle>
                           <CardDescription>
-                            {personConnections.length} connection{personConnections.length !== 1 ? 's' : ''}
+                            {deduplicatedPersonConnections.length} connection{deduplicatedPersonConnections.length !== 1 ? 's' : ''}
                           </CardDescription>
                         </div>
                       </div>
@@ -427,7 +431,7 @@ export default function Connections() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {personConnections.length === 0 ? (
+                    {deduplicatedPersonConnections.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
                         <p>No connections found for this person</p>
@@ -470,12 +474,18 @@ export default function Connections() {
                                       <div>
                                         <div className="font-medium">{otherPerson?.name}</div>
                                         <div className="text-sm text-muted-foreground">
-                                          {isFromPerson ? '→' : '←'} {connection.relationship_type}
+                                          {(() => {
+                                            const relationshipLabel = RelationshipTypeHelpers.getLabel(connection.relationship_type as any);
+                                            if (ConnectionUtils.isBidirectional(connection.relationship_type as any)) {
+                                              return `↔ ${relationshipLabel}`;
+                                            }
+                                            return `${isFromPerson ? '→' : '←'} ${relationshipLabel}`;
+                                          })()}
                                         </div>
                                       </div>
                                     </div>
                                     <Badge variant="outline" className="text-xs">
-                                      {connection.relationship_type}
+                                      {RelationshipTypeHelpers.getLabel(connection.relationship_type as any)}
                                     </Badge>
                                   </div>
                                 ))}

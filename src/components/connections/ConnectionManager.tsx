@@ -106,7 +106,11 @@ export function ConnectionManager({
       } else if (familyTreeId) {
         // Get connections for a specific family tree
         const treeConnections = await ConnectionService.getConnectionsForFamilyTree(familyTreeId);
-        fetchedConnections = treeConnections.map(conn => ({
+        
+        // Apply deduplication to prevent showing duplicate bidirectional relationships
+        const deduplicatedTreeConnections = ConnectionUtils.deduplicate(treeConnections);
+        
+        fetchedConnections = deduplicatedTreeConnections.map(conn => ({
           ...conn,
           direction: 'outgoing' as const,
           other_person_name: getPersonName(conn.to_person_id),
@@ -115,7 +119,11 @@ export function ConnectionManager({
       } else {
         // Get all connections between the provided persons
         const allConnections = await ConnectionService.getAllConnections();
-        fetchedConnections = allConnections.map(conn => ({
+        
+        // Apply deduplication to prevent showing duplicate bidirectional relationships
+        const deduplicatedConnections = ConnectionUtils.deduplicate(allConnections);
+        
+        fetchedConnections = deduplicatedConnections.map(conn => ({
           ...conn,
           direction: 'outgoing' as const,
           other_person_name: getPersonName(conn.to_person_id),
@@ -298,6 +306,7 @@ export function ConnectionManager({
     const toName = getPersonName(connection.to_person_id);
     const relationshipLabel = getRelationshipLabel(connection.relationship_type);
 
+    // Use bidirectional arrow for bidirectional relationships
     if (ConnectionUtils.isBidirectional(connection.relationship_type as RelationshipType)) {
       return `${fromName} ↔ ${toName} (${relationshipLabel})`;
     }
@@ -308,6 +317,10 @@ export function ConnectionManager({
   const getAttributeInfo = (attributes: string[]) => {
     return RelationshipAttributeHelpers.getAttributeInfo(attributes);
   };
+
+  // Connections are already deduplicated by the service layer
+  // No need to deduplicate again here
+  const displayConnections = connections;
 
   if (loading) {
     return (
@@ -436,7 +449,7 @@ export function ConnectionManager({
         </div>
       </CardHeader>
       <CardContent>
-        {connections.length === 0 ? (
+        {displayConnections.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No connections yet. Add people to start creating relationships.</p>
@@ -452,7 +465,7 @@ export function ConnectionManager({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {connections.map(connection => {
+              {displayConnections.map(connection => {
                 const Icon = getRelationshipIcon(connection.relationship_type);
                 return (
                   <TableRow key={connection.id}>
@@ -468,9 +481,6 @@ export function ConnectionManager({
                         >
                           <Icon className="w-3 h-3" />
                           {getRelationshipLabel(connection.relationship_type)}
-                          {connection.direction === 'incoming' && (
-                            <span className="text-xs opacity-70">(incoming)</span>
-                          )}
                         </Badge>
                         {(() => {
                           const attributes = (connection.metadata as any)?.attributes || [];

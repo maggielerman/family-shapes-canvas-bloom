@@ -10,6 +10,7 @@ export type CreateConnectionData = {
   from_person_id: string;
   to_person_id: string;
   relationship_type: string;
+  family_tree_id?: string | null;
   group_id?: string | null;
   organization_id?: string | null;
   notes?: string | null;
