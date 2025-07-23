@@ -180,11 +180,15 @@ export function PublicFamilyTreeViewer({
       if (membersError) throw membersError;
       setPersons((membersData || []).map(member => member.person));
 
-      // Fetch connections
+      // Get person IDs who are members of this family tree
+      const personIds = (membersData || []).map(member => member.person.id);
+
+      // Fetch connections between people who are members of this tree
       const { data: connectionsData, error: connectionsError } = await supabase
         .from('connections')
         .select('*')
-        .eq('family_tree_id', familyTreeId);
+        .in('from_person_id', personIds)
+        .in('to_person_id', personIds);
 
       if (connectionsError) throw connectionsError;
       setConnections(connectionsData || []);

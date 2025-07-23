@@ -28,10 +28,18 @@ interface FamilyTree {
   user_id: string;
 }
 
+interface FamilyTreeMember {
+  id: string;
+  family_tree_id: string;
+  person_id: string;
+  role: string;
+}
+
 export default function Connections() {
   const [familyTrees, setFamilyTrees] = useState<FamilyTree[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [familyTreeMembers, setFamilyTreeMembers] = useState<FamilyTreeMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFamilyTree, setSelectedFamilyTree] = useState<string | null>(null);
   const { toast } = useToast();
@@ -40,6 +48,7 @@ export default function Connections() {
     fetchFamilyTrees();
     fetchAllPersons();
     fetchAllConnections();
+    fetchFamilyTreeMembers();
   }, []);
 
   const fetchFamilyTrees = async () => {
@@ -96,6 +105,24 @@ export default function Connections() {
       toast({
         title: "Error",
         description: "Failed to load connections",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchFamilyTreeMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('family_tree_members')
+        .select('*');
+
+      if (error) throw error;
+      setFamilyTreeMembers(data || []);
+    } catch (error) {
+      console.error('Error fetching family tree members:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load family tree members",
         variant: "destructive",
       });
     }
@@ -216,73 +243,201 @@ export default function Connections() {
                 All Family Connections
               </CardTitle>
               <CardDescription>
-                View all connections across your family trees. Select a specific family tree below to manage its connections.
+                View all connections between people in your family trees
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              {connections.length === 0 ? (
                 <div className="text-center py-8">
                   <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">All Connections Overview</h3>
-                  <p className="text-muted-foreground mb-4">
-                    You have {connections.length} total connections across {familyTrees.length} family trees.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Use the "By Family Tree" tab to manage connections for specific family trees.
+                  <h3 className="text-lg font-semibold mb-2">No Connections Yet</h3>
+                  <p className="text-muted-foreground">
+                    Start building your family tree by adding connections between people.
                   </p>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground mb-4">
+                    Showing {connections.length} connections between {persons.length} people
+                  </div>
+                  <div className="grid gap-4">
+                    {connections.map((connection) => {
+                      const fromPerson = persons.find(p => p.id === connection.from_person_id);
+                      const toPerson = persons.find(p => p.id === connection.to_person_id);
+                      const relationshipType = connection.relationship_type;
+                      
+                      return (
+                        <div key={connection.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{fromPerson?.name || 'Unknown'}</span>
+                              <span className="text-muted-foreground">→</span>
+                              <span className="font-medium">{toPerson?.name || 'Unknown'}</span>
+                            </div>
+                            <Badge variant="outline" className="ml-2">
+                              {relationshipType}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {connection.notes && (
+                              <span className="italic">"{connection.notes}"</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="by-tree" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {familyTrees.map((tree) => (
-              <Card 
-                key={tree.id} 
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  selectedFamilyTree === tree.id ? 'ring-2 ring-coral-500' : ''
-                }`}
-                onClick={() => setSelectedFamilyTree(tree.id)}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{tree.name}</CardTitle>
-                    <Badge className={getVisibilityColor(tree.visibility)}>
-                      {tree.visibility}
-                    </Badge>
-                  </div>
-                  {tree.description && (
-                    <CardDescription>{tree.description}</CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    Created {new Date(tree.created_at).toLocaleDateString()}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <div className="space-y-6">
+            {familyTrees.map((tree) => {
+              // Get people in this family tree
+              const treePersonIds = new Set();
+              const treeConnections = connections.filter(conn => {
+                const fromPerson = persons.find(p => p.id === conn.from_person_id);
+                const toPerson = persons.find(p => p.id === conn.to_person_id);
+                
+                // Check if both people are in this tree
+                const fromInTree = fromPerson && familyTreeMembers.some(m => 
+                  m.family_tree_id === tree.id && m.person_id === fromPerson.id
+                );
+                const toInTree = toPerson && familyTreeMembers.some(m => 
+                  m.family_tree_id === tree.id && m.person_id === toPerson.id
+                );
+                
+                if (fromInTree && toInTree) {
+                  treePersonIds.add(conn.from_person_id);
+                  treePersonIds.add(conn.to_person_id);
+                  return true;
+                }
+                return false;
+              });
 
-          {selectedFamilyTree && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TreePine className="w-5 h-5" />
-                  {familyTrees.find(t => t.id === selectedFamilyTree)?.name} - Connections
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ConnectionManager 
-                  familyTreeId={selectedFamilyTree}
-                  persons={persons}
-                  onConnectionUpdated={handleConnectionUpdated}
-                />
-              </CardContent>
-            </Card>
-          )}
+              return (
+                <Card key={tree.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <TreePine className="w-5 h-5" />
+                        <CardTitle className="text-lg">{tree.name}</CardTitle>
+                        <Badge className={getVisibilityColor(tree.visibility)}>
+                          {tree.visibility}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {treeConnections.length} connections • {treePersonIds.size} people
+                      </div>
+                    </div>
+                    {tree.description && (
+                      <CardDescription>{tree.description}</CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    {treeConnections.length === 0 ? (
+                      <div className="text-center py-4 text-muted-foreground">
+                        No connections in this family tree yet
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {treeConnections.map((connection) => {
+                          const fromPerson = persons.find(p => p.id === connection.from_person_id);
+                          const toPerson = persons.find(p => p.id === connection.to_person_id);
+                          
+                          return (
+                            <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{fromPerson?.name || 'Unknown'}</span>
+                                  <span className="text-muted-foreground">→</span>
+                                  <span className="font-medium">{toPerson?.name || 'Unknown'}</span>
+                                </div>
+                                <Badge variant="outline" className="ml-2">
+                                  {connection.relationship_type}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {connection.notes && (
+                                  <span className="italic">"{connection.notes}"</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {/* Orphaned Connections - connections between people not in any family tree */}
+            {(() => {
+              const orphanedConnections = connections.filter(conn => {
+                const fromPerson = persons.find(p => p.id === conn.from_person_id);
+                const toPerson = persons.find(p => p.id === conn.to_person_id);
+                
+                // Check if either person is not in any family tree
+                const fromInAnyTree = fromPerson && familyTreeMembers.some(m => m.person_id === fromPerson.id);
+                const toInAnyTree = toPerson && familyTreeMembers.some(m => m.person_id === toPerson.id);
+                
+                return !fromInAnyTree || !toInAnyTree;
+              });
+
+              if (orphanedConnections.length === 0) return null;
+
+              return (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-5 h-5" />
+                        <CardTitle className="text-lg">Other Connections</CardTitle>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {orphanedConnections.length} connections
+                      </div>
+                    </div>
+                    <CardDescription>
+                      Connections between people not currently in any family tree
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {orphanedConnections.map((connection) => {
+                        const fromPerson = persons.find(p => p.id === connection.from_person_id);
+                        const toPerson = persons.find(p => p.id === connection.to_person_id);
+                        
+                        return (
+                          <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{fromPerson?.name || 'Unknown'}</span>
+                                <span className="text-muted-foreground">→</span>
+                                <span className="font-medium">{toPerson?.name || 'Unknown'}</span>
+                              </div>
+                              <Badge variant="outline" className="ml-2">
+                                {connection.relationship_type}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {connection.notes && (
+                                <span className="italic">"{connection.notes}"</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </div>
         </TabsContent>
 
         <TabsContent value="statistics" className="space-y-6">

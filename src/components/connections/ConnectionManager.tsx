@@ -54,8 +54,6 @@ import { RelationshipAttributeSelector } from '@/components/family-trees/Relatio
 import { RelationshipAttributeHelpers } from '@/types/relationshipAttributes';
 
 interface ConnectionManagerProps {
-  // Family tree context
-  familyTreeId?: string;
   // Person context (for person-specific connections)
   personId?: string;
   // Available persons for selection
@@ -69,7 +67,6 @@ interface ConnectionManagerProps {
 }
 
 export function ConnectionManager({
-  familyTreeId,
   personId,
   persons,
   onConnectionUpdated,
@@ -84,8 +81,7 @@ export function ConnectionManager({
   const [newConnection, setNewConnection] = useState<CreateConnectionData>({
     from_person_id: personId || '',
     to_person_id: '',
-    relationship_type: '',
-    family_tree_id: familyTreeId || null
+    relationship_type: ''
   });
   const [newConnectionAttributes, setNewConnectionAttributes] = useState<string[]>([]);
   const [editingConnectionAttributes, setEditingConnectionAttributes] = useState<string[]>([]);
@@ -94,7 +90,7 @@ export function ConnectionManager({
 
   useEffect(() => {
     fetchConnections();
-  }, [familyTreeId, personId]);
+  }, [personId]);
 
   const fetchConnections = async () => {
     try {
@@ -104,17 +100,15 @@ export function ConnectionManager({
       if (personId) {
         // Get connections for a specific person
         fetchedConnections = await ConnectionService.getConnectionsForPerson(personId);
-      } else if (familyTreeId) {
-        // Get connections for a family tree
-        const treeConnections = await ConnectionService.getConnectionsForFamilyTree(familyTreeId);
-        fetchedConnections = treeConnections.map(conn => ({
+      } else {
+        // Get all connections between the provided persons
+        const allConnections = await ConnectionService.getAllConnections();
+        fetchedConnections = allConnections.map(conn => ({
           ...conn,
           direction: 'outgoing' as const,
           other_person_name: getPersonName(conn.to_person_id),
           other_person_id: conn.to_person_id
         }));
-      } else {
-        fetchedConnections = [];
       }
 
       setConnections(fetchedConnections);
@@ -172,8 +166,7 @@ export function ConnectionManager({
       const exists = await ConnectionService.connectionExists(
         newConnection.from_person_id,
         newConnection.to_person_id,
-        newConnection.relationship_type as RelationshipType,
-        familyTreeId
+        newConnection.relationship_type as RelationshipType
       );
 
       if (exists) {
@@ -203,8 +196,7 @@ export function ConnectionManager({
       setNewConnection({
         from_person_id: personId || '',
         to_person_id: '',
-        relationship_type: '',
-        family_tree_id: familyTreeId || null
+        relationship_type: ''
       });
       setNewConnectionAttributes([]);
       setIsAddingConnection(false);
@@ -229,7 +221,6 @@ export function ConnectionManager({
       const updateData: UpdateConnectionData = {
         id: editingConnection.id,
         relationship_type: editingConnection.relationship_type,
-        family_tree_id: editingConnection.family_tree_id,
         group_id: editingConnection.group_id,
         organization_id: editingConnection.organization_id,
         notes: editingConnection.notes,
