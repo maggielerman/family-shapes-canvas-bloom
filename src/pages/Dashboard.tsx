@@ -146,6 +146,41 @@ const Dashboard = () => {
     }
   };
 
+  const checkOrganizationSetup = async (organizationId: string) => {
+    try {
+      const { data: org, error } = await supabase
+        .from('organizations')
+        .select('id, type, description')
+        .eq('id', organizationId)
+        .single();
+
+      if (error) throw error;
+
+      // Check if organization needs onboarding
+      if (org.type === 'fertility_clinic' && 
+          org.description === 'Organization created by user') {
+        navigate(`/organizations/${organizationId}/onboarding`);
+      } else {
+        navigate(`/organizations/${organizationId}`);
+      }
+    } catch (error) {
+      console.error('Error checking organization setup:', error);
+      // If there's an error, still navigate to the organization dashboard
+      navigate(`/organizations/${organizationId}`);
+    }
+  };
+
+  // Check if user has an organization account that needs onboarding
+  useEffect(() => {
+    if (profile && organizations.length > 0) {
+      // Check if user owns any organization that might need onboarding
+      const ownedOrg = organizations.find(org => org.role === 'owner');
+      if (ownedOrg) {
+        checkOrganizationSetup(ownedOrg.id);
+      }
+    }
+  }, [profile, organizations]);
+
   if (loading || isLoadingData) {
     return (
       <div className="flex items-center justify-center h-full">
