@@ -88,9 +88,9 @@ export default function People() {
     try {
       setLoading(true);
 
-      // First, get all persons
+      // Use the persons_with_trees view to get persons and their tree counts in one query
       const { data: personsData, error: personsError } = await supabase
-        .from('persons')
+        .from('persons_with_trees')
         .select(`
           id,
           name,
@@ -108,7 +108,8 @@ export default function People() {
           used_iui,
           fertility_treatments,
           is_self,
-          created_at
+          created_at,
+          family_trees
         `)
         .eq('user_id', user.id)
         .order('is_self', { ascending: false })
@@ -122,14 +123,6 @@ export default function People() {
       }
 
       const personIds = personsData.map(p => p.id);
-
-      // Get all family tree member counts in a single query
-      const { data: treeCounts, error: treeError } = await supabase
-        .from('family_tree_members')
-        .select('person_id')
-        .in('person_id', personIds);
-
-      if (treeError) throw treeError;
 
       // Get all connection counts - use two separate queries to avoid OR syntax issues
       const { data: fromConnections, error: fromError } = await supabase
@@ -146,12 +139,7 @@ export default function People() {
 
       if (toError) throw toError;
 
-      // Create lookup maps for efficient counting
-      const treeCountMap = new Map();
-      (treeCounts || []).forEach(item => {
-        treeCountMap.set(item.person_id, (treeCountMap.get(item.person_id) || 0) + 1);
-      });
-
+      // Create lookup map for connection counts
       const connectionCountMap = new Map();
       (fromConnections || []).forEach(connection => {
         connectionCountMap.set(connection.from_person_id, (connectionCountMap.get(connection.from_person_id) || 0) + 1);
@@ -161,13 +149,18 @@ export default function People() {
       });
 
       // Combine the data
-      const personsWithCounts = personsData.map(person => ({
-        ...person,
-        _count: {
-          family_trees: treeCountMap.get(person.id) || 0,
-          connections: connectionCountMap.get(person.id) || 0
-        }
-      }));
+      const personsWithCounts = personsData.map(person => {
+        // Count family trees from the family_trees JSON array
+        const familyTreesCount = Array.isArray(person.family_trees) ? person.family_trees.length : 0;
+        
+        return {
+          ...person,
+          _count: {
+            family_trees: familyTreesCount,
+            connections: connectionCountMap.get(person.id) || 0
+          }
+        };
+      });
 
       setPersons(personsWithCounts);
     } catch (error) {
