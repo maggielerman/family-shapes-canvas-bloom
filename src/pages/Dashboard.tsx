@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,16 +60,7 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  // Redirect organization accounts to their organization dashboard or onboarding
-  useEffect(() => {
-    if (profile && profile.account_type === 'organization' && profile.organization_id) {
-      console.log('Redirecting organization account to org dashboard:', profile.organization_id);
-      // Check if organization setup is complete by looking at the type
-      checkOrganizationSetup(profile.organization_id);
-    }
-  }, [profile, navigate]);
-
-  const checkOrganizationSetup = async (organizationId: string) => {
+  const checkOrganizationSetup = useCallback(async (organizationId: string) => {
     try {
       const { data: org, error } = await supabase
         .from('organizations')
@@ -92,7 +83,25 @@ const Dashboard = () => {
       // Fallback to organization dashboard
       navigate(`/organizations/${organizationId}`);
     }
-  };
+  }, [navigate]);
+
+  // Redirect organization accounts to their organization dashboard or onboarding
+  useEffect(() => {
+    if (profile && profile.account_type === 'organization') {
+      if (profile.organization_id) {
+        // Check if organization setup is complete by looking at the type
+        checkOrganizationSetup(profile.organization_id);
+      } else {
+        // Handle organization accounts with null organization_id
+        // This could happen if the organization was deleted or there's a data inconsistency
+        toast({
+          title: "Organization Access Issue",
+          description: "Your organization account is not properly linked. Please contact support.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [profile, checkOrganizationSetup]);
 
   const fetchUserData = async () => {
     if (!user) return;
