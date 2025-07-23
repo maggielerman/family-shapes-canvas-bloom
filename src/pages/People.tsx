@@ -124,28 +124,30 @@ export default function People() {
 
       const personIds = personsData.map(p => p.id);
 
-      // Get all connection counts - use two separate queries to avoid OR syntax issues
-      const { data: fromConnections, error: fromError } = await supabase
-        .from('connections')
-        .select('from_person_id')
-        .in('from_person_id', personIds);
+      // Get all connection counts for each person
+      // Use a single query with OR condition to get all connections involving these persons
+      let allConnections: any[] = [];
 
-      if (fromError) throw fromError;
+      if (personIds.length > 0) {
+        const { data: connectionsData, error: connectionsError } = await supabase
+          .from('connections')
+          .select('from_person_id, to_person_id')
+          .or(`from_person_id.in.(${personIds.join(',')}),to_person_id.in.(${personIds.join(',')})`);
 
-      const { data: toConnections, error: toError } = await supabase
-        .from('connections')
-        .select('to_person_id')
-        .in('to_person_id', personIds);
-
-      if (toError) throw toError;
+        if (connectionsError) throw connectionsError;
+        allConnections = connectionsData || [];
+      }
 
       // Create lookup map for connection counts
       const connectionCountMap = new Map();
-      (fromConnections || []).forEach(connection => {
-        connectionCountMap.set(connection.from_person_id, (connectionCountMap.get(connection.from_person_id) || 0) + 1);
-      });
-      (toConnections || []).forEach(connection => {
-        connectionCountMap.set(connection.to_person_id, (connectionCountMap.get(connection.to_person_id) || 0) + 1);
+      allConnections.forEach(connection => {
+        // Count connections where the person is either the from_person_id or to_person_id
+        if (personIds.includes(connection.from_person_id)) {
+          connectionCountMap.set(connection.from_person_id, (connectionCountMap.get(connection.from_person_id) || 0) + 1);
+        }
+        if (personIds.includes(connection.to_person_id)) {
+          connectionCountMap.set(connection.to_person_id, (connectionCountMap.get(connection.to_person_id) || 0) + 1);
+        }
       });
 
       // Combine the data
