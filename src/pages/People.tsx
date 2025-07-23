@@ -116,22 +116,35 @@ export default function People() {
 
       if (personsError) throw personsError;
 
+      if (!personsData || personsData.length === 0) {
+        setPersons([]);
+        return;
+      }
+
+      const personIds = personsData.map(p => p.id);
+
       // Get all family tree member counts in a single query
       const { data: treeCounts, error: treeError } = await supabase
         .from('family_tree_members')
-        .select('person_id, count')
-        .in('person_id', (personsData || []).map(p => p.id));
+        .select('person_id')
+        .in('person_id', personIds);
 
       if (treeError) throw treeError;
 
-      // Get all connection counts in a single query
-      const personIds = (personsData || []).map(p => p.id);
-      const { data: connectionCounts, error: connectionError } = await supabase
+      // Get all connection counts - use two separate queries to avoid OR syntax issues
+      const { data: fromConnections, error: fromError } = await supabase
         .from('connections')
-        .select('from_person_id, to_person_id')
-        .or(`from_person_id.in.(${personIds.join(',')}),to_person_id.in.(${personIds.join(',')})`);
+        .select('from_person_id')
+        .in('from_person_id', personIds);
 
-      if (connectionError) throw connectionError;
+      if (fromError) throw fromError;
+
+      const { data: toConnections, error: toError } = await supabase
+        .from('connections')
+        .select('to_person_id')
+        .in('to_person_id', personIds);
+
+      if (toError) throw toError;
 
       // Create lookup maps for efficient counting
       const treeCountMap = new Map();
@@ -140,17 +153,15 @@ export default function People() {
       });
 
       const connectionCountMap = new Map();
-      (connectionCounts || []).forEach(connection => {
-        if (connection.from_person_id) {
-          connectionCountMap.set(connection.from_person_id, (connectionCountMap.get(connection.from_person_id) || 0) + 1);
-        }
-        if (connection.to_person_id) {
-          connectionCountMap.set(connection.to_person_id, (connectionCountMap.get(connection.to_person_id) || 0) + 1);
-        }
+      (fromConnections || []).forEach(connection => {
+        connectionCountMap.set(connection.from_person_id, (connectionCountMap.get(connection.from_person_id) || 0) + 1);
+      });
+      (toConnections || []).forEach(connection => {
+        connectionCountMap.set(connection.to_person_id, (connectionCountMap.get(connection.to_person_id) || 0) + 1);
       });
 
       // Combine the data
-      const personsWithCounts = (personsData || []).map(person => ({
+      const personsWithCounts = personsData.map(person => ({
         ...person,
         _count: {
           family_trees: treeCountMap.get(person.id) || 0,
