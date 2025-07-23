@@ -75,7 +75,8 @@ const SignedInHome = () => {
       const [familyTreesData, peopleData, organizationsData, mediaData] = await Promise.all([
         supabase.from('family_trees').select('id', { count: 'exact' }).eq('user_id', user!.id),
         supabase.from('people').select('id', { count: 'exact' }).eq('user_id', user!.id),
-        supabase.from('organizations').select('id', { count: 'exact' }).eq('owner_id', user!.id),
+        // Count organizations where user is owner or member
+        supabase.from('organization_memberships').select('organization_id', { count: 'exact' }).eq('user_id', user!.id),
         supabase.from('media_items').select('id', { count: 'exact' }).eq('user_id', user!.id)
       ]);
 
