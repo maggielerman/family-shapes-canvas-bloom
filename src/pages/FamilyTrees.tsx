@@ -42,20 +42,41 @@ export default function FamilyTrees() {
         .from('family_trees')
         .select(`
           *,
-          family_tree_members(count),
-          connections!family_tree_id(count)
+          family_tree_members(count)
         `)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
-      // Transform the data to include proper counts
-      const treesWithCounts = (data || []).map((tree: any) => ({
-        ...tree,
-        _count: {
-          persons: tree.family_tree_members?.[0]?.count || 0,
-          connections: tree.connections?.[0]?.count || 0
+      // Get connection counts for each tree using the junction table approach
+      const treesWithCounts = await Promise.all((data || []).map(async (tree: any) => {
+        // Get person IDs who are members of this tree
+        const { data: membersData } = await supabase
+          .from('family_tree_members')
+          .select('person_id')
+          .eq('family_tree_id', tree.id);
+
+        const personIds = (membersData || []).map(m => m.person_id);
+        
+        let connectionCount = 0;
+        if (personIds.length > 0) {
+          // Count connections between people who are members of this tree
+          const { count } = await supabase
+            .from('connections')
+            .select('*', { count: 'exact', head: true })
+            .in('from_person_id', personIds)
+            .in('to_person_id', personIds);
+          
+          connectionCount = count || 0;
         }
+
+        return {
+          ...tree,
+          _count: {
+            persons: tree.family_tree_members?.[0]?.count || 0,
+            connections: connectionCount
+          }
+        };
       }));
       
       setFamilyTrees(treesWithCounts);
