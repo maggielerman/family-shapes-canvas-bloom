@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { 
   Dialog, 
   DialogContent, 
@@ -30,7 +31,11 @@ import {
   File,
   Loader2,
   TreePine,
-  GraduationCap
+  GraduationCap,
+  Trash2,
+  UserMinus,
+  Camera,
+  X
 } from 'lucide-react';
 import { usePersonMedia } from '@/hooks/use-person-media';
 import { useFileUpload } from '@/hooks/use-file-upload';
@@ -39,40 +44,44 @@ import { PersonTreesManager } from './PersonTreesManager';
 import { MarkAsSelfDialog } from './MarkAsSelfDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { formatDate, calculateAge } from '@/utils/dateUtils';
+import { formatDate, calculateAge, formatDateShort } from '@/utils/dateUtils';
 import { Donor } from '@/types/donor';
 import { DonorUtils } from '@/types/donor';
+import { Person } from '@/types/person';
 
 interface PersonCardProps {
-  person: {
-    id: string;
-    name: string;
-    gender?: string | null;
-    date_of_birth?: string | null;
-    birth_place?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    address?: string | null;
-    profile_photo_url?: string | null;
-    status: string;
-    notes?: string | null;
-    donor?: boolean;
-    used_ivf?: boolean;
-    used_iui?: boolean;
-    fertility_treatments?: any;
-    is_self?: boolean;
-  };
-  onEdit?: () => void;
+  person: Person;
+  onEdit?: (person?: Person) => void;
+  onDelete?: (person: Person) => void;
+  onRemoveFromTree?: (person: Person) => void;
+  onClick?: () => void;
+  showActions?: boolean;
+  showRemoveFromTree?: boolean;
+  onPersonUpdated?: () => void;
   onClose?: () => void;
+  variant?: 'card' | 'detailed';
 }
 
-export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
+export function PersonCard({ 
+  person, 
+  onEdit, 
+  onDelete,
+  onRemoveFromTree,
+  onClick,
+  showActions = false,
+  showRemoveFromTree = false,
+  onPersonUpdated,
+  onClose,
+  variant = 'detailed'
+}: PersonCardProps) {
   const { mediaFiles, loading: mediaLoading, getFileUrl, linkMediaToPerson, refetch } = usePersonMedia(person.id);
   const { uploadMultipleFiles, isUploading } = useFileUpload();
   const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
   const [markAsSelfDialogOpen, setMarkAsSelfDialogOpen] = useState(false);
   const [donorInfo, setDonorInfo] = useState<Donor | null>(null);
   const [donorLoading, setDonorLoading] = useState(false);
+  const [isChangingPhoto, setIsChangingPhoto] = useState(false);
+  const [uploadedPhoto, setUploadedPhoto] = useState<any>(null);
   
   // Fetch donor information when person is a donor
   useEffect(() => {
@@ -118,6 +127,17 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
   const getAge = (birthDate: string | null) => {
     if (!birthDate) return null;
     return calculateAge(birthDate);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'living':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'deceased':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      default:
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    }
   };
 
   const getFertilityInfo = () => {
@@ -188,12 +208,258 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
     }
   };
 
+  // Photo management functions
+  const handleImageUploaded = (uploadedFile: any) => {
+    console.log('Image uploaded successfully:', uploadedFile);
+    setUploadedPhoto(uploadedFile);
+  };
+
+  const getPhotoUrl = () => {
+    if (!uploadedPhoto) return undefined;
+    console.log('Getting photo URL for:', uploadedPhoto);
+    
+    const { data } = supabase.storage
+      .from(uploadedPhoto.bucket_name)
+      .getPublicUrl(uploadedPhoto.file_path);
+    
+    const publicUrl = data.publicUrl;
+    console.log('Generated public URL:', publicUrl);
+    return publicUrl;
+  };
+
+  const handlePhotoChange = async () => {
+    if (!uploadedPhoto) return;
+
+    const photoUrl = getPhotoUrl();
+    console.log('Photo URL for person:', photoUrl);
+
+    try {
+      const { error } = await supabase
+        .from('persons')
+        .update({ profile_photo_url: photoUrl })
+        .eq('id', person.id);
+
+      if (error) throw error;
+
+      toast.success('Profile photo updated successfully');
+      setIsChangingPhoto(false);
+      setUploadedPhoto(null);
+      onPersonUpdated?.();
+    } catch (error) {
+      console.error('Error updating profile photo:', error);
+      toast.error('Failed to update profile photo');
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    try {
+      const { error } = await supabase
+        .from('persons')
+        .update({ profile_photo_url: null })
+        .eq('id', person.id);
+
+      if (error) throw error;
+
+      toast.success('Profile photo removed');
+      onPersonUpdated?.();
+    } catch (error) {
+      console.error('Error removing profile photo:', error);
+      toast.error('Failed to remove profile photo');
+    }
+  };
+
+  // Simple card variant for grid layouts
+  if (variant === 'card') {
+    return (
+      <Card 
+        className={`hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`}
+        onClick={onClick}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="relative group">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={person.profile_photo_url || ""} />
+                  <AvatarFallback className="text-lg">
+                    {getInitials(person.name)}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Photo management overlay */}
+                <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsChangingPhoto(true);
+                      }}
+                      className="h-8 w-8 p-0 rounded-full"
+                      title="Change photo"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                    {person.profile_photo_url && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePhoto();
+                        }}
+                        className="h-8 w-8 p-0 rounded-full"
+                        title="Remove photo"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-lg">{person.name}</h3>
+                {person.date_of_birth && (
+                  <p className="text-sm text-muted-foreground">
+                    Age {getAge(person.date_of_birth) || 'Unknown'}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <Badge className={getStatusColor(person.status)}>
+                {person.status}
+              </Badge>
+              {person.is_self && (
+                <Badge variant="default" className="bg-[hsl(9,67%,49%)] text-white border-[hsl(9,67%,49%)]">
+                  Self
+                </Badge>
+              )}
+              {(showActions || onEdit || onDelete || showRemoveFromTree) && (
+                <div className="flex items-center gap-1">
+                  {onEdit && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(person);
+                      }}
+                      title="Edit person"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {showRemoveFromTree && onRemoveFromTree && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFromTree(person);
+                      }}
+                      title="Remove from this tree"
+                      className="text-amber-600 hover:text-amber-700"
+                    >
+                      <UserMinus className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {showActions && onDelete && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(person);
+                      }}
+                      title="Delete person permanently"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-3">
+          {person.date_of_birth && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              Born {formatDateShort(person.date_of_birth)}
+            </div>
+          )}
+          
+          {person.email && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Mail className="w-4 h-4" />
+              {person.email}
+            </div>
+          )}
+          
+          {person.phone && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Phone className="w-4 h-4" />
+              {person.phone}
+            </div>
+          )}
+          
+          {person.gender && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <UserCircle className="w-4 h-4" />
+              {person.gender.charAt(0).toUpperCase() + person.gender.slice(1)}
+            </div>
+          )}
+          
+          {person.notes && (
+            <div className="text-sm text-muted-foreground border-t pt-3">
+              <p className="line-clamp-2">{person.notes}</p>
+            </div>
+          )}
+        </CardContent>
+
+        {/* Photo change dialog */}
+        {isChangingPhoto && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setIsChangingPhoto(false)}>
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold mb-4">Change Profile Photo</h3>
+              <div className="space-y-4">
+                <ImageUpload
+                  onImageUploaded={handleImageUploaded}
+                  disabled={false}
+                />
+                {uploadedPhoto && (
+                  <div className="flex gap-2">
+                    <Button onClick={handlePhotoChange} className="flex-1">
+                      Update Photo
+                    </Button>
+                    <Button variant="outline" onClick={() => {
+                      setIsChangingPhoto(false);
+                      setUploadedPhoto(null);
+                    }}>
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+    );
+  }
+
+  // Detailed variant (original functionality)
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
+            <Avatar className="h-20 w-20">
               <AvatarImage src={person.profile_photo_url || undefined} alt={person.name} />
               <AvatarFallback className="text-lg font-semibold">
                 {getInitials(person.name)}
@@ -227,7 +493,7 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
           </div>
           <div className="flex gap-2">
             {onEdit && (
-              <Button variant="outline" size="sm" onClick={onEdit}>
+              <Button variant="outline" size="sm" onClick={() => onEdit(person)}>
                 <Edit className="h-4 w-4" />
               </Button>
             )}
@@ -259,7 +525,7 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                 <div className="flex items-center text-sm">
                   <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span className="text-muted-foreground">Born:</span>
-                                          <span className="ml-2">{formatDateLocal(person.date_of_birth)}</span>
+                  <span className="ml-2">{formatDateLocal(person.date_of_birth)}</span>
                   {person.date_of_birth && getAge(person.date_of_birth) && (
                     <span className="ml-2 text-muted-foreground">
                       (Age {getAge(person.date_of_birth)})
@@ -279,81 +545,73 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
             
             {person.notes && (
               <div className="space-y-2">
-                <h4 className="font-medium flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Notes
-                </h4>
-                <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
+                <Label className="text-sm font-medium">Notes</Label>
+                <div className="p-3 bg-muted rounded-md text-sm">
                   {person.notes}
-                </p>
+                </div>
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="contact" className="space-y-4 mt-4">
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {person.email && (
-                <div className="flex items-center text-sm">
-                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span className="text-muted-foreground">Email:</span>
-                  <a 
-                    href={`mailto:${person.email}`}
-                    className="ml-2 text-primary hover:underline"
-                  >
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Email
+                  </Label>
+                  <div className="p-2 bg-muted rounded-md text-sm">
                     {person.email}
-                  </a>
-                </div>
-              )}
-              
-              {person.phone && (
-                <div className="flex items-center text-sm">
-                  <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span className="text-muted-foreground">Phone:</span>
-                  <a 
-                    href={`tel:${person.phone}`}
-                    className="ml-2 text-primary hover:underline"
-                  >
-                    {person.phone}
-                  </a>
-                </div>
-              )}
-              
-              {person.address && (
-                <div className="flex items-start text-sm">
-                  <MapPin className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
-                  <span className="text-muted-foreground">Address:</span>
-                  <span className="ml-2">{person.address}</span>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="medical" className="space-y-4 mt-4">
-            <div className="space-y-3">
-              {getFertilityInfo().length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-2 flex items-center">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Fertility Treatments
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {getFertilityInfo().map((treatment) => (
-                      <Badge key={treatment} variant="outline">
-                        {treatment}
-                      </Badge>
-                    ))}
                   </div>
                 </div>
               )}
               
-              {!person.used_ivf && !person.used_iui && !person.fertility_treatments && (
-                <div className="text-sm text-muted-foreground">
-                  No fertility treatment information recorded
+              {person.phone && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center">
+                    <Phone className="h-4 w-4 mr-2" />
+                    Phone
+                  </Label>
+                  <div className="p-2 bg-muted rounded-md text-sm">
+                    {person.phone}
+                  </div>
+                </div>
+              )}
+              
+              {person.address && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-sm font-medium flex items-center">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Address
+                  </Label>
+                  <div className="p-2 bg-muted rounded-md text-sm">
+                    {person.address}
+                  </div>
                 </div>
               )}
             </div>
           </TabsContent>
-          
+
+          <TabsContent value="medical" className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Fertility Treatments</Label>
+                <div className="space-y-2">
+                  {getFertilityInfo().length > 0 ? (
+                    getFertilityInfo().map((treatment, index) => (
+                      <Badge key={index} variant="outline" className="mr-2">
+                        {treatment}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No fertility treatments recorded</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
           {person.donor && (
             <TabsContent value="donor" className="space-y-4 mt-4">
               {donorLoading ? (
@@ -361,189 +619,55 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : donorInfo ? (
-                <div className="space-y-4">
-                  {/* Basic Donor Information */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center text-lg">
-                        <Dna className="h-5 w-5 mr-2" />
-                        Donor Information
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {donorInfo.donor_number && (
-                          <div>
-                            <Label className="text-sm font-medium">Donor Number</Label>
-                            <div className="p-2 bg-muted rounded-md text-sm">
-                              {donorInfo.donor_number}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {donorInfo.donor_type && (
-                          <div>
-                            <Label className="text-sm font-medium">Donor Type</Label>
-                            <div className="p-2 bg-muted rounded-md text-sm">
-                              <Badge variant="outline">
-                                {DonorUtils.getDonorTypeLabel(donorInfo.donor_type)}
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {donorInfo.sperm_bank && (
-                          <div>
-                            <Label className="text-sm font-medium">Sperm Bank</Label>
-                            <div className="p-2 bg-muted rounded-md text-sm">
-                              {donorInfo.sperm_bank}
-                            </div>
-                          </div>
-                        )}
-                        
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {donorInfo.donor_number && (
                         <div>
-                          <Label className="text-sm font-medium">Anonymous Status</Label>
+                          <Label className="text-sm font-medium">Donor Number</Label>
                           <div className="p-2 bg-muted rounded-md text-sm">
-                            <Badge variant={donorInfo.is_anonymous ? "secondary" : "default"}>
-                              {DonorUtils.getAnonymityStatus(donorInfo.is_anonymous)}
+                            {donorInfo.donor_number}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {donorInfo.donor_type && (
+                        <div>
+                          <Label className="text-sm font-medium">Donor Type</Label>
+                          <div className="p-2 bg-muted rounded-md text-sm">
+                            <Badge variant="outline">
+                              {DonorUtils.getDonorTypeLabel(donorInfo.donor_type)}
                             </Badge>
                           </div>
                         </div>
+                      )}
+                      
+                      {donorInfo.sperm_bank && (
+                        <div>
+                          <Label className="text-sm font-medium">Sperm Bank</Label>
+                          <div className="p-2 bg-muted rounded-md text-sm">
+                            {donorInfo.sperm_bank}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <Label className="text-sm font-medium">Anonymous Status</Label>
+                        <div className="p-2 bg-muted rounded-md text-sm">
+                          <Badge variant={donorInfo.is_anonymous ? "secondary" : "default"}>
+                            {DonorUtils.getAnonymityStatus(donorInfo.is_anonymous)}
+                          </Badge>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Physical Characteristics */}
-                  {(donorInfo.height || donorInfo.weight || donorInfo.eye_color || donorInfo.hair_color || donorInfo.ethnicity || donorInfo.blood_type) && (
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="flex items-center text-lg">
-                          <User className="h-5 w-5 mr-2" />
-                          Physical Characteristics
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {donorInfo.height && (
-                            <div>
-                              <Label className="text-sm font-medium">Height</Label>
-                              <div className="p-2 bg-muted rounded-md text-sm">
-                                {donorInfo.height}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {donorInfo.weight && (
-                            <div>
-                              <Label className="text-sm font-medium">Weight</Label>
-                              <div className="p-2 bg-muted rounded-md text-sm">
-                                {donorInfo.weight}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {donorInfo.eye_color && (
-                            <div>
-                              <Label className="text-sm font-medium">Eye Color</Label>
-                              <div className="p-2 bg-muted rounded-md text-sm">
-                                {donorInfo.eye_color}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {donorInfo.hair_color && (
-                            <div>
-                              <Label className="text-sm font-medium">Hair Color</Label>
-                              <div className="p-2 bg-muted rounded-md text-sm">
-                                {donorInfo.hair_color}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {donorInfo.ethnicity && (
-                            <div>
-                              <Label className="text-sm font-medium">Ethnicity</Label>
-                              <div className="p-2 bg-muted rounded-md text-sm">
-                                {donorInfo.ethnicity}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {donorInfo.blood_type && (
-                            <div>
-                              <Label className="text-sm font-medium">Blood Type</Label>
-                              <div className="p-2 bg-muted rounded-md text-sm">
-                                {donorInfo.blood_type}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Education and Medical */}
-                  {(donorInfo.education_level || donorInfo.medical_history) && (
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="flex items-center text-lg">
-                          <GraduationCap className="h-5 w-5 mr-2" />
-                          Education & Medical
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {donorInfo.education_level && (
-                          <div>
-                            <Label className="text-sm font-medium">Education Level</Label>
-                            <div className="p-2 bg-muted rounded-md text-sm">
-                              {donorInfo.education_level}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {donorInfo.medical_history && (
-                          <div>
-                            <Label className="text-sm font-medium">Medical History</Label>
-                            <div className="p-3 bg-muted rounded-md text-sm">
-                              <pre className="whitespace-pre-wrap">
-                                {typeof donorInfo.medical_history === 'object' 
-                                  ? JSON.stringify(donorInfo.medical_history, null, 2)
-                                  : donorInfo.medical_history}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Notes */}
-                  {donorInfo.notes && (
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="flex items-center text-lg">
-                          <FileText className="h-5 w-5 mr-2" />
-                          Notes
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="p-3 bg-muted rounded-md text-sm">
-                          {donorInfo.notes}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Dna className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>No donor information available</p>
-                  <p className="text-xs">Donor details may not have been recorded</p>
-                </div>
+                <p className="text-sm text-muted-foreground">No donor information available</p>
               )}
             </TabsContent>
           )}
-          
+
           <TabsContent value="trees" className="space-y-4 mt-4">
             <PersonTreesManager personId={person.id} />
           </TabsContent>
@@ -650,27 +774,10 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
 }
 
 interface PersonCardDialogProps {
-  person: {
-    id: string;
-    name: string;
-    gender?: string | null;
-    date_of_birth?: string | null;
-    birth_place?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    address?: string | null;
-    profile_photo_url?: string | null;
-    status: string;
-    notes?: string | null;
-    donor?: boolean;
-    used_ivf?: boolean;
-    used_iui?: boolean;
-    fertility_treatments?: any;
-    is_self?: boolean;
-  } | null;
+  person: Person | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit?: () => void;
+  onEdit?: (person?: Person) => void;
 }
 
 export function PersonCardDialog({ person, open, onOpenChange, onEdit }: PersonCardDialogProps) {
@@ -685,7 +792,7 @@ export function PersonCardDialog({ person, open, onOpenChange, onEdit }: PersonC
             View detailed information about {person.name}
           </DialogDescription>
         </DialogHeader>
-        <PersonCard person={person} onEdit={onEdit} />
+        <PersonCard person={person} onEdit={onEdit} variant="detailed" />
       </DialogContent>
     </Dialog>
   );

@@ -11,6 +11,8 @@ export class PersonService {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw new Error('No user found');
 
+    console.log('Creating person with data:', personData);
+
     const { data, error } = await supabase
       .from('persons')
       .insert({
@@ -20,7 +22,12 @@ export class PersonService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating person:', error);
+      throw error;
+    }
+    
+    console.log('Person created successfully:', data);
     return data as Person;
   }
 

@@ -20,7 +20,7 @@ import {
   Users,
   Loader2
 } from "lucide-react";
-import { PersonCard } from "@/components/family-trees/PersonCard";
+import { PersonCard } from "@/components/people/PersonCard";
 import { PersonCardDialog } from "@/components/people/PersonCard";
 import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { DeletePersonDialog } from "@/components/people/DeletePersonDialog";
@@ -393,6 +393,8 @@ export default function People() {
                 onDelete={(p) => setDeletingPerson(p)}
                 onClick={() => setViewingPerson(person)}
                 showActions={true}
+                onPersonUpdated={fetchPersons}
+                variant="card"
               />
               <div className="mt-2 text-xs text-muted-foreground text-center">
                 {getStatsForPerson(person)}

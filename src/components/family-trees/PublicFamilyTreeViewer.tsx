@@ -335,11 +335,11 @@ export function PublicFamilyTreeViewer({
                         <img
                           src={person.profile_photo_url}
                           alt={person.name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-16 h-16 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-primary" />
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="w-8 h-8 text-primary" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">

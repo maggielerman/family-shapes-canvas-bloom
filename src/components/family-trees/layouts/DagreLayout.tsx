@@ -132,8 +132,8 @@ export function DagreLayout({
 
     // Add node containers (cards)
     nodes.append('rect')
-      .attr('width', 120)
-      .attr('height', 80)
+      .attr('width', 140)
+      .attr('height', 100)
       .attr('rx', 8)
       .attr('ry', 8)
       .attr('fill', (d) => {
@@ -153,20 +153,20 @@ export function DagreLayout({
       return node.profile_photo_url;
     })
       .append('image')
-      .attr('x', 20)
-      .attr('y', 20)
-      .attr('width', 40)
-      .attr('height', 40)
+      .attr('x', 25)
+      .attr('y', 25)
+      .attr('width', 50)
+      .attr('height', 50)
       .attr('href', (d) => {
         const node = g.node(d) as DagreNodeData;
         return node.profile_photo_url!;
       })
-      .attr('clip-path', 'circle(20px)');
+      .attr('clip-path', 'circle(25px)');
 
     // Add names
     nodes.append('text')
-      .attr('x', 60)
-      .attr('y', 35)
+      .attr('x', 70)
+      .attr('y', 45)
       .attr('text-anchor', 'middle')
       .attr('font-size', '11px')
       .attr('font-weight', 'bold')
@@ -179,8 +179,8 @@ export function DagreLayout({
 
     // Add generation labels
     nodes.append('text')
-      .attr('x', 60)
-      .attr('y', 55)
+      .attr('x', 70)
+      .attr('y', 65)
       .attr('text-anchor', 'middle')
       .attr('font-size', '9px')
       .attr('fill', (d) => {
@@ -194,8 +194,8 @@ export function DagreLayout({
 
     // Add gender indicators
     nodes.append('text')
-      .attr('x', 10)
-      .attr('y', 20)
+      .attr('x', 15)
+      .attr('y', 25)
       .attr('font-size', '12px')
       .attr('fill', 'hsl(var(--muted-foreground))')
       .text((d) => {

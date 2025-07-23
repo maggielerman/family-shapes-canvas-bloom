@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { AddPersonDialog } from "@/components/family-trees/AddPersonDialog";
 import { AddExistingPersonDialog } from "@/components/family-trees/AddExistingPersonDialog";
-import { PersonCard } from "@/components/family-trees/PersonCard";
+import { PersonCard } from "@/components/people/PersonCard";
 import { PersonCardDialog } from "@/components/people/PersonCard";
 import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { FamilyTreeVisualization } from "@/components/family-trees/FamilyTreeVisualization";
@@ -279,6 +279,8 @@ export default function FamilyTreeDetail() {
                   onClick={() => setViewingPerson(person)}
                   onEdit={(p) => setEditingPerson(p)}
                   showRemoveFromTree={true}
+                  onPersonUpdated={fetchPersons}
+                  variant="card"
                   onRemoveFromTree={async (p) => {
                     try {
                       const { error } = await supabase

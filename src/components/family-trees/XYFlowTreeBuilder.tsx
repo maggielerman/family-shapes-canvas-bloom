@@ -40,6 +40,7 @@ import {
   GenerationInfo 
 } from '@/utils/generationUtils';
 import { usePersonManagement } from '@/hooks/use-person-management';
+import { EditPersonDialog } from '@/components/people/EditPersonDialog';
 
 interface XYFlowTreeBuilderProps {
   familyTreeId: string;
@@ -58,6 +59,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
   const [generationMap, setGenerationMap] = useState<Map<string, GenerationInfo>>(new Map());
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [currentLayout, setCurrentLayout] = useState<LayoutType>('dagre');
   const [isLayoutLoading, setIsLayoutLoading] = useState(false);
@@ -370,7 +372,23 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
         person={viewingPerson}
         open={!!viewingPerson}
         onOpenChange={(open) => !open && setViewingPerson(null)}
+        onEdit={() => {
+          setEditingPerson(viewingPerson);
+          setViewingPerson(null);
+        }}
       />
+
+      {editingPerson && (
+        <EditPersonDialog
+          person={editingPerson}
+          open={!!editingPerson}
+          onOpenChange={(open) => !open && setEditingPerson(null)}
+          onPersonUpdated={() => {
+            onPersonAdded();
+            setEditingPerson(null);
+          }}
+        />
+      )}
     </div>
   );
 } 

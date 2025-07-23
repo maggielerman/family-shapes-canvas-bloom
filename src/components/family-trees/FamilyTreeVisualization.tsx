@@ -1,39 +1,21 @@
-import { useEffect, useState, lazy, Suspense, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Users, Heart, Baby, Dna, GitBranch, Target, Zap, Network, Layers, TreePine, Building2, Share2 } from "lucide-react";
-import { AddPersonDialog } from "./AddPersonDialog";
-import { PersonCardDialog } from "@/components/people/PersonCard";
-
-// Lazy load heavy chart components for better performance
-
-const ForceDirectedLayout = lazy(() => import("./layouts/ForceDirectedLayout").then(module => ({ default: module.ForceDirectedLayout })));
-
-const DagreLayout = lazy(() => import("./layouts/DagreLayout").then(module => ({ default: module.DagreLayout })));
-const XYFlowTreeBuilder = lazy(() => import("./XYFlowTreeBuilder").then(module => ({ default: module.XYFlowTreeBuilder })));
-
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Person } from "@/types/person";
-import { Connection, ConnectionUtils } from "@/types/connection";
-import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
-import { ConnectionService } from "@/services/connectionService";
-import { PersonService } from "@/services/personService";
-import { 
-  calculateGenerations, 
-  getGenerationalConnections, 
-  getSiblingConnections,
-  getGenerationStats 
-} from "@/utils/generationUtils";
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Users, Network, Share2, Zap } from 'lucide-react';
+import { PersonCardDialog } from '@/components/people/PersonCard';
+import { EditPersonDialog } from '@/components/people/EditPersonDialog';
+import { AddPersonDialog } from './AddPersonDialog';
+import { ForceDirectedLayout } from './layouts/ForceDirectedLayout';
+import { DagreLayout } from './layouts/DagreLayout';
+import { XYFlowTreeBuilder } from './XYFlowTreeBuilder';
 import { usePersonManagement } from '@/hooks/use-person-management';
-
-// Loading component for chart components
-const ChartLoadingSpinner = () => (
-  <div className="flex items-center justify-center h-64">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral-600"></div>
-  </div>
-);
+import { useToast } from '@/hooks/use-toast';
+import { Person } from '@/types/person';
+import { Connection } from '@/types/connection';
+import { calculateGenerations, getGenerationStats, getGenerationalConnections, getSiblingConnections } from '@/utils/generationUtils';
+import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
 
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
@@ -43,9 +25,16 @@ interface FamilyTreeVisualizationProps {
   onConnectionsUpdated: () => void;
 }
 
+const ChartLoadingSpinner = () => (
+  <div className="flex items-center justify-center h-96">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
+
 export function FamilyTreeVisualization({ familyTreeId, persons, connections, onPersonAdded, onConnectionsUpdated }: FamilyTreeVisualizationProps) {
   const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -97,41 +86,29 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const siblingConnections = getSiblingConnections(connections);
 
   return (
-    <div className="space-y-6" ref={containerRef}>
-      {/* Controls */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-2">
-          <Button onClick={() => setAddPersonDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Person
-          </Button>
-        </div>
-        
-        
-      </div>
-
-      {/* Generation Stats */}
-      {generationStats.totalGenerations > 0 && (
+    <div ref={containerRef} className="space-y-6">
+      {/* Generation Statistics */}
+      {persons.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              Generation Statistics
+              Family Tree Statistics
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-coral-600">{generationStats.totalGenerations}</div>
-                <div className="text-sm text-muted-foreground">Generations</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-sage-600">{persons.length}</div>
+                <div className="text-2xl font-bold text-primary">{persons.length}</div>
                 <div className="text-sm text-muted-foreground">People</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-dusty-600">{connections.length}</div>
-                <div className="text-sm text-muted-foreground">Connections</div>
+                <div className="text-2xl font-bold text-green-600">{generationalConnections.length}</div>
+                <div className="text-sm text-muted-foreground">Generational</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{siblingConnections.length}</div>
+                <div className="text-sm text-muted-foreground">Siblings</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-navy-600">{generationStats.maxGeneration}</div>
@@ -172,46 +149,42 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="force" className="mt-6">
+            <Suspense fallback={<ChartLoadingSpinner />}>
+              <ForceDirectedLayout
+                persons={persons}
+                connections={connections}
+                relationshipTypes={relationshipTypes}
+                width={dimensions.width}
+                height={dimensions.height}
+                onPersonClick={handlePersonClick}
+              />
+            </Suspense>
+          </TabsContent>
 
+          <TabsContent value="dagre" className="mt-6">
+            <Suspense fallback={<ChartLoadingSpinner />}>
+              <DagreLayout
+                persons={persons}
+                connections={connections}
+                relationshipTypes={relationshipTypes}
+                width={dimensions.width}
+                height={dimensions.height}
+                onPersonClick={handlePersonClick}
+              />
+            </Suspense>
+          </TabsContent>
 
-        <TabsContent value="force" className="mt-6">
-          <Suspense fallback={<ChartLoadingSpinner />}>
-            <ForceDirectedLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={dimensions.width}
-              height={dimensions.height}
-              onPersonClick={handlePersonClick}
-            />
-          </Suspense>
-        </TabsContent>
-
-
-
-        <TabsContent value="dagre" className="mt-6">
-          <Suspense fallback={<ChartLoadingSpinner />}>
-            <DagreLayout
-              persons={persons}
-              connections={connections}
-              relationshipTypes={relationshipTypes}
-              width={dimensions.width}
-              height={dimensions.height}
-              onPersonClick={handlePersonClick}
-            />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="xyflow" className="mt-6">
-          <Suspense fallback={<ChartLoadingSpinner />}>
-            <XYFlowTreeBuilder
-              familyTreeId={familyTreeId}
-              persons={persons}
-              onPersonAdded={onPersonAdded}
-            />
-          </Suspense>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="xyflow" className="mt-6">
+            <Suspense fallback={<ChartLoadingSpinner />}>
+              <XYFlowTreeBuilder
+                familyTreeId={familyTreeId}
+                persons={persons}
+                onPersonAdded={onPersonAdded}
+              />
+            </Suspense>
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* Dialogs */}
@@ -227,6 +200,22 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
           person={viewingPerson}
           open={!!viewingPerson}
           onOpenChange={(open) => !open && setViewingPerson(null)}
+          onEdit={() => {
+            setEditingPerson(viewingPerson);
+            setViewingPerson(null);
+          }}
+        />
+      )}
+
+      {editingPerson && (
+        <EditPersonDialog
+          person={editingPerson}
+          open={!!editingPerson}
+          onOpenChange={(open) => !open && setEditingPerson(null)}
+          onPersonUpdated={() => {
+            onConnectionsUpdated();
+            setEditingPerson(null);
+          }}
         />
       )}
     </div>
