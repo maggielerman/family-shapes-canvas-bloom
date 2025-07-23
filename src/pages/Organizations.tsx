@@ -16,7 +16,8 @@ import {
   Crown,
   MoreHorizontal,
   UserPlus,
-  Eye
+  Eye,
+  Home
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -157,7 +158,17 @@ const Organizations = () => {
             Manage your family groups, clinics, and other organizations
           </p>
         </div>
-        <CreateOrganizationDialog onOrganizationCreated={fetchOrganizations} />
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dashboard', { state: { viewPersonalDashboard: true } })}
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Personal Dashboard
+          </Button>
+          <CreateOrganizationDialog onOrganizationCreated={fetchOrganizations} />
+        </div>
       </div>
 
       {organizations.length === 0 ? (

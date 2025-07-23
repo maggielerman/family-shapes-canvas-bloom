@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,8 @@ import {
   Shield,
   Calendar,
   MapPin,
-  Globe
+  Globe,
+  Home
 } from "lucide-react";
 import CreateOrganizationDialog from "./CreateOrganizationDialog";
 import { OrganizationInviteDialog } from "./OrganizationInviteDialog";
@@ -53,6 +54,7 @@ export function OrganizationDashboard() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [membership, setMembership] = useState<OrganizationMembership | null>(null);
@@ -173,6 +175,14 @@ export function OrganizationDashboard() {
         </div>
 
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dashboard', { state: { viewPersonalDashboard: true } })}
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Personal Dashboard
+          </Button>
           {canManage && (
             <>
               <Button

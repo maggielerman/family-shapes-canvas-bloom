@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/components/auth/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,10 +38,12 @@ interface Organization {
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -146,7 +148,7 @@ const Dashboard = () => {
     }
   };
 
-  const checkOrganizationSetup = async (organizationId: string) => {
+  const checkOrganizationSetup = useCallback(async (organizationId: string) => {
     try {
       const { data: org, error } = await supabase
         .from('organizations')
@@ -168,18 +170,36 @@ const Dashboard = () => {
       // If there's an error, still navigate to the organization dashboard
       navigate(`/organizations/${organizationId}`);
     }
-  };
+  }, [navigate]);
 
   // Check if user has an organization account that needs onboarding
+  // Only redirect if user hasn't explicitly navigated to personal dashboard
   useEffect(() => {
-    if (profile && organizations.length > 0) {
+    // Reset redirect flag when location changes
+    if (location.pathname === '/dashboard') {
+      hasRedirectedRef.current = false;
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    // Skip redirect if:
+    // 1. Already redirected in this session
+    // 2. User explicitly navigated to personal dashboard (via state or direct navigation)
+    // 3. URL contains explicit dashboard intent
+    const isExplicitPersonalDashboard = 
+      location.state?.viewPersonalDashboard || 
+      location.search.includes('personal=true') ||
+      hasRedirectedRef.current;
+
+    if (profile && organizations.length > 0 && !isExplicitPersonalDashboard) {
       // Check if user owns any organization that might need onboarding
       const ownedOrg = organizations.find(org => org.role === 'owner');
       if (ownedOrg) {
+        hasRedirectedRef.current = true;
         checkOrganizationSetup(ownedOrg.id);
       }
     }
-  }, [profile, organizations]);
+  }, [profile, organizations, checkOrganizationSetup, location.state, location.search]);
 
   if (loading || isLoadingData) {
     return (
