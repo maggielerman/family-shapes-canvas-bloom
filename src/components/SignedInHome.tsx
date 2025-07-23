@@ -78,10 +78,10 @@ const SignedInHome = () => {
         supabase.from('media_items').select('id', { count: 'exact' }).eq('user_id', user!.id)
       ]);
 
-      // Fetch organizations count (both owned and member organizations)
+      // Fetch organizations data (both owned and member organizations)
       const [ownedOrgsData, memberOrgsData] = await Promise.all([
-        supabase.from('organizations').select('id', { count: 'exact' }).eq('owner_id', user!.id),
-        supabase.from('organization_memberships').select('organization_id', { count: 'exact' }).eq('user_id', user!.id)
+        supabase.from('organizations').select('id').eq('owner_id', user!.id),
+        supabase.from('organization_memberships').select('organization_id').eq('user_id', user!.id)
       ]);
 
       // Get unique organization count (owned + member organizations, avoiding duplicates)
