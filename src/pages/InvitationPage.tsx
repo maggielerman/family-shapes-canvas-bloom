@@ -121,6 +121,8 @@ const InvitationPage = () => {
         if (action === 'accept' && data.organization?.id) {
           navigate(`/organizations/${data.organization.id}`);
         } else {
+          // Mark as explicit navigation when declining invitation
+          sessionStorage.setItem('explicit-personal-dashboard', 'true');
           navigate('/dashboard');
         }
       } else {
