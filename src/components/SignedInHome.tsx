@@ -72,17 +72,32 @@ const SignedInHome = () => {
       }
 
       // Fetch quick stats
-      const [familyTreesData, peopleData, organizationsData, mediaData] = await Promise.all([
+      const [familyTreesData, peopleData, mediaData] = await Promise.all([
         supabase.from('family_trees').select('id', { count: 'exact' }).eq('user_id', user!.id),
         supabase.from('people').select('id', { count: 'exact' }).eq('user_id', user!.id),
-        supabase.from('organizations').select('id', { count: 'exact' }).eq('owner_id', user!.id),
         supabase.from('media_items').select('id', { count: 'exact' }).eq('user_id', user!.id)
+      ]);
+
+      // Fetch organizations data (both owned and member organizations)
+      const [ownedOrgsData, memberOrgsData] = await Promise.all([
+        supabase.from('organizations').select('id').eq('owner_id', user!.id),
+        supabase.from('organization_memberships').select('organization_id').eq('user_id', user!.id)
+      ]);
+
+      // Get unique organization count (owned + member organizations, avoiding duplicates)
+      const ownedOrgs = ownedOrgsData.data || [];
+      const memberOrgs = memberOrgsData.data || [];
+      
+      // Create a set of unique organization IDs
+      const uniqueOrgIds = new Set([
+        ...ownedOrgs.map(org => org.id),
+        ...memberOrgs.map(member => member.organization_id)
       ]);
 
       setStats({
         familyTrees: familyTreesData.count || 0,
         people: peopleData.count || 0,
-        organizations: organizationsData.count || 0,
+        organizations: uniqueOrgIds.size,
         mediaItems: mediaData.count || 0
       });
 
