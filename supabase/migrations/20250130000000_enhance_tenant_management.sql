@@ -69,7 +69,7 @@ BEGIN
         org_slug,
         org_subdomain,
         org_type,
-        COALESCE(org_description, 'Organization created by user'),
+        COALESCE(org_description, 'Organization created during signup'),
         'private',
         current_user_id
     ) RETURNING id INTO new_org_id;
