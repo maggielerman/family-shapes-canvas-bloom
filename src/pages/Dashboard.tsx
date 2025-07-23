@@ -62,12 +62,21 @@ const Dashboard = () => {
 
   // Redirect organization accounts to their organization dashboard or onboarding
   useEffect(() => {
-    if (profile && profile.account_type === 'organization' && profile.organization_id) {
-      console.log('Redirecting organization account to org dashboard:', profile.organization_id);
-      // Check if organization setup is complete by looking at the type
-      checkOrganizationSetup(profile.organization_id);
+    if (profile && profile.account_type === 'organization') {
+      if (profile.organization_id) {
+        // Check if organization setup is complete by looking at the type
+        checkOrganizationSetup(profile.organization_id);
+      } else {
+        // Handle organization accounts with null organization_id
+        // This could happen if the organization was deleted or there's a data inconsistency
+        toast({
+          title: "Organization Access Issue",
+          description: "Your organization account is not properly linked. Please contact support.",
+          variant: "destructive",
+        });
+      }
     }
-  }, [profile, navigate]);
+  }, [profile, navigate, checkOrganizationSetup]);
 
   const checkOrganizationSetup = async (organizationId: string) => {
     try {
