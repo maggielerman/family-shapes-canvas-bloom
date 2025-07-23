@@ -51,10 +51,9 @@ const GENERATION_COLORS = [
 
 **Updated Components:**
 - `XYFlowTreeBuilder.tsx` - Interactive flow layout
-- `TreeLayout.tsx` - Hierarchical tree layout  
-- `RadialTreeLayout.tsx` - Radial tree layout
+
 - `ForceDirectedLayout.tsx` - Force-directed layout
-- `ClusterLayout.tsx` - Cluster layout
+
 
 ### 4. Enhanced Legend System
 
