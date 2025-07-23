@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +42,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -53,9 +54,9 @@ const Dashboard = () => {
     if (user) {
       fetchUserData();
     }
-  }, [user]);
+  }, [user, fetchUserData]);
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -92,9 +93,9 @@ const Dashboard = () => {
     } finally {
       setIsLoadingData(false);
     }
-  };
+  }, [user, toast, fetchOrganizations]);
 
-  const fetchOrganizations = async () => {
+  const fetchOrganizations = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -144,9 +145,9 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching organizations:', error);
     }
-  };
+  }, [user]);
 
-  const checkOrganizationSetup = async (organizationId: string) => {
+  const checkOrganizationSetup = useCallback(async (organizationId: string) => {
     try {
       const { data: org, error } = await supabase
         .from('organizations')
@@ -168,18 +169,33 @@ const Dashboard = () => {
       // If there's an error, still navigate to the organization dashboard
       navigate(`/organizations/${organizationId}`);
     }
-  };
+  }, [navigate]);
 
-  // Check if user has an organization account that needs onboarding
+  // Check if user should be redirected to organization setup on initial load only
   useEffect(() => {
-    if (profile && organizations.length > 0) {
+    // Only redirect on initial load and if user hasn't explicitly navigated to personal dashboard
+    const hasExplicitlyNavigatedToPersonal = sessionStorage.getItem('explicit-personal-dashboard');
+    
+    if (profile && organizations.length > 0 && !hasExplicitlyNavigatedToPersonal && !hasRedirectedRef.current) {
       // Check if user owns any organization that might need onboarding
-      const ownedOrg = organizations.find(org => org.role === 'owner');
-      if (ownedOrg) {
-        checkOrganizationSetup(ownedOrg.id);
+      const ownedOrganizations = organizations.filter(org => org.role === 'owner');
+      
+      // Only auto-redirect if this is the first load (not a subsequent data refresh)
+      // and user has owned organizations
+      if (ownedOrganizations.length > 0) {
+        hasRedirectedRef.current = true;
+        // For now, redirect to the first owned organization
+        // In the future, this could be enhanced to remember the last used organization
+        const primaryOrg = ownedOrganizations[0];
+        checkOrganizationSetup(primaryOrg.id);
       }
     }
-  }, [profile, organizations]);
+    
+    // Clear the session flag after check
+    if (hasExplicitlyNavigatedToPersonal) {
+      sessionStorage.removeItem('explicit-personal-dashboard');
+    }
+  }, [profile, organizations, checkOrganizationSetup]);
 
   if (loading || isLoadingData) {
     return (

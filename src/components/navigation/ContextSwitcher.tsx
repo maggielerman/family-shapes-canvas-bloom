@@ -106,8 +106,12 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
     setCurrentContext(value);
     
     if (value === "personal") {
+      // Mark that user explicitly navigated to personal dashboard
+      sessionStorage.setItem('explicit-personal-dashboard', 'true');
       navigate("/dashboard");
     } else {
+      // Clear any explicit personal navigation flag when switching to organization
+      sessionStorage.removeItem('explicit-personal-dashboard');
       // Navigate to organization dashboard
       navigate(`/organizations/${value}`);
     }

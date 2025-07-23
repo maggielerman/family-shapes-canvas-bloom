@@ -33,6 +33,8 @@ const Auth = () => {
   useEffect(() => {
     if (user) {
       console.log('User authenticated, redirecting to dashboard');
+      // Mark as explicit navigation since user just authenticated
+      sessionStorage.setItem('explicit-personal-dashboard', 'true');
       navigate("/dashboard");
     }
   }, [user, navigate]);
