@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Dialog, 
@@ -28,7 +29,8 @@ import {
   UserCircle,
   File,
   Loader2,
-  TreePine
+  TreePine,
+  GraduationCap
 } from 'lucide-react';
 import { usePersonMedia } from '@/hooks/use-person-media';
 import { useFileUpload } from '@/hooks/use-file-upload';
@@ -38,6 +40,8 @@ import { MarkAsSelfDialog } from './MarkAsSelfDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDate, calculateAge } from '@/utils/dateUtils';
+import { Donor } from '@/types/donor';
+import { DonorUtils } from '@/types/donor';
 
 interface PersonCardProps {
   person: {
@@ -67,6 +71,37 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
   const { uploadMultipleFiles, isUploading } = useFileUpload();
   const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
   const [markAsSelfDialogOpen, setMarkAsSelfDialogOpen] = useState(false);
+  const [donorInfo, setDonorInfo] = useState<Donor | null>(null);
+  const [donorLoading, setDonorLoading] = useState(false);
+  
+  // Fetch donor information when person is a donor
+  useEffect(() => {
+    const fetchDonorInfo = async () => {
+      if (person.donor) {
+        setDonorLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('donors')
+            .select('*')
+            .eq('person_id', person.id)
+            .single();
+
+          if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+            throw error;
+          }
+
+          setDonorInfo(data);
+        } catch (error) {
+          console.error('Error fetching donor info:', error);
+        } finally {
+          setDonorLoading(false);
+        }
+      }
+    };
+
+    fetchDonorInfo();
+  }, [person.id, person.donor]);
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
@@ -209,10 +244,11 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
       
       <CardContent>
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className={`grid w-full ${person.donor ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="medical">Medical</TabsTrigger>
+            {person.donor && <TabsTrigger value="donor">Donor</TabsTrigger>}
             <TabsTrigger value="trees">Trees</TabsTrigger>
             <TabsTrigger value="media">Media</TabsTrigger>
           </TabsList>
@@ -317,6 +353,196 @@ export function PersonCard({ person, onEdit, onClose }: PersonCardProps) {
               )}
             </div>
           </TabsContent>
+          
+          {person.donor && (
+            <TabsContent value="donor" className="space-y-4 mt-4">
+              {donorLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : donorInfo ? (
+                <div className="space-y-4">
+                  {/* Basic Donor Information */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center text-lg">
+                        <Dna className="h-5 w-5 mr-2" />
+                        Donor Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {donorInfo.donor_number && (
+                          <div>
+                            <Label className="text-sm font-medium">Donor Number</Label>
+                            <div className="p-2 bg-muted rounded-md text-sm">
+                              {donorInfo.donor_number}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {donorInfo.donor_type && (
+                          <div>
+                            <Label className="text-sm font-medium">Donor Type</Label>
+                            <div className="p-2 bg-muted rounded-md text-sm">
+                              <Badge variant="outline">
+                                {DonorUtils.getDonorTypeLabel(donorInfo.donor_type)}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {donorInfo.sperm_bank && (
+                          <div>
+                            <Label className="text-sm font-medium">Sperm Bank</Label>
+                            <div className="p-2 bg-muted rounded-md text-sm">
+                              {donorInfo.sperm_bank}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div>
+                          <Label className="text-sm font-medium">Anonymous Status</Label>
+                          <div className="p-2 bg-muted rounded-md text-sm">
+                            <Badge variant={donorInfo.is_anonymous ? "secondary" : "default"}>
+                              {DonorUtils.getAnonymityStatus(donorInfo.is_anonymous)}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Physical Characteristics */}
+                  {(donorInfo.height || donorInfo.weight || donorInfo.eye_color || donorInfo.hair_color || donorInfo.ethnicity || donorInfo.blood_type) && (
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center text-lg">
+                          <User className="h-5 w-5 mr-2" />
+                          Physical Characteristics
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {donorInfo.height && (
+                            <div>
+                              <Label className="text-sm font-medium">Height</Label>
+                              <div className="p-2 bg-muted rounded-md text-sm">
+                                {donorInfo.height}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {donorInfo.weight && (
+                            <div>
+                              <Label className="text-sm font-medium">Weight</Label>
+                              <div className="p-2 bg-muted rounded-md text-sm">
+                                {donorInfo.weight}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {donorInfo.eye_color && (
+                            <div>
+                              <Label className="text-sm font-medium">Eye Color</Label>
+                              <div className="p-2 bg-muted rounded-md text-sm">
+                                {donorInfo.eye_color}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {donorInfo.hair_color && (
+                            <div>
+                              <Label className="text-sm font-medium">Hair Color</Label>
+                              <div className="p-2 bg-muted rounded-md text-sm">
+                                {donorInfo.hair_color}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {donorInfo.ethnicity && (
+                            <div>
+                              <Label className="text-sm font-medium">Ethnicity</Label>
+                              <div className="p-2 bg-muted rounded-md text-sm">
+                                {donorInfo.ethnicity}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {donorInfo.blood_type && (
+                            <div>
+                              <Label className="text-sm font-medium">Blood Type</Label>
+                              <div className="p-2 bg-muted rounded-md text-sm">
+                                {donorInfo.blood_type}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Education and Medical */}
+                  {(donorInfo.education_level || donorInfo.medical_history) && (
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center text-lg">
+                          <GraduationCap className="h-5 w-5 mr-2" />
+                          Education & Medical
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {donorInfo.education_level && (
+                          <div>
+                            <Label className="text-sm font-medium">Education Level</Label>
+                            <div className="p-2 bg-muted rounded-md text-sm">
+                              {donorInfo.education_level}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {donorInfo.medical_history && (
+                          <div>
+                            <Label className="text-sm font-medium">Medical History</Label>
+                            <div className="p-3 bg-muted rounded-md text-sm">
+                              <pre className="whitespace-pre-wrap">
+                                {typeof donorInfo.medical_history === 'object' 
+                                  ? JSON.stringify(donorInfo.medical_history, null, 2)
+                                  : donorInfo.medical_history}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Notes */}
+                  {donorInfo.notes && (
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center text-lg">
+                          <FileText className="h-5 w-5 mr-2" />
+                          Notes
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="p-3 bg-muted rounded-md text-sm">
+                          {donorInfo.notes}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Dna className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No donor information available</p>
+                  <p className="text-xs">Donor details may not have been recorded</p>
+                </div>
+              )}
+            </TabsContent>
+          )}
           
           <TabsContent value="trees" className="space-y-4 mt-4">
             <PersonTreesManager personId={person.id} />

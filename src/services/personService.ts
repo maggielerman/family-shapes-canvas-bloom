@@ -145,6 +145,13 @@ export class PersonService {
    * Delete person
    */
   static async deletePerson(id: string): Promise<void> {
+    // Delete donor record first (if person is a donor)
+    await supabase
+      .from('donors')
+      .delete()
+      .eq('person_id', id);
+
+    // Delete the person
     const { error } = await supabase
       .from('persons')
       .delete()

@@ -69,6 +69,6 @@ export function usePersonManagement(options: UsePersonManagementOptions = {}) {
   return {
     handleAddPerson,
     handleAddDonor,
-    isSubmitting,
+    isSubmitting
   };
 } 

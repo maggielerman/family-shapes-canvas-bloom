@@ -186,7 +186,13 @@ export default function People() {
 
   const handleDeletePerson = async (personId: string) => {
     try {
-      // Delete all connections first
+      // Delete donor record first (if person is a donor)
+      await supabase
+        .from('donors')
+        .delete()
+        .eq('person_id', personId);
+
+      // Delete all connections
       await supabase
         .from('connections')
         .delete()
