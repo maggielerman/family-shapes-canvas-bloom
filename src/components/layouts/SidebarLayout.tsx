@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import ContextSwitcher from "@/components/navigation/ContextSwitcher";
 import { 
   Heart, 
   User, 
@@ -57,14 +58,17 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   };
 
   const sidebarItems = [
-    { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: User, label: "Profile", path: "/profile" },
-    { icon: Users, label: "People", path: "/people" },
-    { icon: TreePine, label: "Family Trees", path: "/family-trees" },
-    { icon: Image, label: "Media", path: "/media" },
-    { icon: Share2, label: "Share", path: "/share" },
-    { icon: Building2, label: "Organizations", path: "/organizations" },
+    { path: "/dashboard", label: "Dashboard", icon: Home },
+    { path: "/family-trees", label: "Family Trees", icon: TreePine },
+    { path: "/people", label: "People", icon: Users },
+    { path: "/organizations", label: "Organizations", icon: Building2 },
+    { path: "/media", label: "Media", icon: Image },
+    { path: "/share", label: "Share", icon: Share2 },
   ];
+
+  if (!user) {
+    return null;
+  }
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -72,8 +76,9 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   return (
     <SidebarProvider>
       <Sidebar variant="inset">
-        <SidebarHeader className="border-b px-2 py-2">
-          <div className="flex items-center gap-2 px-4 py-2">
+        <SidebarHeader className="border-b px-2 py-4">
+          {/* App Logo */}
+          <div className="flex items-center gap-2 px-4 py-2 mb-3">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
               <Heart className="w-4 h-4 text-white" />
             </div>
@@ -81,6 +86,11 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
               <span className="truncate font-semibold">Family Shapes</span>
               <span className="truncate text-xs">Family Tree Management</span>
             </div>
+          </div>
+          
+          {/* Context Switcher */}
+          <div className="px-4">
+            <ContextSwitcher />
           </div>
         </SidebarHeader>
         <SidebarContent className="px-2 py-2">
@@ -125,10 +135,10 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     onClick={handleSignOut}
-                    tooltip="Sign Out"
+                    tooltip="Sign out"
                   >
                     <LogOut />
-                    <span>Sign Out</span>
+                    <span>Sign out</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -137,23 +147,8 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="h-4 w-px bg-sidebar-border" />
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email} />
-                <AvatarFallback className="bg-coral-600 text-white text-sm">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{displayName}</span>
-                <span className="truncate text-xs">{user?.email}</span>
-              </div>
-            </div>
-          </div>
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           {children}
