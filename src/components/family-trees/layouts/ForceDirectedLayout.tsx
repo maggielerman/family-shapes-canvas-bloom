@@ -5,7 +5,9 @@ import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
 import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
-import { RelationshipFilter, RELATIONSHIP_CATEGORIES, RelationshipCategory } from './RelationshipFilter';
+import { InfoPanel } from './InfoPanel';
+import { RelationshipFilter } from './RelationshipFilter';
+import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './relationshipConstants';
 
 interface RelationshipType {
   value: string;
@@ -359,37 +361,29 @@ export function ForceDirectedLayout({
         />
       </div>
 
-      {/* Relationship Filter - bottom right */}
-      <div className="absolute bottom-4 right-4 z-10">
-        <RelationshipFilter
-          relationshipFilters={relationshipFilters}
-          onRelationshipFilterChange={handleRelationshipFilterChange}
-          className="bg-background/80 backdrop-blur-sm rounded-lg p-3"
-        />
-      </div>
-
       {/* Layout Switcher - top left */}
       <div className="absolute top-4 left-4 z-10">
         <LayoutSwitcher
           currentLayout={currentLayout}
           onLayoutChange={onLayoutChange}
-          className="mb-3"
         />
       </div>
 
-      {/* Info Panel - top left below layout switcher */}
-      <div className="absolute top-20 left-4 z-10">
-        <div className="bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1 text-sm space-y-1">
-          <div>Layout: Force</div>
-          <div>{Math.round(zoomLevel * 100)}%</div>
-          <div className="text-xs text-muted-foreground">
-            Showing: {Object.entries(relationshipFilters).filter(([_, enabled]) => enabled).map(([category]) => 
-              category === 'generational' ? 'Parent-Child' : 
-              category === 'lateral' ? 'Siblings & Partners' : 
-              'Donors'
-            ).join(', ')}
-          </div>
-        </div>
+      {/* Relationship Filter - top left below layout switcher */}
+      <div className="absolute top-16 left-4 z-10">
+        <RelationshipFilter
+          relationshipFilters={relationshipFilters}
+          onRelationshipFilterChange={handleRelationshipFilterChange}
+        />
+      </div>
+
+      {/* Info Panel - bottom left */}
+      <div className="absolute bottom-4 left-4 z-10">
+        <InfoPanel
+          layout="Force"
+          zoomLevel={zoomLevel}
+          relationshipFilters={relationshipFilters}
+        />
       </div>
 
       <svg
