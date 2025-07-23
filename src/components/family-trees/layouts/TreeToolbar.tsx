@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Target, ZoomIn, Share2, Network, Grid3X3 } from 'lucide-react';
+import { User, Maximize2, Share2, Network, Grid3X3 } from 'lucide-react';
 import { Person } from '@/types/person';
 
 interface TreeToolbarProps {
@@ -38,7 +38,7 @@ export function TreeToolbar({
         className="h-8 w-8 p-0"
         title={hasSelf ? `Center on ${selfPerson?.name}` : 'No person designated as self'}
       >
-        <Target className="h-4 w-4" />
+        <User className="h-4 w-4" />
       </Button>
 
       {/* Zoom to Fit Button */}
@@ -49,7 +49,7 @@ export function TreeToolbar({
         className="h-8 w-8 p-0"
         title="Zoom to fit all nodes"
       >
-        <ZoomIn className="h-4 w-4" />
+        <Maximize2 className="h-4 w-4" />
       </Button>
 
       {/* Separator */}
