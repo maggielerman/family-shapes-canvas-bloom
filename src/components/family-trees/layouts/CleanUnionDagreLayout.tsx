@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import * as d3 from 'd3';
 import * as dagre from 'dagre';
 import { Person } from '@/types/person';
@@ -6,7 +6,7 @@ import { Connection } from '@/types/connection';
 import { processConnectionsWithUnions } from '@/services/unionProcessingService';
 import { UnionProcessedData, UnionNode } from '@/types/unionTypes';
 
-interface CleanUnionDagreLayoutProps {
+export interface CleanUnionDagreLayoutProps {
   persons: Person[];
   connections: Connection[];
   width: number;
@@ -17,7 +17,13 @@ interface CleanUnionDagreLayoutProps {
   onUnionClick?: (union: UnionNode) => void;
 }
 
-export default function CleanUnionDagreLayout({
+export type UnionDagreHandle = {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
+};
+
+const CleanUnionDagreLayout = forwardRef<UnionDagreHandle, CleanUnionDagreLayoutProps>(function CleanUnionDagreLayout({
   persons,
   connections,
   width,
@@ -26,8 +32,9 @@ export default function CleanUnionDagreLayout({
   minSharedChildren = 1,
   onPersonClick,
   onUnionClick
-}: CleanUnionDagreLayoutProps) {
+}, ref) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   // Build union-processed data once per render
   const data: UnionProcessedData = enableUnions
@@ -162,13 +169,36 @@ export default function CleanUnionDagreLayout({
     unionNodes.style('cursor', 'pointer').on('click', (_, d: any) => onUnionClick?.(d.union));
 
     // Zoom / pan
-    svg.call(
-      d3
-        .zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.1, 2])
-        .on('zoom', (e) => g.attr('transform', e.transform))
-    );
+    const zoomBehavior = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 2])
+      .on('zoom', (e) => g.attr('transform', e.transform));
+
+    zoomBehaviorRef.current = zoomBehavior;
+
+    svg.call(zoomBehavior as any);
   }, [persons, connections, enableUnions, minSharedChildren]);
 
+  // expose imperative zoom handlers
+  useImperativeHandle(ref, () => ({
+    zoomIn: () => {
+      if (svgRef.current && zoomBehaviorRef.current) {
+        d3.select(svgRef.current).transition().call(zoomBehaviorRef.current.scaleBy as any, 1.2);
+      }
+    },
+    zoomOut: () => {
+      if (svgRef.current && zoomBehaviorRef.current) {
+        d3.select(svgRef.current).transition().call(zoomBehaviorRef.current.scaleBy as any, 0.8);
+      }
+    },
+    resetZoom: () => {
+      if (svgRef.current && zoomBehaviorRef.current) {
+        d3.select(svgRef.current).transition().call(zoomBehaviorRef.current.transform as any, d3.zoomIdentity);
+      }
+    }
+  }));
+
   return <svg ref={svgRef} width={width} height={height} />;
-} 
+});
+
+export default CleanUnionDagreLayout; 
