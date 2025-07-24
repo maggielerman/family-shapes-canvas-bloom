@@ -7,6 +7,7 @@ import { AddPersonDialog } from './AddPersonDialog';
 import { ForceDirectedLayout } from './layouts/ForceDirectedLayout';
 import { RadialLayout } from './layouts/RadialLayout';
 import { DagreLayout } from './layouts/DagreLayout';
+import CleanUnionDagreLayout from './layouts/CleanUnionDagreLayout';
 import { FamilyChartLayout } from './layouts/FamilyChartLayout';
 import { usePersonManagement } from '@/hooks/use-person-management';
 import { useToast } from '@/hooks/use-toast';
@@ -122,15 +123,13 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                   onLayoutChange={handleLayoutChange}
                 />
               ) : currentLayout === 'dagre' ? (
-                <DagreLayout
+                <CleanUnionDagreLayout
                   persons={persons}
                   connections={connections}
-                  relationshipTypes={relationshipTypes}
                   width={dimensions.width}
                   height={dimensions.height}
                   onPersonClick={handlePersonClick}
-                  currentLayout={currentLayout}
-                  onLayoutChange={handleLayoutChange}
+                  enableUnions={true}
                 />
               ) : (
                 <FamilyChartLayout
