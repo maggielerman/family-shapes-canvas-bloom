@@ -92,7 +92,11 @@ export function transformToFamilyChartData(
           }
         } else {
           // Gender unknown - try to assign to available parent slot
-          if (!toNode.fid) {
+          // First check if this parent is already assigned
+          if (toNode.fid === fromNode.id || toNode.mid === fromNode.id) {
+            // Parent already assigned, skip
+            console.log(`familyChartAdapter: Parent ${fromNode.name} already assigned to ${toNode.name}, skipping duplicate.`);
+          } else if (!toNode.fid) {
             // No father assigned yet, use this slot
             toNode.fid = fromNode.id;
             console.warn(`familyChartAdapter: Parent ${fromNode.name} with unknown gender assigned as father for ${toNode.name}.`);
@@ -103,8 +107,10 @@ export function transformToFamilyChartData(
           } else {
             // Both slots filled, store in unknown gender parents array
             if (!toNode._unknownGenderParents) toNode._unknownGenderParents = [];
-            toNode._unknownGenderParents.push(fromNode.id);
-            console.warn(`familyChartAdapter: Parent ${fromNode.name} has unknown gender and both parent slots are filled for child ${toNode.name}. Stored in _unknownGenderParents array.`);
+            if (!toNode._unknownGenderParents.includes(fromNode.id)) {
+              toNode._unknownGenderParents.push(fromNode.id);
+              console.warn(`familyChartAdapter: Parent ${fromNode.name} has unknown gender and cannot be assigned to standard slots for child ${toNode.name}. Stored in _unknownGenderParents array.`);
+            }
           }
         }
         
@@ -140,7 +146,11 @@ export function transformToFamilyChartData(
           }
         } else {
           // Gender unknown - try to assign to available parent slot
-          if (!fromNode.fid) {
+          // First check if this parent is already assigned
+          if (fromNode.fid === toNode.id || fromNode.mid === toNode.id) {
+            // Parent already assigned, skip
+            console.log(`familyChartAdapter: Parent ${toNode.name} already assigned to ${fromNode.name}, skipping duplicate.`);
+          } else if (!fromNode.fid) {
             // No father assigned yet, use this slot
             fromNode.fid = toNode.id;
             console.warn(`familyChartAdapter: Parent ${toNode.name} with unknown gender assigned as father for ${fromNode.name}.`);
@@ -151,8 +161,10 @@ export function transformToFamilyChartData(
           } else {
             // Both slots filled, store in unknown gender parents array
             if (!fromNode._unknownGenderParents) fromNode._unknownGenderParents = [];
-            fromNode._unknownGenderParents.push(toNode.id);
-            console.warn(`familyChartAdapter: Parent ${toNode.name} has unknown gender and both parent slots are filled for child ${fromNode.name}. Stored in _unknownGenderParents array.`);
+            if (!fromNode._unknownGenderParents.includes(toNode.id)) {
+              fromNode._unknownGenderParents.push(toNode.id);
+              console.warn(`familyChartAdapter: Parent ${toNode.name} has unknown gender and cannot be assigned to standard slots for child ${fromNode.name}. Stored in _unknownGenderParents array.`);
+            }
           }
         }
         

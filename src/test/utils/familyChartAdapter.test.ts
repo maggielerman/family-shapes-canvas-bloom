@@ -231,5 +231,69 @@ describe('familyChartAdapter', () => {
       expect(childNode?._allParents).toEqual(['parent1']);
       expect(childNode?.fid).toBe('parent1');
     });
+
+    it('should not assign same unknown gender parent to both fid and mid slots', () => {
+      const persons: Person[] = [
+        { id: 'child1', name: 'Child 1', gender: 'female' },
+        { id: 'parent1', name: 'Parent 1', gender: undefined } // Unknown gender
+      ];
+
+      const connections: Connection[] = [
+        { 
+          id: 'conn1',
+          from_person_id: 'parent1',
+          to_person_id: 'child1',
+          relationship_type: 'parent'
+        },
+        { 
+          id: 'conn2',
+          from_person_id: 'parent1',
+          to_person_id: 'child1',
+          relationship_type: 'parent'
+        }
+      ];
+
+      const result = transformToFamilyChartData(persons, connections);
+      const childNode = result.nodes.find(n => n.id === 'child1');
+
+      // Parent should only be assigned to fid, not both fid and mid
+      expect(childNode?.fid).toBe('parent1');
+      expect(childNode?.mid).toBeUndefined();
+      expect(childNode?._allParents).toEqual(['parent1']);
+      // Duplicate relationship should be skipped entirely
+      expect(childNode?._unknownGenderParents).toBeUndefined();
+    });
+
+    it('should handle duplicate child relationships with unknown gender parent correctly', () => {
+      const persons: Person[] = [
+        { id: 'child1', name: 'Child 1', gender: 'male' },
+        { id: 'parent1', name: 'Parent 1', gender: undefined } // Unknown gender
+      ];
+
+      const connections: Connection[] = [
+        { 
+          id: 'conn1',
+          from_person_id: 'child1',
+          to_person_id: 'parent1',
+          relationship_type: 'child'
+        },
+        { 
+          id: 'conn2',
+          from_person_id: 'child1',
+          to_person_id: 'parent1',
+          relationship_type: 'child'
+        }
+      ];
+
+      const result = transformToFamilyChartData(persons, connections);
+      const childNode = result.nodes.find(n => n.id === 'child1');
+
+      // Parent should only be assigned to fid, not both fid and mid
+      expect(childNode?.fid).toBe('parent1');
+      expect(childNode?.mid).toBeUndefined();
+      expect(childNode?._allParents).toEqual(['parent1']);
+      // Duplicate relationship should be skipped entirely
+      expect(childNode?._unknownGenderParents).toBeUndefined();
+    });
   });
 });
