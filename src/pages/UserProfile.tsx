@@ -41,17 +41,34 @@ const UserProfile = () => {
       setLoading(true);
       console.log('Loading profile for user:', user.id, user.email);
       
-      // Load from user_profiles table
-      const { data: profile, error } = await supabase
+      // Load from user_profiles table - get the most recent one if multiple exist
+      const { data: profiles, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .order('updated_at', { ascending: false })
+        .limit(1);
 
-      console.log('Profile data:', profile, 'Error:', error);
+      console.log('Profile data:', profiles, 'Error:', error);
 
       // Handle case where profile doesn't exist (not an error)
-      if (error && error.code === 'PGRST116') {
+      if (error) {
+        console.error('Error loading profile:', error);
+        throw error;
+      } else if (profiles && profiles.length > 0) {
+        // Profile exists, use the most recent one
+        const profile = profiles[0];
+        console.log('Profile found, loading data');
+        setProfileData({
+          firstName: profile.full_name?.split(' ')[0] || '',
+          lastName: profile.full_name?.split(' ').slice(1).join(' ') || '',
+          email: user.email || '',
+          phone: profile.phone || '',
+          location: profile.location || '',
+          bio: profile.bio || '',
+          memberSince: new Date(user.created_at).toLocaleDateString()
+        });
+      } else {
         // No profile exists, create default from auth user
         console.log('No profile found, using auth user data');
         setProfileData({
@@ -61,22 +78,6 @@ const UserProfile = () => {
           phone: '',
           location: '',
           bio: '',
-          memberSince: new Date(user.created_at).toLocaleDateString()
-        });
-      } else if (error) {
-        // Real error occurred
-        console.error('Error loading profile:', error);
-        throw error;
-      } else if (profile) {
-        // Profile exists, use it
-        console.log('Profile found, loading data');
-        setProfileData({
-          firstName: profile.full_name?.split(' ')[0] || '',
-          lastName: profile.full_name?.split(' ').slice(1).join(' ') || '',
-          email: user.email || '',
-          phone: profile.phone || '',
-          location: profile.location || '',
-          bio: profile.bio || '',
           memberSince: new Date(user.created_at).toLocaleDateString()
         });
       }

@@ -45,17 +45,21 @@ export const DatabaseTest = () => {
 
       // Test 3: Test user_profiles table access
       addResult('Testing user_profiles table access...');
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError, count } = await supabase
         .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+        .select('*', { count: 'exact' })
+        .eq('id', user.id);
       
       if (profileError) {
         addResult(`ERROR user_profiles: ${profileError.message} (Code: ${profileError.code})`);
       } else {
-        addResult(`SUCCESS user_profiles: Found profile data`);
-        addResult(`Profile name: ${profileData?.full_name || 'No name'}`);
+        addResult(`SUCCESS user_profiles: Found ${count || profileData?.length || 0} profile records`);
+        if (profileData && profileData.length > 1) {
+          addResult(`WARNING: Multiple profiles found (${profileData.length}) - using most recent`);
+        }
+        if (profileData && profileData.length > 0) {
+          addResult(`First profile name: ${profileData[0]?.full_name || 'No name'}`);
+        }
       }
 
       // Test 4: Test family_tree_members table access
