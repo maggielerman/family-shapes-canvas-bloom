@@ -176,7 +176,7 @@ const Dashboard = () => {
     // Only redirect on initial load and if user hasn't explicitly navigated to personal dashboard
     const hasExplicitlyNavigatedToPersonal = sessionStorage.getItem('explicit-personal-dashboard');
     
-    // Clear the session flag after checking it, regardless of whether we redirect
+    // Clear the session flag regardless of whether redirect occurs
     // This ensures the flag only prevents auto-redirect for a single load cycle
     if (hasExplicitlyNavigatedToPersonal) {
       sessionStorage.removeItem('explicit-personal-dashboard');
