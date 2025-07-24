@@ -38,26 +38,54 @@ export default function FamilyTrees() {
 
   const fetchFamilyTrees = async () => {
     try {
-      const { data, error } = await supabase
+      console.log('Fetching family trees...');
+      
+      // First get basic family trees data
+      const { data: treesData, error: treesError } = await supabase
         .from('family_trees')
-        .select(`
-          *,
-          family_tree_members(count),
-          connections!family_tree_id(count)
-        `)
+        .select('*')
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Family trees data:', treesData, 'Error:', treesError);
 
-      // Transform the data to include proper counts
-      const treesWithCounts = (data || []).map((tree: any) => ({
-        ...tree,
-        _count: {
-          persons: tree.family_tree_members?.[0]?.count || 0,
-          connections: tree.connections?.[0]?.count || 0
-        }
-      }));
+      if (treesError) throw treesError;
+
+      // Get counts separately for each tree
+      const treesWithCounts = await Promise.all(
+        (treesData || []).map(async (tree) => {
+          console.log('Processing tree:', tree.name, tree.id);
+          
+          // Count family tree members
+          const { count: membersCount, error: membersError } = await supabase
+            .from('family_tree_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('family_tree_id', tree.id);
+
+          if (membersError) {
+            console.error('Error counting members:', membersError);
+          }
+
+          // Count connections
+          const { count: connectionsCount, error: connectionsError } = await supabase
+            .from('connections')
+            .select('*', { count: 'exact', head: true })
+            .eq('family_tree_id', tree.id);
+
+          if (connectionsError) {
+            console.error('Error counting connections:', connectionsError);
+          }
+
+          return {
+            ...tree,
+            _count: {
+              persons: membersCount || 0,
+              connections: connectionsCount || 0
+            }
+          };
+        })
+      );
       
+      console.log('Final trees with counts:', treesWithCounts);
       setFamilyTrees(treesWithCounts);
     } catch (error) {
       console.error('Error fetching family trees:', error);

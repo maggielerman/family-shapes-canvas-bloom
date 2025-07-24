@@ -39,6 +39,7 @@ const UserProfile = () => {
     
     try {
       setLoading(true);
+      console.log('Loading profile for user:', user.id, user.email);
       
       // Load from user_profiles table
       const { data: profile, error } = await supabase
@@ -47,11 +48,28 @@ const UserProfile = () => {
         .eq('id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw error;
-      }
+      console.log('Profile data:', profile, 'Error:', error);
 
-      if (profile) {
+      // Handle case where profile doesn't exist (not an error)
+      if (error && error.code === 'PGRST116') {
+        // No profile exists, create default from auth user
+        console.log('No profile found, using auth user data');
+        setProfileData({
+          firstName: user.user_metadata?.full_name?.split(' ')[0] || '',
+          lastName: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          email: user.email || '',
+          phone: '',
+          location: '',
+          bio: '',
+          memberSince: new Date(user.created_at).toLocaleDateString()
+        });
+      } else if (error) {
+        // Real error occurred
+        console.error('Error loading profile:', error);
+        throw error;
+      } else if (profile) {
+        // Profile exists, use it
+        console.log('Profile found, loading data');
         setProfileData({
           firstName: profile.full_name?.split(' ')[0] || '',
           lastName: profile.full_name?.split(' ').slice(1).join(' ') || '',
@@ -61,13 +79,6 @@ const UserProfile = () => {
           bio: profile.bio || '',
           memberSince: new Date(user.created_at).toLocaleDateString()
         });
-      } else {
-        // Set default values from auth user
-        setProfileData(prev => ({
-          ...prev,
-          email: user.email || '',
-          memberSince: new Date(user.created_at).toLocaleDateString()
-        }));
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -75,6 +86,17 @@ const UserProfile = () => {
         title: "Error",
         description: "Failed to load profile data",
         variant: "destructive",
+      });
+      
+      // Set fallback data from auth user even on error
+      setProfileData({
+        firstName: user.user_metadata?.full_name?.split(' ')[0] || '',
+        lastName: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: '',
+        location: '',
+        bio: '',
+        memberSince: new Date(user.created_at).toLocaleDateString()
       });
     } finally {
       setLoading(false);
