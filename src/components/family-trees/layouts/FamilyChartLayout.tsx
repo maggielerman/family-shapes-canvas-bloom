@@ -205,9 +205,36 @@ export function FamilyChartLayout({
                             // Check if this element or its parents contain text that matches a person name
                             // This is a fallback if IDs are not properly set in the DOM
                             const textContent = target.textContent || '';
-                            const matchingPerson = persons.find(p => 
+                            
+                            // Find all persons whose names appear in the text content
+                            const matchingPersons = persons.filter(p => 
                                 p.name && textContent.includes(p.name)
                             );
+                            
+                            // If we have matches, select the most specific one (longest name)
+                            // This prevents "John" from matching when "Johnson" is the actual target
+                            let matchingPerson = null;
+                            if (matchingPersons.length > 0) {
+                                // Sort by name length descending to get the most specific match first
+                                matchingPersons.sort((a, b) => (b.name?.length || 0) - (a.name?.length || 0));
+                                
+                                // Additional check: try to find exact word boundary matches
+                                for (const person of matchingPersons) {
+                                    if (!person.name) continue;
+                                    
+                                    // Create a regex to match the name as a whole word
+                                    const wordBoundaryRegex = new RegExp(`\\b${person.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+                                    if (wordBoundaryRegex.test(textContent)) {
+                                        matchingPerson = person;
+                                        break;
+                                    }
+                                }
+                                
+                                // If no exact word boundary match, use the longest name match
+                                if (!matchingPerson) {
+                                    matchingPerson = matchingPersons[0];
+                                }
+                            }
                             
                             if (matchingPerson && target.querySelector('*') === null) {
                                 // Only match if this is a leaf element (no children) to avoid false positives
