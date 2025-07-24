@@ -184,16 +184,14 @@ const Dashboard = () => {
       // and user has owned organizations
       if (ownedOrganizations.length > 0) {
         hasRedirectedRef.current = true;
+        // Clear the session flag only when an actual redirect occurs
+        // This ensures the flag only prevents auto-redirect for a single load cycle
+        sessionStorage.removeItem('explicit-personal-dashboard');
         // For now, redirect to the first owned organization
         // In the future, this could be enhanced to remember the last used organization
         const primaryOrg = ownedOrganizations[0];
         checkOrganizationSetup(primaryOrg.id);
       }
-    }
-    
-    // Clear the session flag after check
-    if (hasExplicitlyNavigatedToPersonal) {
-      sessionStorage.removeItem('explicit-personal-dashboard');
     }
   }, [profile, organizations, checkOrganizationSetup]);
 
