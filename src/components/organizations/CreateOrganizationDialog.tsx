@@ -24,6 +24,12 @@ import {
 } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
 
+// Helper function to validate UUID format
+const isValidUUID = (uuid: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
 interface CreateOrganizationDialogProps {
   onOrganizationCreated: () => void;
 }
@@ -56,6 +62,16 @@ const CreateOrganizationDialog = ({ onOrganizationCreated }: CreateOrganizationD
 
       if (error) throw error;
 
+      // Validate that we received a valid organization ID
+      if (!data || typeof data !== 'string') {
+        throw new Error('Failed to create organization: Invalid response from server');
+      }
+
+      // Validate UUID format
+      if (!isValidUUID(data)) {
+        throw new Error('Failed to create organization: Invalid organization ID format');
+      }
+
       toast({
         title: "Organization created",
         description: `${formData.name} has been created successfully. Complete the setup to get started.`,
@@ -69,7 +85,7 @@ const CreateOrganizationDialog = ({ onOrganizationCreated }: CreateOrganizationD
       setOpen(false);
       onOrganizationCreated();
       
-      // Redirect to organization onboarding
+      // Redirect to organization onboarding with validated ID
       navigate(`/organizations/${data}/onboarding`);
     } catch (error: any) {
       toast({
