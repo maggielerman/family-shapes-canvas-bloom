@@ -1,17 +1,12 @@
 -- Migration: Enhanced Tenant Management System
 -- Adds organization management for existing users
 
--- Add account_type to user_profiles to track individual vs organization accounts
-ALTER TABLE public.user_profiles 
-ADD COLUMN IF NOT EXISTS account_type text DEFAULT 'individual' CHECK (account_type IN ('individual', 'organization'));
-
 -- Add organization_id to user_profiles to link organization owners to their organization
 ALTER TABLE public.user_profiles 
 ADD COLUMN IF NOT EXISTS organization_id uuid REFERENCES public.organizations(id) ON DELETE SET NULL;
 
 -- Add index for performance
 CREATE INDEX IF NOT EXISTS idx_user_profiles_organization_id ON public.user_profiles(organization_id);
-CREATE INDEX IF NOT EXISTS idx_user_profiles_account_type ON public.user_profiles(account_type);
 
 -- Function to create organization for existing user
 CREATE OR REPLACE FUNCTION create_organization_for_user(
@@ -74,10 +69,9 @@ BEGIN
         current_user_id
     ) RETURNING id INTO new_org_id;
     
-    -- Update user profile to link to organization and change account type
+    -- Update user profile to link to organization
     UPDATE public.user_profiles 
-    SET organization_id = new_org_id,
-        account_type = 'organization'
+    SET organization_id = new_org_id
     WHERE id = current_user_id;
     
     RETURN new_org_id;
@@ -92,11 +86,11 @@ BEGIN
     INSERT INTO public.user_profiles (
         id,
         full_name,
-        account_type
+        organization_id
     ) VALUES (
         NEW.id,
         NEW.raw_user_meta_data->>'full_name',
-        'individual' -- Default to individual account
+        NULL -- No organization for new users
     );
     
     RETURN NEW;
@@ -146,8 +140,3 @@ CREATE POLICY "Organization owners can update their organization" ON public.orga
 DROP POLICY IF EXISTS "Organization owners can delete their organization" ON public.organizations;
 CREATE POLICY "Organization owners can delete their organization" ON public.organizations
     FOR DELETE USING (owner_id = auth.uid());
-
--- Update existing users to have account_type if not set
-UPDATE public.user_profiles 
-SET account_type = 'individual' 
-WHERE account_type IS NULL;
