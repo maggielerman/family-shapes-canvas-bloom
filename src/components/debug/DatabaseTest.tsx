@@ -88,6 +88,48 @@ export const DatabaseTest = () => {
         addResult(`SUCCESS connections: Found ${connectionsData?.length || 0} records`);
       }
 
+      // Test 5b: Test connections with joins (this is where it might fail)
+      addResult('Testing connections with person joins...');
+      const { data: joinData, error: joinError } = await supabase
+        .from('connections')
+        .select(`
+          *,
+          from_person:persons(name),
+          to_person:persons(name)
+        `)
+        .limit(1);
+      
+      if (joinError) {
+        addResult(`ERROR connections join: ${joinError.message}`);
+        addResult(`Join error code: ${joinError.code}`);
+        addResult(`Join error details: ${joinError.details}`);
+        addResult(`Join error hint: ${joinError.hint}`);
+      } else {
+        addResult(`SUCCESS connections join: Found ${joinData?.length || 0} records with person data`);
+      }
+
+      // Test 5c: Test alternative connection query format
+      addResult('Testing alternative connection query...');
+      const { data: altData, error: altError } = await supabase
+        .from('connections')
+        .select(`
+          id,
+          from_person_id,
+          to_person_id,
+          relationship_type,
+          family_tree_id
+        `)
+        .limit(1);
+      
+      if (altError) {
+        addResult(`ERROR alt connections: ${altError.message}`);
+      } else {
+        addResult(`SUCCESS alt connections: Found ${altData?.length || 0} records`);
+        if (altData && altData.length > 0) {
+          addResult(`Sample connection: ${altData[0].relationship_type} (${altData[0].from_person_id} -> ${altData[0].to_person_id})`);
+        }
+      }
+
       // Test 6: Test current user session
       addResult('Testing current session...');
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();

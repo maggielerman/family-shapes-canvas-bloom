@@ -94,7 +94,7 @@ export class ConnectionService {
       .from('connections')
       .select(`
         *,
-        to_person:persons!connections_to_person_id_fkey(name)
+        to_person:persons(name)
       `)
       .eq('from_person_id', personId);
 
@@ -105,7 +105,7 @@ export class ConnectionService {
       .from('connections')
       .select(`
         *,
-        from_person:persons!connections_from_person_id_fkey(name)
+        from_person:persons(name)
       `)
       .eq('to_person_id', personId);
 

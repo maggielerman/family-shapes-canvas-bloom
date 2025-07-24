@@ -131,7 +131,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
           from_person_id,
           to_person_id,
           relationship_type,
-          to_person:persons!connections_to_person_id_fkey(name)
+          to_person:persons(name)
         `)
         .eq('from_person_id', personId);
 
@@ -145,7 +145,7 @@ export function PersonTreesManager({ personId }: PersonTreesManagerProps) {
           from_person_id,
           to_person_id,
           relationship_type,
-          from_person:persons!connections_from_person_id_fkey(name)
+          from_person:persons(name)
         `)
         .eq('to_person_id', personId);
 
