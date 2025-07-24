@@ -115,6 +115,71 @@ export function transformToFamilyChartData(
 }
 
 /**
+ * Alternative transformation that creates a simpler, flatter structure
+ * This is more commonly used by D3-based family tree libraries
+ */
+export function transformToSimpleFamilyData(
+  persons: Person[],
+  connections: Connection[]
+): any[] {
+  console.log('familyChartAdapter: Creating simple family data structure');
+  
+  // Create nodes with basic properties
+  const nodes = persons.map(person => {
+    const node: any = {
+      id: person.id,
+      name: person.name || 'Unknown',
+      gender: person.gender === 'male' ? 'male' : person.gender === 'female' ? 'female' : undefined,
+      img: person.profile_photo_url || undefined,
+      // Store the original person data
+      _data: person
+    };
+    
+    // Find parent connections
+    const parentConnections = connections.filter(
+      conn => conn.to_person_id === person.id && 
+      (conn.relationship_type === 'parent' || conn.relationship_type === 'child')
+    );
+    
+    // Find spouse connections
+    const spouseConnections = connections.filter(
+      conn => (conn.from_person_id === person.id || conn.to_person_id === person.id) &&
+      (conn.relationship_type === 'spouse' || conn.relationship_type === 'partner')
+    );
+    
+    // Set parent IDs
+    parentConnections.forEach(conn => {
+      const parent = persons.find(p => p.id === conn.from_person_id);
+      if (parent) {
+        if (parent.gender === 'male') {
+          node.fid = parent.id; // father id
+        } else if (parent.gender === 'female') {
+          node.mid = parent.id; // mother id
+        }
+      }
+    });
+    
+    // Set partner IDs (pids)
+    node.pids = [];
+    spouseConnections.forEach(conn => {
+      const partnerId = conn.from_person_id === person.id ? conn.to_person_id : conn.from_person_id;
+      if (!node.pids.includes(partnerId)) {
+        node.pids.push(partnerId);
+      }
+    });
+    
+    if (node.pids.length === 0) {
+      delete node.pids;
+    }
+    
+    return node;
+  });
+  
+  console.log('familyChartAdapter: Simple nodes created:', nodes);
+  return nodes;
+}
+
+/**
  * Find the root node for the family tree (typically the oldest generation or marked as self)
  */
 export function findRootNode(nodes: any[], persons: Person[]): string | undefined {

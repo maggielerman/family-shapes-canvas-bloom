@@ -4,7 +4,7 @@ import { Connection } from '@/types/connection';
 import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
-import { transformToFamilyChartData, findRootNode } from '@/utils/familyChartAdapter';
+import { transformToFamilyChartData, transformToSimpleFamilyData, findRootNode } from '@/utils/familyChartAdapter';
 
 interface RelationshipType {
   value: string;
@@ -92,7 +92,9 @@ export function FamilyChartLayout({
                 // Transform our data to family-chart format
                 console.log('FamilyChartLayout: Transforming data...');
                 const familyData = transformToFamilyChartData(persons, connections);
-                console.log('FamilyChartLayout: Data transformation complete');
+                const simpleData = transformToSimpleFamilyData(persons, connections);
+                console.log('FamilyChartLayout: Complex data transformation complete:', familyData);
+                console.log('FamilyChartLayout: Simple data transformation complete:', simpleData);
                 
                 if (familyData.nodes.length === 0) {
                     console.log('FamilyChartLayout: No nodes found');
@@ -106,7 +108,9 @@ export function FamilyChartLayout({
                 // Find the root node
                 console.log('FamilyChartLayout: Finding root node...');
                 const rootId = findRootNode(familyData.nodes, persons);
+                const simpleRootId = findRootNode(simpleData, persons);
                 console.log('FamilyChartLayout: Root ID found:', rootId);
+                console.log('FamilyChartLayout: Simple Root ID found:', simpleRootId);
                 
                 if (!rootId) {
                     throw new Error('No root node found');
@@ -118,7 +122,6 @@ export function FamilyChartLayout({
                     return;
                 }
 
-                // Render the family chart using the correct API
                 console.log('FamilyChartLayout: About to call createChart function');
                 console.log('FamilyChartLayout: Container element:', containerRef.current);
                 console.log('FamilyChartLayout: Root ID:', rootId);
@@ -127,43 +130,131 @@ export function FamilyChartLayout({
                 console.log('FamilyChartLayout: First few nodes:', familyData.nodes.slice(0, 3));
                 
                 let familyTree;
-                try {
-                    // Try the simpler createChart API first with main_id
-                    familyTree = createChart(containerRef.current, {
-                        data: familyData.nodes,
-                        main_id: rootId
-                    });
-                    console.log('FamilyChartLayout: createChart function completed successfully');
-                } catch (viewError) {
-                    console.error('FamilyChartLayout: createChart function failed:', viewError);
-                    // Try with the original parameters if the simple call fails
-                    try {
-                        familyTree = createChart(
-                          familyData.nodes,
-                          containerRef.current,
-                          CardHtml,
-                          {
-                            rootId,
-                            width,
-                            height,
-                            nodeBinding: {
-                              field_0: 'name',
-                              field_1: 'birthday',
-                            },
-                            enableSearch: false,
-                            enableMenu: false,
-                            enableDragDrop: false,
-                          }
-                        );
-                        console.log('FamilyChartLayout: createChart with full config completed successfully');
-                    } catch (secondError) {
-                        console.error('FamilyChartLayout: Both createChart attempts failed:', secondError);
-                        throw new Error(`createChart function failed: ${secondError instanceof Error ? secondError.message : 'Unknown view error'}`);
+                
+                // Create a factory function to handle different possible API signatures
+                const createFamilyChart = () => {
+                    // First, let's check what we actually imported
+                    console.log('FamilyChartLayout: familyChart module type:', typeof familyChart);
+                    console.log('FamilyChartLayout: familyChart module keys:', Object.keys(familyChart));
+                    
+                    // If createChart is not a function, try to find the correct method
+                    if (typeof createChart !== 'function') {
+                        // Check if familyChart itself is the constructor
+                        if (typeof familyChart === 'function') {
+                            console.log('FamilyChartLayout: familyChart is a function, using it directly');
+                            return new familyChart(containerRef.current, {
+                                data: familyData.nodes,
+                                rootId: rootId
+                            });
+                        }
+                        
+                        // Check for other possible entry points
+                        const possibleMethods = ['FamilyChart', 'create', 'init', 'render'];
+                        for (const method of possibleMethods) {
+                            if (typeof familyChart[method] === 'function') {
+                                console.log(`FamilyChartLayout: Found method ${method}, trying it`);
+                                return familyChart[method](containerRef.current, {
+                                    data: familyData.nodes,
+                                    rootId: rootId
+                                });
+                            }
+                        }
+                        
+                        throw new Error('Could not find a valid chart creation method');
                     }
+                    
+                    // If createChart exists, try different API signatures
+                    const signatures = [
+                        // Signature 1: Standard D3 pattern (container, config) with simple data
+                        () => createChart(containerRef.current, {
+                            data: simpleData,
+                            rootId: simpleRootId || rootId,
+                            width: width,
+                            height: height
+                        }),
+                        
+                        // Signature 2: Standard D3 pattern with complex data
+                        () => createChart(containerRef.current, {
+                            data: familyData.nodes,
+                            rootId: rootId,
+                            width: width,
+                            height: height
+                        }),
+                        
+                        // Signature 3: Data first, then container (simple data)
+                        () => createChart(simpleData, containerRef.current),
+                        
+                        // Signature 4: Data first, then container (complex data)
+                        () => createChart(familyData.nodes, containerRef.current),
+                        
+                        // Signature 5: Container only, with chained methods
+                        () => {
+                            const chart = createChart(containerRef.current);
+                            if (chart && typeof chart.data === 'function') {
+                                return chart.data(simpleData);
+                            }
+                            return chart;
+                        },
+                        
+                        // Signature 6: Constructor pattern with simple data
+                        () => new createChart(containerRef.current, simpleData),
+                        
+                        // Signature 7: jQuery-like pattern with simple data
+                        () => createChart({
+                            container: containerRef.current,
+                            data: simpleData,
+                            rootId: simpleRootId || rootId
+                        }),
+                        
+                        // Signature 8: Direct instantiation with container and options
+                        () => {
+                            if (typeof familyChart === 'function') {
+                                return new familyChart(containerRef.current, {
+                                    data: simpleData,
+                                    main_id: simpleRootId || rootId
+                                });
+                            }
+                            throw new Error('familyChart is not a constructor');
+                        }
+                    ];
+                    
+                    // Try each signature until one works
+                    for (let i = 0; i < signatures.length; i++) {
+                        try {
+                            console.log(`FamilyChartLayout: Trying signature ${i + 1}`);
+                            const result = signatures[i]();
+                            if (result) {
+                                console.log(`FamilyChartLayout: Signature ${i + 1} succeeded`);
+                                return result;
+                            }
+                        } catch (e) {
+                            console.log(`FamilyChartLayout: Signature ${i + 1} failed:`, e.message);
+                        }
+                    }
+                    
+                    throw new Error('All chart creation methods failed');
+                };
+                
+                try {
+                    familyTree = createFamilyChart();
+                    console.log('FamilyChartLayout: Family tree created successfully:', familyTree);
+                } catch (error) {
+                    console.error('FamilyChartLayout: Failed to create family tree:', error);
+                    
+                    // As a last resort, render a simple message
+                    if (containerRef.current) {
+                        containerRef.current.innerHTML = `
+                            <div style="padding: 20px; text-align: center;">
+                                <h3>Unable to render family chart</h3>
+                                <p>The family-chart library failed to initialize properly.</p>
+                                <p style="font-size: 0.9em; color: #666;">Error: ${error.message}</p>
+                            </div>
+                        `;
+                    }
+                    throw error;
                 }
                 
-                console.log('FamilyChartLayout: Family tree object:', familyTree);
-                console.log('FamilyChartLayout: Container after view:', containerRef.current.innerHTML);
+                console.log('FamilyChartLayout: Container after chart creation:', containerRef.current.innerHTML);
 
                 // Add click handler if supported
                 if (onPersonClick && familyTree && typeof familyTree.on === 'function') {
