@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -304,12 +305,10 @@ const OrganizationOnboarding = ({ organizationId }: OrganizationOnboardingProps)
 
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="publiclyVisible"
                     checked={formData.publiclyVisible}
-                    onChange={(e) => setFormData(prev => ({ ...prev, publiclyVisible: e.target.checked }))}
-                    className="rounded"
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, publiclyVisible: checked === true }))}
                   />
                   <Label htmlFor="publiclyVisible">Make organization publicly discoverable</Label>
                 </div>

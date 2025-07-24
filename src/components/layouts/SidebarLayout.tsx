@@ -39,7 +39,7 @@ interface SidebarLayoutProps {
 }
 
 const SidebarLayout = ({ children }: SidebarLayoutProps) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
@@ -66,8 +66,13 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
     { path: "/share", label: "Share", icon: Share2 },
   ];
 
-  if (!user) {
-    return null;
+  // Show loading while auth is still loading
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';

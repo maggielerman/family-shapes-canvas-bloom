@@ -36,23 +36,35 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
     if (user) {
       fetchOrganizations();
       detectCurrentContext();
+    } else {
+      // Clear state when user is not authenticated
+      setOrganizations([]);
+      setCurrentContext("personal");
+      setLoading(false);
     }
   }, [user, location.pathname]);
 
   const fetchOrganizations = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
 
       // Fetch organizations owned by user
-      const { data: ownedOrgs } = await supabase
+      const { data: ownedOrgs, error: ownedError } = await supabase
         .from('organizations')
         .select('id, name, type')
         .eq('owner_id', user.id);
 
+      if (ownedError) {
+        console.error('Error fetching owned organizations:', ownedError);
+      }
+
       // Fetch organizations where user is a member
-      const { data: memberOrgs } = await supabase
+      const { data: memberOrgs, error: memberError } = await supabase
         .from('organization_memberships')
         .select(`
           role,
@@ -64,12 +76,16 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
         `)
         .eq('user_id', user.id);
 
+      if (memberError) {
+        console.error('Error fetching member organizations:', memberError);
+      }
+
       const owned = ownedOrgs?.map(org => ({
         ...org,
         role: 'owner'
       })) || [];
 
-      const memberships = memberOrgs?.map(item => ({
+      const memberships = memberOrgs?.filter(item => item && item.organizations).map(item => ({
         id: item.organizations.id,
         name: item.organizations.name,
         type: item.organizations.type,
@@ -85,6 +101,7 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
       setOrganizations(uniqueOrgs);
     } catch (error) {
       console.error('Error fetching organizations:', error);
+      // Don't throw the error, just log it and continue
     } finally {
       setLoading(false);
     }
@@ -123,7 +140,7 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
         name: "Personal Account",
         type: "individual",
         icon: <User className="w-4 h-4" />,
-        initials: user?.email?.charAt(0).toUpperCase() || "U"
+        initials: (user?.email?.charAt(0) || user?.user_metadata?.full_name?.charAt(0) || "U").toUpperCase()
       };
     }
 
@@ -134,7 +151,7 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
         type: org.type,
         role: org.role,
         icon: <Building2 className="w-4 h-4" />,
-        initials: org.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        initials: org.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || "ORG"
       };
     }
 
@@ -152,6 +169,11 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
         <div className="animate-pulse bg-muted rounded-md h-8 w-48"></div>
       </div>
     );
+  }
+
+  // Don't render if user is not available
+  if (!user) {
+    return null;
   }
 
   const contextDisplay = getCurrentContextDisplay();
