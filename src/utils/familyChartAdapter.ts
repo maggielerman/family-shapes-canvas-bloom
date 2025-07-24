@@ -123,6 +123,93 @@ export function transformToFamilyChartData(
 }
 
 /**
+ * Alternative transformation that creates a simpler, flatter structure
+ * This is more commonly used by D3-based family tree libraries
+ */
+export function transformToSimpleFamilyData(
+  persons: Person[],
+  connections: Connection[]
+): any[] {
+  console.log('familyChartAdapter: Creating simple family data structure');
+  
+  // Create nodes with basic properties
+  const nodes = persons.map(person => {
+    const node: any = {
+      id: person.id,
+      name: person.name || 'Unknown',
+      gender: person.gender === 'male' ? 'male' : person.gender === 'female' ? 'female' : undefined,
+      img: person.profile_photo_url || undefined,
+      // Store the original person data
+      _data: person
+    };
+    
+    // Find parent connections
+    // Case 1: relationship_type is 'parent' and from_person is the parent of to_person (current person)
+    // Case 2: relationship_type is 'child' and to_person is the parent of from_person (current person)
+    const parentConnections = connections.filter(conn => {
+      if (conn.relationship_type === 'parent' && conn.to_person_id === person.id) {
+        // from_person is parent of current person
+        return true;
+      }
+      if (conn.relationship_type === 'child' && conn.from_person_id === person.id) {
+        // to_person is parent of current person
+        return true;
+      }
+      return false;
+    });
+    
+    // Find spouse connections
+    const spouseConnections = connections.filter(
+      conn => (conn.from_person_id === person.id || conn.to_person_id === person.id) &&
+      (conn.relationship_type === 'spouse' || conn.relationship_type === 'partner')
+    );
+    
+    // Set parent IDs
+    parentConnections.forEach(conn => {
+      let parentId: string;
+      
+      // Determine which person is the parent based on relationship type
+      if (conn.relationship_type === 'parent' && conn.to_person_id === person.id) {
+        // from_person is the parent
+        parentId = conn.from_person_id;
+      } else if (conn.relationship_type === 'child' && conn.from_person_id === person.id) {
+        // to_person is the parent
+        parentId = conn.to_person_id;
+      } else {
+        return; // Skip if we can't determine the parent
+      }
+      
+      const parent = persons.find(p => p.id === parentId);
+      if (parent) {
+        if (parent.gender === 'male') {
+          node.fid = parent.id; // father id
+        } else if (parent.gender === 'female') {
+          node.mid = parent.id; // mother id
+        }
+      }
+    });
+    
+    // Set partner IDs (pids)
+    node.pids = [];
+    spouseConnections.forEach(conn => {
+      const partnerId = conn.from_person_id === person.id ? conn.to_person_id : conn.from_person_id;
+      if (!node.pids.includes(partnerId)) {
+        node.pids.push(partnerId);
+      }
+    });
+    
+    if (node.pids.length === 0) {
+      delete node.pids;
+    }
+    
+    return node;
+  });
+  
+  console.log('familyChartAdapter: Simple nodes created:', nodes);
+  return nodes;
+}
+
+/**
  * Find the root node for the family tree (typically the oldest generation or marked as self)
  */
 export function findRootNode(nodes: any[], persons: Person[]): string | undefined {
