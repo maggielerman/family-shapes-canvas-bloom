@@ -128,6 +128,13 @@ CREATE POLICY "Users can insert own profile" ON public.user_profiles
     FOR INSERT WITH CHECK (id = auth.uid());
 
 -- Allow organization owners to view and update their organization
+-- First drop any existing policies from previous migrations
+DROP POLICY IF EXISTS "Users can view organizations" ON public.organizations;
+DROP POLICY IF EXISTS "Users can update organizations" ON public.organizations;
+DROP POLICY IF EXISTS "Users can create organizations" ON public.organizations;
+DROP POLICY IF EXISTS "Users can delete organizations" ON public.organizations;
+
+-- Now create our new policies
 DROP POLICY IF EXISTS "Organization owners can view their organization" ON public.organizations;
 CREATE POLICY "Organization owners can view their organization" ON public.organizations
     FOR SELECT USING (owner_id = auth.uid());
@@ -135,6 +142,10 @@ CREATE POLICY "Organization owners can view their organization" ON public.organi
 DROP POLICY IF EXISTS "Organization owners can update their organization" ON public.organizations;
 CREATE POLICY "Organization owners can update their organization" ON public.organizations
     FOR UPDATE USING (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS "Organization owners can delete their organization" ON public.organizations;
+CREATE POLICY "Organization owners can delete their organization" ON public.organizations
+    FOR DELETE USING (owner_id = auth.uid());
 
 -- Update existing users to have account_type if not set
 UPDATE public.user_profiles 
