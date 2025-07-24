@@ -52,6 +52,7 @@ export function FamilyChartLayout({
         }
 
         let isMounted = true;
+        let cleanupClickHandler: (() => void) | null = null;
 
         const initChart = async () => {
             try {
@@ -256,16 +257,165 @@ export function FamilyChartLayout({
                 
                 console.log('FamilyChartLayout: Container after chart creation:', containerRef.current.innerHTML);
 
-                // Add click handler if supported
-                if (onPersonClick && familyTree && typeof familyTree.on === 'function') {
-                    familyTree.on('click', (node: any) => {
-                        if (node && node.id) {
-                            const person = persons.find(p => p.id === node.id);
-                            if (person) {
-                                onPersonClick(person);
+                // Log the DOM structure to understand what the library creates
+                if (containerRef.current) {
+                    const firstNode = containerRef.current.querySelector('[data-id], [data-person-id], [data-node-id], .node, .family-chart-node, .card');
+                    if (firstNode) {
+                        console.log('FamilyChartLayout: Found node element:', firstNode);
+                        console.log('FamilyChartLayout: Node attributes:', Array.from(firstNode.attributes).map(attr => `${attr.name}="${attr.value}"`).join(' '));
+                    } else {
+                        console.log('FamilyChartLayout: No node elements found with expected selectors');
+                    }
+                }
+
+                // Add click handler using DOM event delegation instead of library API
+                if (onPersonClick && containerRef.current) {
+                    // Use event delegation to handle clicks on nodes
+                    const clickHandler = (event: MouseEvent) => {
+                        // Find the clicked element or its parent that represents a node
+                        let target = event.target as HTMLElement;
+                        
+                        // Traverse up the DOM tree to find a node element
+                        while (target && target !== containerRef.current) {
+                            // Check for various possible node identifiers
+                            // Try data attributes first
+                            const personId = target.getAttribute('data-person-id') || 
+                                           target.getAttribute('data-id') ||
+                                           target.getAttribute('data-node-id') ||
+                                           target.getAttribute('id');
+                            
+                            if (personId) {
+                                const person = persons.find(p => p.id === personId);
+                                if (person) {
+                                    console.log('FamilyChartLayout: Click detected on person:', person.name);
+                                    onPersonClick(person);
+                                    return;
+                                }
                             }
+                            
+                            // Check if this element or its parents contain text that matches a person name
+                            // This is a fallback if IDs are not properly set in the DOM
+                            const textContent = target.textContent || '';
+                            
+                            // Define node classes that indicate person elements
+                            const nodeClasses = ['node', 'family-chart-node', 'card', 'person', 'member'];
+                            
+                            // Find all persons whose names appear in the text content
+                            const matchingPersons = persons.filter(p => 
+                                p.name && textContent.includes(p.name)
+                            );
+                            
+                            // If we have matches, select the most specific one (longest name)
+                            // This prevents "John" from matching when "Johnson" is the actual target
+                            let matchingPerson = null;
+                            if (matchingPersons.length > 0) {
+                                // Sort by name length descending to get the most specific match first
+                                matchingPersons.sort((a, b) => (b.name?.length || 0) - (a.name?.length || 0));
+                                
+                                // Additional check: try to find exact word boundary matches
+                                for (const person of matchingPersons) {
+                                    if (!person.name) continue;
+                                    
+                                    // Create a regex to match the name as a whole word
+                                    const wordBoundaryRegex = new RegExp(`\\b${person.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+                                    if (wordBoundaryRegex.test(textContent)) {
+                                        matchingPerson = person;
+                                        break;
+                                    }
+                                }
+                                
+                                // If no exact word boundary match, use the longest name match
+                                if (!matchingPerson) {
+                                    matchingPerson = matchingPersons[0];
+                                }
+                            }
+                            
+                            if (matchingPerson) {
+                                // Check if this element is likely a person node
+                                // Allow clicks on elements that contain person names even if they have child elements
+                                const isLikelyPersonNode = 
+                                    // Element has person-related classes
+                                    nodeClasses.some(cls => target.classList.contains(cls)) ||
+                                    // Element has person-related data attributes
+                                    target.hasAttribute('data-person-id') ||
+                                    target.hasAttribute('data-id') ||
+                                    target.hasAttribute('data-node-id') ||
+                                    // Element is within the chart container and not in unrelated UI
+                                    ((function() {
+                                        // Check if we're within the chart container
+                                        const chartContainer = target.closest('[data-id], [data-person-id], [data-node-id], .node, .family-chart-node, .card');
+                                        const isInChartContainer = chartContainer !== null || target === containerRef.current || containerRef.current?.contains(target);
+                                        
+                                        // Exclude common navigation/UI elements
+                                        const isExcludedElement = target.closest('nav, header, footer, aside, .sidebar, .navigation, .menu, .toolbar') !== null;
+                                        
+                                        return isInChartContainer && !isExcludedElement;
+                                    })() &&
+                                     // And the element seems to be a clickable person node
+                                     ((target.hasAttribute('role') && ['button', 'link', 'treeitem'].includes(target.getAttribute('role') || '')) ||
+                                      target.tagName === 'BUTTON' || target.tagName === 'A' ||
+                                      // Or the element's primary content is the person's name
+                                      (target.textContent?.trim() === matchingPerson.name && target.children.length <= 2) || 
+                                      // Or has a direct text node with the exact name
+                                      Array.from(target.childNodes).some(node => 
+                                         node.nodeType === Node.TEXT_NODE && 
+                                         node.textContent?.trim() === matchingPerson.name
+                                      )));
+                                
+                                if (isLikelyPersonNode) {
+                                    console.log('FamilyChartLayout: Click detected on person by name match:', matchingPerson.name);
+                                    onPersonClick(matchingPerson);
+                                    return;
+                                }
+                            }
+                            
+                            // Check parent classes for node indicators
+                            const isNodeElement = nodeClasses.some(cls => target.classList.contains(cls));
+                            
+                            if (isNodeElement) {
+                                // Try to extract ID from the element or its children
+                                const idElement = target.querySelector('[data-person-id], [data-id], [data-node-id], [id]');
+                                if (idElement) {
+                                    const personId = idElement.getAttribute('data-person-id') || 
+                                                   idElement.getAttribute('data-id') ||
+                                                   idElement.getAttribute('data-node-id') ||
+                                                   idElement.getAttribute('id');
+                                    if (personId) {
+                                        const person = persons.find(p => p.id === personId);
+                                        if (person) {
+                                            console.log('FamilyChartLayout: Click detected on person from child element:', person.name);
+                                            onPersonClick(person);
+                                            return;
+                                        }
+                                    }
+                                }
+                                
+                                // Also try to find ID in the text content using regex
+                                const idMatch = target.innerHTML.match(/data-id="([^"]+)"|id="([^"]+)"/);
+                                if (idMatch) {
+                                    const extractedId = idMatch[1] || idMatch[2];
+                                    const person = persons.find(p => p.id === extractedId);
+                                    if (person) {
+                                        console.log('FamilyChartLayout: Click detected on person from HTML match:', person.name);
+                                        onPersonClick(person);
+                                        return;
+                                    }
+                                }
+                            }
+                            
+                            target = target.parentElement as HTMLElement;
                         }
-                    });
+                        
+                        console.log('FamilyChartLayout: Click event did not match any person');
+                    };
+                    
+                    containerRef.current.addEventListener('click', clickHandler);
+                    
+                    // Store the cleanup function
+                    const currentContainer = containerRef.current;
+                    cleanupClickHandler = () => {
+                        currentContainer.removeEventListener('click', clickHandler);
+                    };
                 }
 
                 if (isMounted) {
@@ -293,6 +443,9 @@ export function FamilyChartLayout({
 
         return () => {
             isMounted = false;
+            if (cleanupClickHandler) {
+                cleanupClickHandler();
+            }
         };
     }, [persons, connections, width, height, onPersonClick]);
 
