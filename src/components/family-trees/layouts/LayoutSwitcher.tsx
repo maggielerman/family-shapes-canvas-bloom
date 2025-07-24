@@ -1,7 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Network, Target, Share2 } from 'lucide-react';
+import { Network, Target, Share2, TreePine } from 'lucide-react';
 
-type LayoutType = 'force' | 'radial' | 'dagre';
+type LayoutType = 'force' | 'radial' | 'dagre' | 'family-chart';
 
 interface LayoutOption {
   value: LayoutType;
@@ -28,6 +28,12 @@ const LAYOUT_OPTIONS: LayoutOption[] = [
     label: 'Tree',
     description: 'Hierarchical layout',
     icon: Share2
+  },
+  {
+    value: 'family-chart',
+    label: 'Family Chart',
+    description: 'Beautiful family tree',
+    icon: TreePine
   }
 ];
 
