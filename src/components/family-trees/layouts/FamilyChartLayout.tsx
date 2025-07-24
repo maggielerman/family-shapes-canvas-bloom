@@ -249,14 +249,27 @@ export function FamilyChartLayout({
                                     target.hasAttribute('data-person-id') ||
                                     target.hasAttribute('data-id') ||
                                     target.hasAttribute('data-node-id') ||
-                                    // Element is relatively small (not a container with many nested elements)
-                                    target.children.length <= 5 ||
-                                    // Element directly contains the person's name (not deeply nested)
-                                    (target.textContent?.trim() === matchingPerson.name || 
-                                     Array.from(target.childNodes).some(node => 
-                                        node.nodeType === Node.TEXT_NODE && 
-                                        node.textContent?.includes(matchingPerson.name)
-                                    ));
+                                    // Element is within the chart container and not in unrelated UI
+                                    ((function() {
+                                        // Check if we're within the chart container
+                                        const chartContainer = target.closest('[data-id], [data-person-id], [data-node-id], .node, .family-chart-node, .card');
+                                        const isInChartContainer = chartContainer !== null || target === containerRef.current || containerRef.current?.contains(target);
+                                        
+                                        // Exclude common navigation/UI elements
+                                        const isExcludedElement = target.closest('nav, header, footer, aside, .sidebar, .navigation, .menu, .toolbar') !== null;
+                                        
+                                        return isInChartContainer && !isExcludedElement;
+                                    })() &&
+                                     // And the element seems to be a clickable person node
+                                     ((target.hasAttribute('role') && ['button', 'link', 'treeitem'].includes(target.getAttribute('role') || '')) ||
+                                      target.tagName === 'BUTTON' || target.tagName === 'A' ||
+                                      // Or the element's primary content is the person's name
+                                      (target.textContent?.trim() === matchingPerson.name && target.children.length <= 2) || 
+                                      // Or has a direct text node with the exact name
+                                      Array.from(target.childNodes).some(node => 
+                                         node.nodeType === Node.TEXT_NODE && 
+                                         node.textContent?.trim() === matchingPerson.name
+                                      )));
                                 
                                 if (isLikelyPersonNode) {
                                     console.log('FamilyChartLayout: Click detected on person by name match:', matchingPerson.name);
