@@ -33,8 +33,8 @@ export default function UnionDagreCanvas({ persons, connections, width, height, 
       <TreeToolbar
         persons={persons}
         currentLayout="dagre"
-        onCenterSelf={() => {}}
-        onZoomToFit={() => unionRef.current?.resetZoom()}
+        onCenterSelf={() => unionRef.current?.centerSelf()}
+        onZoomToFit={() => unionRef.current?.zoomFit()}
         onLayoutDirectionChange={undefined}
         className="absolute right-2 top-2 z-20"
       />
@@ -70,6 +70,7 @@ export default function UnionDagreCanvas({ persons, connections, width, height, 
         height={height}
         enableUnions={true}
         onPersonClick={onPersonClick}
+        relationshipFilters={relationshipFilters}
         minSharedChildren={1}
       />
     </div>

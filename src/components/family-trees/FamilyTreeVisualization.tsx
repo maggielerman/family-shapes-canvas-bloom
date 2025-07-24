@@ -15,6 +15,7 @@ import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
 import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
 import UnionDagreCanvas from './layouts/UnionDagreCanvas';
+import ReactFlowFamilyTreeCanvas from './layouts/ReactFlowFamilyTreeCanvas';
 
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
@@ -35,7 +36,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre' | 'family-chart'>('force');
+  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow'>('reactflow');
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -77,7 +78,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     setViewingPerson(person);
   };
 
-  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'family-chart') => {
+  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow') => {
     setCurrentLayout(layout);
   };
 
@@ -132,6 +133,16 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                   onPersonClick={handlePersonClick}
                   currentLayout={currentLayout}
                   onLayoutChange={setCurrentLayout}
+                />
+              ) : currentLayout === 'reactflow' ? (
+                <ReactFlowFamilyTreeCanvas
+                  persons={persons}
+                  connections={connections}
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  onPersonClick={handlePersonClick}
+                  currentLayout={currentLayout}
+                  onLayoutChange={handleLayoutChange}
                 />
               ) : (
                 <FamilyChartLayout

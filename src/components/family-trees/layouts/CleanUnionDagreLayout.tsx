@@ -15,12 +15,15 @@ export interface CleanUnionDagreLayoutProps {
   minSharedChildren?: number;
   onPersonClick?: (person: Person) => void;
   onUnionClick?: (union: UnionNode) => void;
+  relationshipFilters?: { generational: boolean; lateral: boolean; donor: boolean };
 }
 
 export type UnionDagreHandle = {
   zoomIn: () => void;
   zoomOut: () => void;
   resetZoom: () => void;
+  zoomFit: () => void;
+  centerSelf: () => void;
 };
 
 const CleanUnionDagreLayout = forwardRef<UnionDagreHandle, CleanUnionDagreLayoutProps>(function CleanUnionDagreLayout({
@@ -31,10 +34,12 @@ const CleanUnionDagreLayout = forwardRef<UnionDagreHandle, CleanUnionDagreLayout
   enableUnions = true,
   minSharedChildren = 1,
   onPersonClick,
-  onUnionClick
+  onUnionClick,
+  relationshipFilters
 }, ref) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const gRef = useRef<SVGGElement | null>(null);
 
   // Build union-processed data once per render
   const data: UnionProcessedData = enableUnions
@@ -102,6 +107,7 @@ const CleanUnionDagreLayout = forwardRef<UnionDagreHandle, CleanUnionDagreLayout
 
     // Set up SVG group for zoom/pan
     const g = svg.append('g');
+    gRef.current = g.node() as SVGGElement;
 
     // Render edges first so they’re behind nodes
     g.selectAll('path.edge')
@@ -125,8 +131,10 @@ const CleanUnionDagreLayout = forwardRef<UnionDagreHandle, CleanUnionDagreLayout
       .selectAll('g.node')
       .data(graph.nodes().map((id) => ({ id, ...graph.node(id) })))
       .enter()
-      .append('g')
-      .attr('transform', (d) => `translate(${d.x - d.width / 2}, ${d.y - d.height / 2})`);
+      .append('g');
+
+    // add data-id to nodes selection
+    nodes.attr('data-id', (d: any) => d.id);
 
     // Person rectangles
     const personNodes = nodes.filter((d: any) => !!d.person);
@@ -177,7 +185,7 @@ const CleanUnionDagreLayout = forwardRef<UnionDagreHandle, CleanUnionDagreLayout
     zoomBehaviorRef.current = zoomBehavior;
 
     svg.call(zoomBehavior as any);
-  }, [persons, connections, enableUnions, minSharedChildren]);
+  }, [persons, connections, enableUnions, minSharedChildren, relationshipFilters]);
 
   // expose imperative zoom handlers
   useImperativeHandle(ref, () => ({
@@ -195,6 +203,28 @@ const CleanUnionDagreLayout = forwardRef<UnionDagreHandle, CleanUnionDagreLayout
       if (svgRef.current && zoomBehaviorRef.current) {
         d3.select(svgRef.current).transition().call(zoomBehaviorRef.current.transform as any, d3.zoomIdentity);
       }
+    },
+    zoomFit: () => {
+      if (!svgRef.current || !gRef.current || !zoomBehaviorRef.current) return;
+      const svg = d3.select(svgRef.current);
+      const bbox = gRef.current.getBBox();
+      const widthScale = (width - 80) / bbox.width;
+      const heightScale = (height - 80) / bbox.height;
+      const scale = Math.min(widthScale, heightScale, 1);
+      const tx = width / 2 - (bbox.x + bbox.width / 2) * scale;
+      const ty = height / 2 - (bbox.y + bbox.height / 2) * scale;
+      svg.transition().call(zoomBehaviorRef.current.transform as any, d3.zoomIdentity.translate(tx, ty).scale(scale));
+    },
+    centerSelf: () => {
+      const self = persons.find(p => p.is_self);
+      if (!self || !svgRef.current || !zoomBehaviorRef.current) return;
+      const node = gRef.current?.querySelector<SVGGElement>(`[data-id='${self.id}']`);
+      if (!node) return;
+      const bbox = node.getBBox();
+      const scale = 1;
+      const tx = width / 2 - (bbox.x + bbox.width / 2) * scale;
+      const ty = height / 2 - (bbox.y + bbox.height / 2) * scale;
+      d3.select(svgRef.current).transition().call(zoomBehaviorRef.current.transform as any, d3.zoomIdentity.translate(tx, ty).scale(scale));
     }
   }));
 
