@@ -50,12 +50,6 @@ const Dashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    if (user) {
-      fetchUserData();
-    }
-  }, [user, fetchUserData]);
-
   const fetchOrganizations = useCallback(async () => {
     if (!user) return;
 
@@ -146,6 +140,12 @@ const Dashboard = () => {
       setIsLoadingData(false);
     }
   }, [user, toast, fetchOrganizations]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserData();
+    }
+  }, [user, fetchUserData]);
 
   const checkOrganizationSetup = useCallback(async (organizationId: string) => {
     try {
