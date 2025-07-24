@@ -24,62 +24,81 @@ export function transformToFamilyChartData(
   persons: Person[], 
   connections: Connection[]
 ): FamilyChartData {
-  // Create a map to build relationships
-  const nodeMap = new Map<string, FamilyChartNode>();
+  console.log('familyChartAdapter: Starting transformation with', persons.length, 'persons and', connections.length, 'connections');
   
-  // Initialize all persons as nodes
+  // Create a map to build relationships
+  const nodeMap = new Map<string, any>();
+  
+  // Initialize all persons as nodes with the correct structure
   persons.forEach(person => {
-    const node: FamilyChartNode = {
+    const node = {
       id: person.id,
-      name: person.name || 'Unknown',
-      gender: person.gender === 'male' ? 'M' : person.gender === 'female' ? 'F' : undefined,
-      birthday: person.date_of_birth || undefined,
-      avatar: person.profile_photo_url || undefined,
-      // Add additional data for reference
-      person: person
+      data: {
+        name: person.name || 'Unknown',
+        gender: person.gender === 'male' ? 'M' : person.gender === 'female' ? 'F' : undefined,
+        birthday: person.date_of_birth || undefined,
+        avatar: person.profile_photo_url || undefined,
+        // Add additional data for reference
+        person: person
+      },
+      rels: {
+        spouses: [],
+        children: [],
+        parents: []
+      }
     };
     
     nodeMap.set(person.id, node);
   });
+
+  console.log('familyChartAdapter: Created initial nodes:', Array.from(nodeMap.values()));
 
   // Process connections to establish relationships
   connections.forEach(connection => {
     const fromNode = nodeMap.get(connection.from_person_id);
     const toNode = nodeMap.get(connection.to_person_id);
     
-    if (!fromNode || !toNode) return;
+    if (!fromNode || !toNode) {
+      console.log('familyChartAdapter: Skipping connection - node not found:', connection);
+      return;
+    }
 
     switch (connection.relationship_type) {
       case 'parent':
         // from_person is parent of to_person
-        if (fromNode.gender === 'M') {
-          toNode.fid = fromNode.id; // Father
-        } else if (fromNode.gender === 'F') {
-          toNode.mid = fromNode.id; // Mother
-        }
+        if (!toNode.rels.parents) toNode.rels.parents = [];
+        toNode.rels.parents.push(fromNode.id);
+        
+        if (!fromNode.rels.children) fromNode.rels.children = [];
+        fromNode.rels.children.push(toNode.id);
+        
+        console.log('familyChartAdapter: Set parent relationship:', fromNode.data.name, '->', toNode.data.name);
         break;
         
       case 'child':
         // from_person is child of to_person
-        if (toNode.gender === 'M') {
-          fromNode.fid = toNode.id; // Father
-        } else if (toNode.gender === 'F') {
-          fromNode.mid = toNode.id; // Mother
-        }
+        if (!fromNode.rels.parents) fromNode.rels.parents = [];
+        fromNode.rels.parents.push(toNode.id);
+        
+        if (!toNode.rels.children) toNode.rels.children = [];
+        toNode.rels.children.push(fromNode.id);
+        
+        console.log('familyChartAdapter: Set parent relationship:', toNode.data.name, '->', fromNode.data.name);
         break;
         
       case 'spouse':
       case 'partner':
         // Add partners/spouses
-        if (!fromNode.pids) fromNode.pids = [];
-        if (!toNode.pids) toNode.pids = [];
+        if (!fromNode.rels.spouses) fromNode.rels.spouses = [];
+        if (!toNode.rels.spouses) toNode.rels.spouses = [];
         
-        if (!fromNode.pids.includes(toNode.id)) {
-          fromNode.pids.push(toNode.id);
+        if (!fromNode.rels.spouses.includes(toNode.id)) {
+          fromNode.rels.spouses.push(toNode.id);
         }
-        if (!toNode.pids.includes(fromNode.id)) {
-          toNode.pids.push(fromNode.id);
+        if (!toNode.rels.spouses.includes(fromNode.id)) {
+          toNode.rels.spouses.push(fromNode.id);
         }
+        console.log('familyChartAdapter: Set partner relationship:', fromNode.data.name, '<->', toNode.data.name);
         break;
         
       // Note: Other relationship types like 'sibling' are typically derived 
@@ -87,15 +106,18 @@ export function transformToFamilyChartData(
     }
   });
 
-  return {
+  const result = {
     nodes: Array.from(nodeMap.values())
   };
+  
+  console.log('familyChartAdapter: Final transformed data:', result);
+  return result;
 }
 
 /**
  * Find the root node for the family tree (typically the oldest generation or marked as self)
  */
-export function findRootNode(nodes: FamilyChartNode[], persons: Person[]): string | undefined {
+export function findRootNode(nodes: any[], persons: Person[]): string | undefined {
   // First, try to find a person marked as self
   const selfPerson = persons.find(p => p.is_self === true);
   if (selfPerson) {
@@ -103,7 +125,7 @@ export function findRootNode(nodes: FamilyChartNode[], persons: Person[]): strin
   }
   
   // If no self person, find someone without parents (root of tree)
-  const rootNode = nodes.find(node => !node.mid && !node.fid);
+  const rootNode = nodes.find(node => !node.rels.parents || node.rels.parents.length === 0);
   if (rootNode) {
     return rootNode.id;
   }

@@ -40,149 +40,190 @@ export function FamilyChartLayout({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || persons.length === 0) return;
-
-    const initChart = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Import the family-chart library
-        console.log('FamilyChartLayout: Testing import...');
-        let familyChartModule;
-        try {
-          familyChartModule = await import('family-chart');
-          console.log('FamilyChartLayout: Module imported:', familyChartModule);
-        } catch (importError) {
-          console.error('FamilyChartLayout: Import failed:', importError);
-          throw new Error(`Import failed: ${importError instanceof Error ? importError.message : 'Unknown import error'}`);
-        }
-        
-        // Test 2: Check available exports
-        console.log('FamilyChartLayout: Available exports:', Object.keys(familyChartModule));
-        
-        // The module exports a default object with all functions
-        const familyChart = familyChartModule.default || familyChartModule;
-        console.log('FamilyChartLayout: Family chart object:', familyChart);
-        console.log('FamilyChartLayout: Available functions:', Object.keys(familyChart));
-        
-        // Use view function from the family chart object
-        const { view, CardHtml } = familyChart;
-        if (typeof view !== 'function') {
-          console.error('FamilyChartLayout: view is not a function:', typeof view);
-          console.error('FamilyChartLayout: Available functions:', Object.keys(familyChart));
-          throw new Error('view is not a function');
-        }
-        
-        if (typeof CardHtml !== 'function') {
-          console.error('FamilyChartLayout: CardHtml is not a function:', typeof CardHtml);
-          throw new Error('CardHtml is not a function');
-        }
-        
-        // Clear the container
-        if (containerRef.current) {
-          containerRef.current.innerHTML = '';
-        }
-        
-        // Transform our data to family-chart format
-        console.log('FamilyChartLayout: Transforming data...');
-        const familyData = transformToFamilyChartData(persons, connections);
-        console.log('FamilyChartLayout: Transformed data:', familyData);
-        
-        if (familyData.nodes.length === 0) {
-          console.log('FamilyChartLayout: No nodes found, showing empty state');
-          if (containerRef.current) {
-            containerRef.current.textContent = 'No family data available';
-            containerRef.current.className = 'flex items-center justify-center h-full text-muted-foreground';
-          }
-          return;
+        if (persons.length === 0) {
+            console.log('FamilyChartLayout: useEffect early return - no persons');
+            return;
         }
 
-        // Find the root node
-        console.log('FamilyChartLayout: Finding root node...');
-        const rootId = findRootNode(familyData.nodes, persons);
-        console.log('FamilyChartLayout: Root ID:', rootId);
-        
-        // Test 3: Create a minimal configuration first
-        console.log('FamilyChartLayout: Creating family tree with minimal config...');
-        const minimalConfig = {
-          rootId: rootId,
-          width: width,
-          height: height
-        };
-        
-        console.log('FamilyChartLayout: Minimal config:', minimalConfig);
-        
-        // Check if container still exists before proceeding
+        // Check if container exists immediately
         if (!containerRef.current) {
-          console.log('FamilyChartLayout: Container no longer exists, aborting');
-          return;
+            console.log('FamilyChartLayout: No container ref available');
+            return;
         }
-        
-        console.log('FamilyChartLayout: Container element:', containerRef.current);
-        
-        // Create an SVG element for the family chart
-        const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svgElement.setAttribute('width', width.toString());
-        svgElement.setAttribute('height', height.toString());
-        containerRef.current.appendChild(svgElement);
-        
-        // Create the family tree with beautiful styling
-        // Call the view function with correct parameters
-        const familyTree = view(familyData.nodes, svgElement, CardHtml, minimalConfig);
-        console.log('FamilyChartLayout: Family tree instance created successfully');
 
-        // Test 4: Set the data
-        console.log('FamilyChartLayout: Setting data...');
-        familyTree.setData(familyData.nodes);
-        console.log('FamilyChartLayout: Data set successfully');
-        
-        // Add click handlers
-        containerRef.current!.addEventListener('click', (event) => {
-          const nodeElement = (event.target as Element).closest('.family-chart-node');
-          if (nodeElement && onPersonClick) {
-            const personId = nodeElement.getAttribute('data-person-id');
-            const person = persons.find(p => p.id === personId);
-            if (person) {
-              onPersonClick(person);
+        let isMounted = true;
+
+        const initChart = async () => {
+            try {
+                // Check container at the start of async function
+                if (!containerRef.current) {
+                    console.log('FamilyChartLayout: No container ref at start of initChart');
+                    return;
+                }
+
+                setIsLoading(true);
+                setError(null);
+
+                console.log('FamilyChartLayout: Starting initChart...');
+
+                // Import the family-chart library
+                console.log('FamilyChartLayout: Importing family-chart...');
+                const familyChartModule = await import('family-chart');
+                console.log('FamilyChartLayout: Import successful');
+                
+                // Check if component is still mounted after async import
+                if (!isMounted || !containerRef.current) {
+                    console.log('FamilyChartLayout: Component unmounted or container lost after import');
+                    return;
+                }
+                
+                const familyChart = familyChartModule.default || familyChartModule;
+                console.log('FamilyChartLayout: Got familyChart object');
+                
+                const { createChart, CardHtml } = familyChart;
+                console.log('FamilyChartLayout: Destructured createChart and CardHtml');
+                console.log('FamilyChartLayout: createChart type:', typeof createChart);
+                console.log('FamilyChartLayout: CardHtml type:', typeof CardHtml);
+
+                // Clear the container
+                containerRef.current.innerHTML = '';
+                console.log('FamilyChartLayout: Container cleared');
+
+                // Transform our data to family-chart format
+                console.log('FamilyChartLayout: Transforming data...');
+                const familyData = transformToFamilyChartData(persons, connections);
+                console.log('FamilyChartLayout: Data transformation complete');
+                
+                if (familyData.nodes.length === 0) {
+                    console.log('FamilyChartLayout: No nodes found');
+                    if (containerRef.current) {
+                        containerRef.current.textContent = 'No family data available';
+                        containerRef.current.className = 'flex items-center justify-center h-full text-muted-foreground';
+                    }
+                    return;
+                }
+
+                // Find the root node
+                console.log('FamilyChartLayout: Finding root node...');
+                const rootId = findRootNode(familyData.nodes, persons);
+                console.log('FamilyChartLayout: Root ID found:', rootId);
+                
+                if (!rootId) {
+                    throw new Error('No root node found');
+                }
+
+                // Final container check before rendering
+                if (!containerRef.current) {
+                    console.log('FamilyChartLayout: Container lost before rendering');
+                    return;
+                }
+
+                // Render the family chart using the correct API
+                console.log('FamilyChartLayout: About to call createChart function');
+                console.log('FamilyChartLayout: Container element:', containerRef.current);
+                console.log('FamilyChartLayout: Root ID:', rootId);
+                console.log('FamilyChartLayout: Width/Height:', width, height);
+                console.log('FamilyChartLayout: Data nodes count:', familyData.nodes.length);
+                console.log('FamilyChartLayout: First few nodes:', familyData.nodes.slice(0, 3));
+                
+                let familyTree;
+                try {
+                    // Try the simpler createChart API first with main_id
+                    familyTree = createChart(containerRef.current, {
+                        data: familyData.nodes,
+                        main_id: rootId
+                    });
+                    console.log('FamilyChartLayout: createChart function completed successfully');
+                } catch (viewError) {
+                    console.error('FamilyChartLayout: createChart function failed:', viewError);
+                    // Try with the original parameters if the simple call fails
+                    try {
+                        familyTree = createChart(
+                          familyData.nodes,
+                          containerRef.current,
+                          CardHtml,
+                          {
+                            rootId,
+                            width,
+                            height,
+                            nodeBinding: {
+                              field_0: 'name',
+                              field_1: 'birthday',
+                            },
+                            enableSearch: false,
+                            enableMenu: false,
+                            enableDragDrop: false,
+                          }
+                        );
+                        console.log('FamilyChartLayout: createChart with full config completed successfully');
+                    } catch (secondError) {
+                        console.error('FamilyChartLayout: Both createChart attempts failed:', secondError);
+                        throw new Error(`createChart function failed: ${secondError instanceof Error ? secondError.message : 'Unknown view error'}`);
+                    }
+                }
+                
+                console.log('FamilyChartLayout: Family tree object:', familyTree);
+                console.log('FamilyChartLayout: Container after view:', containerRef.current.innerHTML);
+
+                // Add click handler if supported
+                if (onPersonClick && familyTree && typeof familyTree.on === 'function') {
+                    familyTree.on('click', (node: any) => {
+                        if (node && node.id) {
+                            const person = persons.find(p => p.id === node.id);
+                            if (person) {
+                                onPersonClick(person);
+                            }
+                        }
+                    });
+                }
+
+                if (isMounted) {
+                    setChart(familyTree);
+                    setZoomLevel(1);
+                }
+            } catch (error) {
+                console.error('FamilyChartLayout: Error in initChart:', error);
+                if (isMounted) {
+                    setError(`Failed to load family chart: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    if (containerRef.current) {
+                        containerRef.current.textContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+                        containerRef.current.className = 'flex items-center justify-center h-full text-red-500';
+                    }
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
-          }
-        });
+        };
 
-        // Store chart reference
-        setChart(familyTree);
-        
-        // Set initial zoom level
-        setZoomLevel(1);
-        
-      } catch (error) {
-        console.error('Error initializing family chart:', error);
-        setError(`Failed to load family chart: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        if (containerRef.current) {
-          containerRef.current.textContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-          containerRef.current.className = 'flex items-center justify-center h-full text-red-500';
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        // Start the chart initialization immediately
+        initChart();
 
-    initChart();
-  }, [persons, connections, width, height, onPersonClick]);
+        return () => {
+            isMounted = false;
+        };
+    }, [persons, connections, width, height, onPersonClick]);
 
   const handleCenterSelf = () => {
     if (!chart) return;
     
     const selfPerson = persons.find(person => person.is_self === true);
     if (selfPerson) {
-      chart.centerOn(selfPerson.id);
+      // Try to center on the person if the chart has this method
+      if (typeof chart.centerOn === 'function') {
+        chart.centerOn(selfPerson.id);
+      }
     }
   };
 
   const handleZoomToFit = () => {
     if (!chart) return;
-    chart.fit();
-    setZoomLevel(1);
+    // Try to fit the chart if it has this method
+    if (typeof chart.fit === 'function') {
+      chart.fit();
+      setZoomLevel(1);
+    }
   };
 
   if (isLoading) {
@@ -241,7 +282,7 @@ export function FamilyChartLayout({
       {/* Chart Container */}
       <div 
         ref={containerRef}
-        className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg overflow-hidden"
+        className="border rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden"
         style={{ width, height }}
       />
     </div>
