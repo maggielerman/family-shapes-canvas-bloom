@@ -185,9 +185,22 @@ export function transformToSimpleFamilyData(
       const parent = persons.find(p => p.id === parentId);
       if (parent) {
         if (parent.gender === 'male') {
-          node.fid = parent.id; // father id
+          // Only set if not already set (to prevent overwriting)
+          if (!node.fid) {
+            node.fid = parent.id; // father id
+          }
         } else if (parent.gender === 'female') {
-          node.mid = parent.id; // mother id
+          // Only set if not already set (to prevent overwriting)
+          if (!node.mid) {
+            node.mid = parent.id; // mother id
+          }
+        } else {
+          // If gender is unknown, use fallback logic similar to transformToFamilyChartData
+          if (!node.mid) {
+            node.mid = parent.id;
+          } else if (!node.fid) {
+            node.fid = parent.id;
+          }
         }
       }
     });
@@ -201,9 +214,8 @@ export function transformToSimpleFamilyData(
       }
     });
     
-    if (node.pids.length === 0) {
-      delete node.pids;
-    }
+    // Keep empty pids arrays to maintain consistency with transformToFamilyChartData
+    // (removed the deletion of empty pids)
     
     return node;
   });
