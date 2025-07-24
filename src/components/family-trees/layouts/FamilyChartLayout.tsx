@@ -206,6 +206,9 @@ export function FamilyChartLayout({
                             // This is a fallback if IDs are not properly set in the DOM
                             const textContent = target.textContent || '';
                             
+                            // Define node classes that indicate person elements
+                            const nodeClasses = ['node', 'family-chart-node', 'card', 'person', 'member'];
+                            
                             // Find all persons whose names appear in the text content
                             const matchingPersons = persons.filter(p => 
                                 p.name && textContent.includes(p.name)
@@ -236,15 +239,33 @@ export function FamilyChartLayout({
                                 }
                             }
                             
-                            if (matchingPerson && target.querySelector('*') === null) {
-                                // Only match if this is a leaf element (no children) to avoid false positives
-                                console.log('FamilyChartLayout: Click detected on person by name match:', matchingPerson.name);
-                                onPersonClick(matchingPerson);
-                                return;
+                            if (matchingPerson) {
+                                // Check if this element is likely a person node
+                                // Allow clicks on elements that contain person names even if they have child elements
+                                const isLikelyPersonNode = 
+                                    // Element has person-related classes
+                                    nodeClasses.some(cls => target.classList.contains(cls)) ||
+                                    // Element has person-related data attributes
+                                    target.hasAttribute('data-person-id') ||
+                                    target.hasAttribute('data-id') ||
+                                    target.hasAttribute('data-node-id') ||
+                                    // Element is relatively small (not a container with many nested elements)
+                                    target.children.length <= 5 ||
+                                    // Element directly contains the person's name (not deeply nested)
+                                    (target.textContent?.trim() === matchingPerson.name || 
+                                     Array.from(target.childNodes).some(node => 
+                                        node.nodeType === Node.TEXT_NODE && 
+                                        node.textContent?.includes(matchingPerson.name)
+                                    ));
+                                
+                                if (isLikelyPersonNode) {
+                                    console.log('FamilyChartLayout: Click detected on person by name match:', matchingPerson.name);
+                                    onPersonClick(matchingPerson);
+                                    return;
+                                }
                             }
                             
                             // Check parent classes for node indicators
-                            const nodeClasses = ['node', 'family-chart-node', 'card', 'person', 'member'];
                             const isNodeElement = nodeClasses.some(cls => target.classList.contains(cls));
                             
                             if (isNodeElement) {
