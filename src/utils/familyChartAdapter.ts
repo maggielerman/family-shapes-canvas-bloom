@@ -76,8 +76,10 @@ export function transformToFamilyChartData(
           if (toNode.fid && toNode.fid !== fromNode.id) {
             // Multiple fathers - store additional fathers in custom array
             if (!toNode._additionalFathers) toNode._additionalFathers = [];
-            toNode._additionalFathers.push(fromNode.id);
-            console.warn(`familyChartAdapter: Multiple fathers detected for ${toNode.name}. Additional father ${fromNode.name} stored in _additionalFathers array.`);
+            if (!toNode._additionalFathers.includes(fromNode.id)) {
+              toNode._additionalFathers.push(fromNode.id);
+              console.warn(`familyChartAdapter: Multiple fathers detected for ${toNode.name}. Additional father ${fromNode.name} stored in _additionalFathers array.`);
+            }
           } else {
             toNode.fid = fromNode.id;
           }
@@ -85,8 +87,10 @@ export function transformToFamilyChartData(
           if (toNode.mid && toNode.mid !== fromNode.id) {
             // Multiple mothers - store additional mothers in custom array
             if (!toNode._additionalMothers) toNode._additionalMothers = [];
-            toNode._additionalMothers.push(fromNode.id);
-            console.warn(`familyChartAdapter: Multiple mothers detected for ${toNode.name}. Additional mother ${fromNode.name} stored in _additionalMothers array.`);
+            if (!toNode._additionalMothers.includes(fromNode.id)) {
+              toNode._additionalMothers.push(fromNode.id);
+              console.warn(`familyChartAdapter: Multiple mothers detected for ${toNode.name}. Additional mother ${fromNode.name} stored in _additionalMothers array.`);
+            }
           } else {
             toNode.mid = fromNode.id;
           }
@@ -130,8 +134,10 @@ export function transformToFamilyChartData(
           if (fromNode.fid && fromNode.fid !== toNode.id) {
             // Multiple fathers - store additional fathers in custom array
             if (!fromNode._additionalFathers) fromNode._additionalFathers = [];
-            fromNode._additionalFathers.push(toNode.id);
-            console.warn(`familyChartAdapter: Multiple fathers detected for ${fromNode.name}. Additional father ${toNode.name} stored in _additionalFathers array.`);
+            if (!fromNode._additionalFathers.includes(toNode.id)) {
+              fromNode._additionalFathers.push(toNode.id);
+              console.warn(`familyChartAdapter: Multiple fathers detected for ${fromNode.name}. Additional father ${toNode.name} stored in _additionalFathers array.`);
+            }
           } else {
             fromNode.fid = toNode.id;
           }
@@ -139,8 +145,10 @@ export function transformToFamilyChartData(
           if (fromNode.mid && fromNode.mid !== toNode.id) {
             // Multiple mothers - store additional mothers in custom array
             if (!fromNode._additionalMothers) fromNode._additionalMothers = [];
-            fromNode._additionalMothers.push(toNode.id);
-            console.warn(`familyChartAdapter: Multiple mothers detected for ${fromNode.name}. Additional mother ${toNode.name} stored in _additionalMothers array.`);
+            if (!fromNode._additionalMothers.includes(toNode.id)) {
+              fromNode._additionalMothers.push(toNode.id);
+              console.warn(`familyChartAdapter: Multiple mothers detected for ${fromNode.name}. Additional mother ${toNode.name} stored in _additionalMothers array.`);
+            }
           } else {
             fromNode.mid = toNode.id;
           }
