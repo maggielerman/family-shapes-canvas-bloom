@@ -176,12 +176,6 @@ const Dashboard = () => {
     // Only redirect on initial load and if user hasn't explicitly navigated to personal dashboard
     const hasExplicitlyNavigatedToPersonal = sessionStorage.getItem('explicit-personal-dashboard');
     
-    // Clear the session flag regardless of whether redirect occurs
-    // This ensures the flag only prevents auto-redirect for a single load cycle
-    if (hasExplicitlyNavigatedToPersonal) {
-      sessionStorage.removeItem('explicit-personal-dashboard');
-    }
-    
     if (profile && organizations.length > 0 && !hasExplicitlyNavigatedToPersonal && !hasRedirectedRef.current) {
       // Check if user owns any organization that might need onboarding
       const ownedOrganizations = organizations.filter(org => org.role === 'owner');
@@ -190,6 +184,13 @@ const Dashboard = () => {
       // and user has owned organizations
       if (ownedOrganizations.length > 0) {
         hasRedirectedRef.current = true;
+        
+        // Clear the session flag only when an actual redirect occurs
+        // This ensures the flag only prevents auto-redirect for a single load cycle
+        if (hasExplicitlyNavigatedToPersonal) {
+          sessionStorage.removeItem('explicit-personal-dashboard');
+        }
+        
         // For now, redirect to the first owned organization
         // In the future, this could be enhanced to remember the last used organization
         const primaryOrg = ownedOrganizations[0];
