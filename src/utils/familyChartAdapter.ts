@@ -67,10 +67,14 @@ export function transformToFamilyChartData(
       case 'parent':
         // from_person is parent of to_person
         if (!toNode.rels.parents) toNode.rels.parents = [];
-        toNode.rels.parents.push(fromNode.id);
+        if (!toNode.rels.parents.includes(fromNode.id)) {
+          toNode.rels.parents.push(fromNode.id);
+        }
         
         if (!fromNode.rels.children) fromNode.rels.children = [];
-        fromNode.rels.children.push(toNode.id);
+        if (!fromNode.rels.children.includes(toNode.id)) {
+          fromNode.rels.children.push(toNode.id);
+        }
         
         console.log('familyChartAdapter: Set parent relationship:', fromNode.data.name, '->', toNode.data.name);
         break;
@@ -78,10 +82,14 @@ export function transformToFamilyChartData(
       case 'child':
         // from_person is child of to_person
         if (!fromNode.rels.parents) fromNode.rels.parents = [];
-        fromNode.rels.parents.push(toNode.id);
+        if (!fromNode.rels.parents.includes(toNode.id)) {
+          fromNode.rels.parents.push(toNode.id);
+        }
         
         if (!toNode.rels.children) toNode.rels.children = [];
-        toNode.rels.children.push(fromNode.id);
+        if (!toNode.rels.children.includes(fromNode.id)) {
+          toNode.rels.children.push(fromNode.id);
+        }
         
         console.log('familyChartAdapter: Set parent relationship:', toNode.data.name, '->', fromNode.data.name);
         break;
