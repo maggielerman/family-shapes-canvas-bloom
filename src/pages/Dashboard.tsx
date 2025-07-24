@@ -184,9 +184,9 @@ const Dashboard = () => {
       // and user has owned organizations
       if (ownedOrganizations.length > 0) {
         hasRedirectedRef.current = true;
-        // Clear the session flag only when an actual redirect occurs
-        // This ensures the flag only prevents auto-redirect for a single load cycle
-        sessionStorage.removeItem('explicit-personal-dashboard');
+        // Do not clear the session flag here - it should persist to prevent
+        // unwanted auto-redirects on subsequent data refreshes
+        // The flag will be cleared when user navigates away via ContextSwitcher
         // For now, redirect to the first owned organization
         // In the future, this could be enhanced to remember the last used organization
         const primaryOrg = ownedOrganizations[0];
