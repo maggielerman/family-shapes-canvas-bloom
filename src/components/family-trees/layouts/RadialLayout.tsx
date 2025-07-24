@@ -7,6 +7,8 @@ import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
 import { RelationshipFilter } from './RelationshipFilter';
+import { FamilyTreePersonCardSVG } from './FamilyTreePersonCard';
+import { GenerationLegend } from './GenerationLegend';
 import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './relationshipConstants';
 
 interface RelationshipType {
@@ -37,12 +39,12 @@ interface RadialConfig {
 }
 
 const RADIAL_CONFIG: RadialConfig = {
-  centerRadius: 80,
-  generationSpacing: 120,
-  maxRadius: 400,
-  linkDistance: 100,
-  chargeStrength: -200,
-  collisionRadius: 45
+  centerRadius: 140,
+  generationSpacing: 280,
+  maxRadius: 800,
+  linkDistance: 200,
+  chargeStrength: -500,
+  collisionRadius: 140
 };
 
 export function RadialLayout({ 
@@ -63,6 +65,19 @@ export function RadialLayout({
     lateral: true,
     donor: true
   });
+  const [generationMap, setGenerationMap] = useState<Map<string, { generation: number; color: string; depth: number }>>(new Map());
+
+  // Helper function to get connection line color based on relationship type
+  const getConnectionColor = (relationshipType: string): string => {
+    if (RELATIONSHIP_CATEGORIES.generational.includes(relationshipType as any)) {
+      return '#3b82f6'; // Blue for parent-child relationships
+    } else if (RELATIONSHIP_CATEGORIES.lateral.includes(relationshipType as any)) {
+      return '#10b981'; // Green for sibling relationships
+    } else if (RELATIONSHIP_CATEGORIES.donor.includes(relationshipType as any)) {
+      return '#f59e0b'; // Orange for donor relationships
+    }
+    return '#6b7280'; // Gray for other relationships
+  };
 
   // Filter connections based on relationship type filters
   const getFilteredConnections = (connections: Connection[]) => {
@@ -114,13 +129,13 @@ export function RadialLayout({
   };
 
   // Create radial force for generation-based circular arrangement
-  const createRadialForce = (generationMap: Map<string, any>) => {
+  const createRadialForce = (currentGenerationMapParam: Map<string, any>) => {
     return (alpha: number) => {
       const centerX = width / 2;
       const centerY = height / 2;
 
       return (node: any) => {
-        const generation = generationMap.get(node.id)?.generation;
+        const generation = currentGenerationMapParam.get(node.id)?.generation;
         
         if (generation !== undefined) {
           // Calculate target radius based on generation
@@ -161,7 +176,10 @@ export function RadialLayout({
 
     // Use shared connection processing utility
     const processed = processConnections(persons, connections);
-    const { validConnections, generationMap } = processed;
+    const { validConnections, generationMap: currentGenerationMap } = processed;
+    
+    // Update generation map state for legend
+    setGenerationMap(currentGenerationMap);
 
     // Filter connections based on relationship type filters
     const filteredConnections = getFilteredConnections(validConnections);
@@ -171,7 +189,7 @@ export function RadialLayout({
 
     // Create nodes data from visible persons only
     const nodes = visiblePersons.map(person => {
-      const generationInfo = generationMap.get(person.id);
+      const generationInfo = currentGenerationMap.get(person.id);
       
       // For radial layout, start nodes at their target positions
       let initialX = width / 2;
@@ -220,7 +238,7 @@ export function RadialLayout({
       .force('charge', d3.forceManyBody().strength(RADIAL_CONFIG.chargeStrength))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide().radius(RADIAL_CONFIG.collisionRadius))
-      .force('radial', createRadialForce(generationMap));
+      .force('radial', createRadialForce(currentGenerationMap));
 
     const g = svg.append('g');
 
@@ -251,21 +269,11 @@ export function RadialLayout({
       .data(links)
       .enter()
       .append('line')
-      .attr('stroke', d => {
-        // Different colors for different relationship types in radial layout
-        if (RELATIONSHIP_CATEGORIES.generational.includes(d.type as any)) {
-          return 'hsl(var(--chart-1))';
-        } else if (RELATIONSHIP_CATEGORIES.lateral.includes(d.type as any)) {
-          return 'hsl(var(--chart-2))';
-        } else if (RELATIONSHIP_CATEGORIES.donor.includes(d.type as any)) {
-          return 'hsl(var(--chart-3))';
-        }
-        return 'hsl(var(--border))';
-      })
+      .attr('stroke', d => getConnectionColor(d.type))
       .attr('stroke-opacity', 0.4)
       .attr('stroke-width', 1.5);
 
-    // Create nodes
+    // Create nodes with new PersonNodeSVG component
     const node = g.append('g')
       .attr('class', 'nodes')
       .selectAll('g')
@@ -296,56 +304,227 @@ export function RadialLayout({
         }
       });
 
-    // Add node containers with radial-optimized size
-    const nodeSize = { width: 100, height: 70 };
-    
-    node.append('rect')
-      .attr('width', nodeSize.width)
-      .attr('height', nodeSize.height)
-      .attr('x', -nodeSize.width / 2)
-      .attr('y', -nodeSize.height / 2)
-      .attr('rx', 8)
-      .attr('ry', 8)
-      .attr('fill', d => d.generationColor || 'hsl(var(--chart-1))')
-      .attr('stroke', d => d.generationColor || 'hsl(var(--border))')
-      .attr('stroke-width', 2)
-      .attr('opacity', 0.9);
+    // Add vertical FamilyTreePersonCard components
+    node.each(function(d) {
+      const nodeElement = d3.select(this);
+      const person = d.person;
+      const generationInfo = currentGenerationMap.get(person.id);
+      const generationColor = generationInfo?.color || '#e5e7eb';
+      
+      // Create FamilyTreePersonCardSVG component
+      const cardGroup = nodeElement.append('g');
+      
+      // Card shadow
+      cardGroup.append('rect')
+        .attr('width', 192)
+        .attr('height', 256)
+        .attr('x', -96)
+        .attr('y', -128)
+        .attr('rx', 8)
+        .attr('ry', 8)
+        .attr('fill', '#00000010')
+        .attr('transform', 'translate(2, 2)');
+      
+      // Card background with generation color border
+      cardGroup.append('rect')
+        .attr('width', 192)
+        .attr('height', 256)
+        .attr('x', -96)
+        .attr('y', -128)
+        .attr('rx', 8)
+        .attr('ry', 8)
+        .attr('fill', 'white')
+        .attr('stroke', generationColor)
+        .attr('stroke-width', 3);
 
-    // Add profile images if available
-    const imageSize = 40;
-    node.filter(d => d.profile_photo_url)
-      .append('image')
-      .attr('x', -imageSize / 2)
-      .attr('y', -imageSize / 2)
-      .attr('width', imageSize)
-      .attr('height', imageSize)
-      .attr('href', d => d.profile_photo_url!)
-      .attr('clip-path', `circle(${imageSize / 2}px)`);
+      // Avatar circle background
+      cardGroup.append('circle')
+        .attr('cx', 0)
+        .attr('cy', -80)
+        .attr('r', 32)
+        .attr('fill', '#f3f4f6')
+        .attr('stroke', '#e5e7eb')
+        .attr('stroke-width', 1);
 
-    // Add names with radial-optimized sizing
-    node.append('text')
-      .attr('text-anchor', 'middle')
-      .attr('dy', '0.35em')
-      .attr('font-size', '10px')
-      .attr('font-weight', 'bold')
-      .attr('fill', 'hsl(var(--foreground))')
-      .text(d => d.name.length > 10 ? d.name.substring(0, 8) + '...' : d.name);
+      // Avatar image or initials
+      if (person.profile_photo_url) {
+        cardGroup.append('image')
+          .attr('x', -32)
+          .attr('y', -112)
+          .attr('width', 64)
+          .attr('height', 64)
+          .attr('href', person.profile_photo_url)
+          .attr('clip-path', 'circle(32px at 32px 32px)')
+          .attr('preserveAspectRatio', 'xMidYMid slice');
+      } else {
+        const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        cardGroup.append('text')
+          .attr('x', 0)
+          .attr('y', -72)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#6b7280')
+          .attr('font-size', '16px')
+          .attr('font-weight', '600')
+          .text(initials);
+      }
 
-    // Add generation labels
-    node.append('text')
-      .attr('text-anchor', 'middle')
-      .attr('dy', '18px')
-      .attr('font-size', '9px')
-      .attr('fill', d => d.generationColor || 'hsl(var(--muted-foreground))')
-      .text(d => d.generation ? `Gen ${d.generation}` : '');
+      // Name
+      cardGroup.append('text')
+        .attr('x', 0)
+        .attr('y', -20)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#111827')
+        .attr('font-size', '14px')
+        .attr('font-weight', '600')
+        .text(person.name.length > 18 ? person.name.substring(0, 18) + '...' : person.name);
 
-    // Add gender indicators
-    node.append('text')
-      .attr('x', -35)
-      .attr('y', -20)
-      .attr('font-size', '12px')
-      .attr('fill', 'hsl(var(--muted-foreground))')
-      .text(d => d.gender === 'male' ? '♂' : d.gender === 'female' ? '♀' : '');
+      // Age (if available)
+      let yOffset = 0;
+      if (person.date_of_birth) {
+        const birthDate = new Date(person.date_of_birth);
+        if (!isNaN(birthDate.getTime())) {
+          const age = new Date().getFullYear() - birthDate.getFullYear();
+          cardGroup.append('text')
+            .attr('x', 0)
+            .attr('y', yOffset)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#6b7280')
+            .attr('font-size', '12px')
+            .text(`Age ${age}`);
+          yOffset += 20;
+        }
+      }
+
+      // Contact info (email or phone)
+      if (person.email) {
+        cardGroup.append('text')
+          .attr('x', 0)
+          .attr('y', yOffset)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#9ca3af')
+          .attr('font-size', '10px')
+          .text(person.email.length > 20 ? person.email.substring(0, 20) + '...' : person.email);
+        yOffset += 20;
+      } else if (person.phone) {
+        cardGroup.append('text')
+          .attr('x', 0)
+          .attr('y', yOffset)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#9ca3af')
+          .attr('font-size', '10px')
+          .text(person.phone);
+        yOffset += 20;
+      }
+
+      // Notes
+      if (person.notes) {
+        cardGroup.append('text')
+          .attr('x', 0)
+          .attr('y', yOffset)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#d1d5db')
+          .attr('font-size', '9px')
+          .text(person.notes.length > 25 ? person.notes.substring(0, 25) + '...' : person.notes);
+      }
+
+      // Badges at bottom
+      let badgeY = 72;
+      let badgeX = -60;
+
+      // Status badge
+      const statusColor = person.status === 'living' ? '#047857' : '#374151';
+      const statusBg = person.status === 'living' ? '#ecfdf5' : '#f9fafb';
+      const statusStroke = person.status === 'living' ? '#10b981' : '#6b7280';
+      
+      cardGroup.append('rect')
+        .attr('x', badgeX)
+        .attr('y', badgeY)
+        .attr('width', 50)
+        .attr('height', 18)
+        .attr('rx', 9)
+        .attr('fill', statusBg)
+        .attr('stroke', statusStroke)
+        .attr('stroke-width', 1);
+        
+      cardGroup.append('text')
+        .attr('x', badgeX + 25)
+        .attr('y', badgeY + 11)
+        .attr('text-anchor', 'middle')
+        .attr('fill', statusColor)
+        .attr('font-size', '9px')
+        .attr('font-weight', '500')
+        .text(person.status);
+      
+      badgeX += 55;
+
+      // Self badge
+      if (person.is_self) {
+        cardGroup.append('rect')
+          .attr('x', badgeX)
+          .attr('y', badgeY)
+          .attr('width', 30)
+          .attr('height', 18)
+          .attr('rx', 9)
+          .attr('fill', '#dc2626')
+          .attr('stroke', '#dc2626')
+          .attr('stroke-width', 1);
+          
+        cardGroup.append('text')
+          .attr('x', badgeX + 15)
+          .attr('y', badgeY + 11)
+          .attr('text-anchor', 'middle')
+          .attr('fill', 'white')
+          .attr('font-size', '9px')
+          .attr('font-weight', '500')
+          .text('Self');
+        
+        badgeX += 35;
+      }
+
+      // Donor badge
+      if (person.donor) {
+        cardGroup.append('rect')
+          .attr('x', badgeX)
+          .attr('y', badgeY)
+          .attr('width', 35)
+          .attr('height', 18)
+          .attr('rx', 9)
+          .attr('fill', '#fed7aa')
+          .attr('stroke', '#ea580c')
+          .attr('stroke-width', 1);
+          
+        cardGroup.append('text')
+          .attr('x', badgeX + 17.5)
+          .attr('y', badgeY + 11)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#ea580c')
+          .attr('font-size', '9px')
+          .attr('font-weight', '500')
+          .text('Donor');
+      }
+
+      // Gender badge (second row if needed)
+      if (person.gender) {
+        cardGroup.append('rect')
+          .attr('x', -60)
+          .attr('y', badgeY + 25)
+          .attr('width', 40)
+          .attr('height', 18)
+          .attr('rx', 9)
+          .attr('fill', '#dbeafe')
+          .attr('stroke', '#3b82f6')
+          .attr('stroke-width', 1);
+          
+        cardGroup.append('text')
+          .attr('x', -40)
+          .attr('y', badgeY + 36)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#1d4ed8')
+          .attr('font-size', '9px')
+          .attr('font-weight', '500')
+          .text(person.gender.charAt(0).toUpperCase() + person.gender.slice(1));
+      }
+    });
 
     // Add zoom and pan
     const zoom = d3.zoom<SVGSVGElement, unknown>()
@@ -481,6 +660,13 @@ export function RadialLayout({
         <RelationshipFilter
           relationshipFilters={relationshipFilters}
           onRelationshipFilterChange={handleRelationshipFilterChange}
+        />
+      </div>
+
+      {/* Generation Legend - top left below relationship filter */}
+      <div className="absolute top-36 left-4 z-10">
+        <GenerationLegend
+          generationMap={generationMap}
         />
       </div>
 

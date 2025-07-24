@@ -10,6 +10,8 @@ import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
 import { RelationshipFilter } from './RelationshipFilter';
+import { FamilyTreePersonCardSVG } from './FamilyTreePersonCard';
+import { GenerationLegend } from './GenerationLegend';
 import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './relationshipConstants';
 
 interface DagreLayoutProps {
@@ -59,6 +61,19 @@ export function DagreLayout({
     lateral: true,
     donor: true
   });
+  const [generationMap, setGenerationMap] = useState<Map<string, { generation: number; color: string; depth: number }>>(new Map());
+
+  // Helper function to get connection line color based on relationship type
+  const getConnectionColor = (relationshipType: string): string => {
+    if (RELATIONSHIP_CATEGORIES.generational.includes(relationshipType as any)) {
+      return '#3b82f6'; // Blue for parent-child relationships
+    } else if (RELATIONSHIP_CATEGORIES.lateral.includes(relationshipType as any)) {
+      return '#10b981'; // Green for sibling relationships
+    } else if (RELATIONSHIP_CATEGORIES.donor.includes(relationshipType as any)) {
+      return '#f59e0b'; // Orange for donor relationships
+    }
+    return '#6b7280'; // Gray for other relationships
+  };
 
   // Filter connections based on relationship type filters
   const getFilteredConnections = (connections: Connection[]) => {
@@ -117,7 +132,10 @@ export function DagreLayout({
 
     // Use shared connection processing utility
     const processed = processConnections(persons, connections);
-    const { generationalConnections, generationMap } = processed;
+    const { generationalConnections, generationMap: currentGenerationMap } = processed;
+    
+    // Update generation map state for legend
+    setGenerationMap(currentGenerationMap);
 
     // Filter connections based on relationship type filters
     const filteredConnections = getFilteredConnections(generationalConnections);
@@ -137,13 +155,13 @@ export function DagreLayout({
     });
     g.setDefaultEdgeLabel(() => ({}));
 
-    // Add only visible nodes to the graph
+    // Add only visible nodes to the graph (adjusted for vertical cards)
     visiblePersons.forEach(person => {
-      const generationInfo = generationMap.get(person.id);
+      const generationInfo = currentGenerationMap.get(person.id);
       g.setNode(person.id, {
         label: person.name,
-        width: 120,
-        height: 80,
+        width: 192,
+        height: 256,
         generation: generationInfo?.generation,
         generationColor: generationInfo?.color,
         profile_photo_url: person.profile_photo_url,
@@ -185,7 +203,10 @@ export function DagreLayout({
         return `M ${edge.points[0].x} ${edge.points[0].y} ${edge.points.map(p => `L ${p.x} ${p.y}`).join(' ')}`;
       })
       .attr('fill', 'none')
-      .attr('stroke', 'hsl(var(--border))')
+      .attr('stroke', (d) => {
+        const edge = g.edge(d);
+        return getConnectionColor(edge.relationship_type);
+      })
       .attr('stroke-width', 2);
 
     // Transition edges to visible
@@ -228,78 +249,230 @@ export function DagreLayout({
     // Use nodeEnter for adding elements, nodeUpdate for final merged selection
     const allNodes = nodeEnter;
 
-    // Add node containers (cards)
-    allNodes.append('rect')
-      .attr('width', 140)
-      .attr('height', 100)
-      .attr('rx', 8)
-      .attr('ry', 8)
-      .attr('fill', (d) => {
-        const node = g.node(d) as DagreNodeData;
-        return node.generationColor || 'hsl(var(--chart-1))';
-      })
-      .attr('stroke', (d) => {
-        const node = g.node(d) as DagreNodeData;
-        return node.generationColor || 'hsl(var(--border))';
-      })
-      .attr('stroke-width', 2)
-      .attr('opacity', 0.9);
+    // Add vertical FamilyTreePersonCard components
+    allNodes.each(function(d) {
+      const nodeElement = d3.select(this);
+      const person = persons.find(p => p.id === d);
+      
+      if (!person) return;
+      
+      const generationInfo = currentGenerationMap.get(person.id);
+      const generationColor = generationInfo?.color || '#e5e7eb';
+      
+      // Create FamilyTreePersonCardSVG component
+      const cardGroup = nodeElement.append('g');
+      
+      // Card shadow
+      cardGroup.append('rect')
+        .attr('width', 192)
+        .attr('height', 256)
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('rx', 8)
+        .attr('ry', 8)
+        .attr('fill', '#00000010')
+        .attr('transform', 'translate(2, 2)');
+      
+      // Card background with generation color border
+      cardGroup.append('rect')
+        .attr('width', 192)
+        .attr('height', 256)
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('rx', 8)
+        .attr('ry', 8)
+        .attr('fill', 'white')
+        .attr('stroke', generationColor)
+        .attr('stroke-width', 3);
 
-    // Add profile images if available
-    allNodes.filter((d) => {
-      const node = g.node(d) as DagreNodeData;
-      return node.profile_photo_url;
-    })
-      .append('image')
-      .attr('x', 25)
-      .attr('y', 25)
-      .attr('width', 50)
-      .attr('height', 50)
-      .attr('href', (d) => {
-        const node = g.node(d) as DagreNodeData;
-        return node.profile_photo_url!;
-      })
-      .attr('clip-path', 'circle(25px)');
+      // Avatar circle background
+      cardGroup.append('circle')
+        .attr('cx', 96)
+        .attr('cy', 48)
+        .attr('r', 32)
+        .attr('fill', '#f3f4f6')
+        .attr('stroke', '#e5e7eb')
+        .attr('stroke-width', 1);
 
-    // Add names
-    allNodes.append('text')
-      .attr('x', 70)
-      .attr('y', 45)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '11px')
-      .attr('font-weight', 'bold')
-      .attr('fill', 'hsl(var(--foreground))')
-      .text((d) => {
-        const node = g.node(d) as DagreNodeData;
-        const name = node.label;
-        return name.length > 12 ? name.substring(0, 10) + '...' : name;
-      });
+      // Avatar image or initials
+      if (person.profile_photo_url) {
+        cardGroup.append('image')
+          .attr('x', 64)
+          .attr('y', 16)
+          .attr('width', 64)
+          .attr('height', 64)
+          .attr('href', person.profile_photo_url)
+          .attr('clip-path', 'circle(32px at 32px 32px)')
+          .attr('preserveAspectRatio', 'xMidYMid slice');
+      } else {
+        const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        cardGroup.append('text')
+          .attr('x', 96)
+          .attr('y', 56)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#6b7280')
+          .attr('font-size', '16px')
+          .attr('font-weight', '600')
+          .text(initials);
+      }
 
-    // Add generation labels
-    allNodes.append('text')
-      .attr('x', 70)
-      .attr('y', 65)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '9px')
-      .attr('fill', (d) => {
-        const node = g.node(d) as DagreNodeData;
-        return node.generationColor || 'hsl(var(--muted-foreground))';
-      })
-      .text((d) => {
-        const node = g.node(d) as DagreNodeData;
-        return node.generation ? `Gen ${node.generation}` : '';
-      });
+      // Name
+      cardGroup.append('text')
+        .attr('x', 96)
+        .attr('y', 108)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#111827')
+        .attr('font-size', '14px')
+        .attr('font-weight', '600')
+        .text(person.name.length > 18 ? person.name.substring(0, 18) + '...' : person.name);
 
-    // Add gender indicators
-    allNodes.append('text')
-      .attr('x', 15)
-      .attr('y', 25)
-      .attr('font-size', '12px')
-      .attr('fill', 'hsl(var(--muted-foreground))')
-      .text((d) => {
-        const node = g.node(d) as DagreNodeData;
-        return node.gender === 'male' ? '♂' : node.gender === 'female' ? '♀' : '';
-      });
+      // Age (if available)
+      let yOffset = 128;
+      if (person.date_of_birth) {
+        const birthDate = new Date(person.date_of_birth);
+        if (!isNaN(birthDate.getTime())) {
+          const age = new Date().getFullYear() - birthDate.getFullYear();
+          cardGroup.append('text')
+            .attr('x', 96)
+            .attr('y', yOffset)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#6b7280')
+            .attr('font-size', '12px')
+            .text(`Age ${age}`);
+          yOffset += 20;
+        }
+      }
+
+      // Contact info (email or phone)
+      if (person.email) {
+        cardGroup.append('text')
+          .attr('x', 96)
+          .attr('y', yOffset)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#9ca3af')
+          .attr('font-size', '10px')
+          .text(person.email.length > 20 ? person.email.substring(0, 20) + '...' : person.email);
+        yOffset += 20;
+      } else if (person.phone) {
+        cardGroup.append('text')
+          .attr('x', 96)
+          .attr('y', yOffset)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#9ca3af')
+          .attr('font-size', '10px')
+          .text(person.phone);
+        yOffset += 20;
+      }
+
+      // Notes
+      if (person.notes) {
+        cardGroup.append('text')
+          .attr('x', 96)
+          .attr('y', yOffset)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#d1d5db')
+          .attr('font-size', '9px')
+          .text(person.notes.length > 25 ? person.notes.substring(0, 25) + '...' : person.notes);
+      }
+
+      // Badges at bottom
+      let badgeY = 200;
+      let badgeX = 30;
+
+      // Status badge
+      const statusColor = person.status === 'living' ? '#047857' : '#374151';
+      const statusBg = person.status === 'living' ? '#ecfdf5' : '#f9fafb';
+      const statusStroke = person.status === 'living' ? '#10b981' : '#6b7280';
+      
+      cardGroup.append('rect')
+        .attr('x', badgeX)
+        .attr('y', badgeY)
+        .attr('width', 50)
+        .attr('height', 18)
+        .attr('rx', 9)
+        .attr('fill', statusBg)
+        .attr('stroke', statusStroke)
+        .attr('stroke-width', 1);
+        
+      cardGroup.append('text')
+        .attr('x', badgeX + 25)
+        .attr('y', badgeY + 11)
+        .attr('text-anchor', 'middle')
+        .attr('fill', statusColor)
+        .attr('font-size', '9px')
+        .attr('font-weight', '500')
+        .text(person.status);
+      
+      badgeX += 55;
+
+      // Self badge
+      if (person.is_self) {
+        cardGroup.append('rect')
+          .attr('x', badgeX)
+          .attr('y', badgeY)
+          .attr('width', 30)
+          .attr('height', 18)
+          .attr('rx', 9)
+          .attr('fill', '#dc2626')
+          .attr('stroke', '#dc2626')
+          .attr('stroke-width', 1);
+          
+        cardGroup.append('text')
+          .attr('x', badgeX + 15)
+          .attr('y', badgeY + 11)
+          .attr('text-anchor', 'middle')
+          .attr('fill', 'white')
+          .attr('font-size', '9px')
+          .attr('font-weight', '500')
+          .text('Self');
+        
+        badgeX += 35;
+      }
+
+      // Donor badge
+      if (person.donor) {
+        cardGroup.append('rect')
+          .attr('x', badgeX)
+          .attr('y', badgeY)
+          .attr('width', 35)
+          .attr('height', 18)
+          .attr('rx', 9)
+          .attr('fill', '#fed7aa')
+          .attr('stroke', '#ea580c')
+          .attr('stroke-width', 1);
+          
+        cardGroup.append('text')
+          .attr('x', badgeX + 17.5)
+          .attr('y', badgeY + 11)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#ea580c')
+          .attr('font-size', '9px')
+          .attr('font-weight', '500')
+          .text('Donor');
+      }
+
+      // Gender badge (second row if needed)
+      if (person.gender) {
+        cardGroup.append('rect')
+          .attr('x', 30)
+          .attr('y', badgeY + 25)
+          .attr('width', 40)
+          .attr('height', 18)
+          .attr('rx', 9)
+          .attr('fill', '#dbeafe')
+          .attr('stroke', '#3b82f6')
+          .attr('stroke-width', 1);
+          
+        cardGroup.append('text')
+          .attr('x', 50)
+          .attr('y', badgeY + 36)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#1d4ed8')
+          .attr('font-size', '9px')
+          .attr('font-weight', '500')
+          .text(person.gender.charAt(0).toUpperCase() + person.gender.slice(1));
+      }
+    });
 
     // Add zoom and pan
     const zoom = d3.zoom<SVGSVGElement, unknown>()
@@ -324,7 +497,7 @@ export function DagreLayout({
     }
 
     // Store references for update function
-    window.dagreData = { g, svg, g_svg, generationMap, persons: visiblePersons };
+    window.dagreData = { g, svg, g_svg, generationMap: currentGenerationMap, persons: visiblePersons };
 
   }, [persons, connections, width, height, onPersonClick, layoutDirection, relationshipFilters]);
 
@@ -435,6 +608,13 @@ export function DagreLayout({
         <RelationshipFilter
           relationshipFilters={relationshipFilters}
           onRelationshipFilterChange={handleRelationshipFilterChange}
+        />
+      </div>
+
+      {/* Generation Legend - top left below relationship filter */}
+      <div className="absolute top-36 left-4 z-10">
+        <GenerationLegend
+          generationMap={generationMap}
         />
       </div>
 
