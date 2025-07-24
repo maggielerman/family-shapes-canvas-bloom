@@ -215,11 +215,18 @@ export class UnionProcessingService {
    */
   private createUnionNodes(analysis: UnionAnalysis): UnionNode[] {
     const unions: UnionNode[] = [];
+    const seenParentSets = new Set<string>();
+
+    // Helper to generate deterministic key (sorted parent IDs)
+    const parentKey = (parents: Person[]) => parents.map(p => p.id).sort().join('_');
     
-    // Create unions for potential unions
-    analysis.potentialUnions.forEach((potential, index) => {
+    // Create unions for potential unions – deduplicated by parent set
+    analysis.potentialUnions.forEach((potential) => {
+      const key = parentKey(potential.parents);
+      if (seenParentSets.has(key)) return; // already have this union
+      seenParentSets.add(key);
       unions.push({
-        id: `union_${index}_${potential.parents.map(p => p.id).join('_')}`,
+        id: `union_${key}`,
         parents: potential.parents,
         unionType: potential.suggestedType
       });
