@@ -136,10 +136,19 @@ export function transformToSimpleFamilyData(
     };
     
     // Find parent connections
-    const parentConnections = connections.filter(
-      conn => conn.to_person_id === person.id && 
-      (conn.relationship_type === 'parent' || conn.relationship_type === 'child')
-    );
+    // Case 1: relationship_type is 'parent' and from_person is the parent of to_person (current person)
+    // Case 2: relationship_type is 'child' and to_person is the parent of from_person (current person)
+    const parentConnections = connections.filter(conn => {
+      if (conn.relationship_type === 'parent' && conn.to_person_id === person.id) {
+        // from_person is parent of current person
+        return true;
+      }
+      if (conn.relationship_type === 'child' && conn.from_person_id === person.id) {
+        // to_person is parent of current person
+        return true;
+      }
+      return false;
+    });
     
     // Find spouse connections
     const spouseConnections = connections.filter(
@@ -149,7 +158,20 @@ export function transformToSimpleFamilyData(
     
     // Set parent IDs
     parentConnections.forEach(conn => {
-      const parent = persons.find(p => p.id === conn.from_person_id);
+      let parentId: string;
+      
+      // Determine which person is the parent based on relationship type
+      if (conn.relationship_type === 'parent' && conn.to_person_id === person.id) {
+        // from_person is the parent
+        parentId = conn.from_person_id;
+      } else if (conn.relationship_type === 'child' && conn.from_person_id === person.id) {
+        // to_person is the parent
+        parentId = conn.to_person_id;
+      } else {
+        return; // Skip if we can't determine the parent
+      }
+      
+      const parent = persons.find(p => p.id === parentId);
       if (parent) {
         if (parent.gender === 'male') {
           node.fid = parent.id; // father id
