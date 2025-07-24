@@ -214,4 +214,10 @@
   .py-mobile {
     @apply py-4 sm:py-6 lg:py-8;
   }
+
+  /* Family Chart component styles */
+  .family-chart-node:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
 }

@@ -312,14 +312,6 @@ export function FamilyChartLayout({
         className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg overflow-hidden"
         style={{ width, height }}
       />
-      
-      {/* Custom styles for hover effects */}
-      <style jsx>{`
-        .family-chart-node:hover {
-          transform: translateY(-4px) scale(1.02);
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-      `}</style>
     </div>
   );
 } 
