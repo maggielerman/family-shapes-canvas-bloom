@@ -52,6 +52,7 @@ export function FamilyChartLayout({
         }
 
         let isMounted = true;
+        let cleanupClickHandler: (() => void) | null = null;
 
         const initChart = async () => {
             try {
@@ -165,16 +166,104 @@ export function FamilyChartLayout({
                 console.log('FamilyChartLayout: Family tree object:', familyTree);
                 console.log('FamilyChartLayout: Container after view:', containerRef.current.innerHTML);
 
-                // Add click handler if supported
-                if (onPersonClick && familyTree && typeof familyTree.on === 'function') {
-                    familyTree.on('click', (node: any) => {
-                        if (node && node.id) {
-                            const person = persons.find(p => p.id === node.id);
-                            if (person) {
-                                onPersonClick(person);
+                // Log the DOM structure to understand what the library creates
+                if (containerRef.current) {
+                    const firstNode = containerRef.current.querySelector('[data-id], [data-person-id], [data-node-id], .node, .family-chart-node, .card');
+                    if (firstNode) {
+                        console.log('FamilyChartLayout: Found node element:', firstNode);
+                        console.log('FamilyChartLayout: Node attributes:', Array.from(firstNode.attributes).map(attr => `${attr.name}="${attr.value}"`).join(' '));
+                    } else {
+                        console.log('FamilyChartLayout: No node elements found with expected selectors');
+                    }
+                }
+
+                // Add click handler using DOM event delegation instead of library API
+                if (onPersonClick && containerRef.current) {
+                    // Use event delegation to handle clicks on nodes
+                    const clickHandler = (event: MouseEvent) => {
+                        // Find the clicked element or its parent that represents a node
+                        let target = event.target as HTMLElement;
+                        
+                        // Traverse up the DOM tree to find a node element
+                        while (target && target !== containerRef.current) {
+                            // Check for various possible node identifiers
+                            // Try data attributes first
+                            const personId = target.getAttribute('data-person-id') || 
+                                           target.getAttribute('data-id') ||
+                                           target.getAttribute('data-node-id') ||
+                                           target.getAttribute('id');
+                            
+                            if (personId) {
+                                const person = persons.find(p => p.id === personId);
+                                if (person) {
+                                    console.log('FamilyChartLayout: Click detected on person:', person.name);
+                                    onPersonClick(person);
+                                    return;
+                                }
                             }
+                            
+                            // Check if this element or its parents contain text that matches a person name
+                            // This is a fallback if IDs are not properly set in the DOM
+                            const textContent = target.textContent || '';
+                            const matchingPerson = persons.find(p => 
+                                p.name && textContent.includes(p.name)
+                            );
+                            
+                            if (matchingPerson && target.querySelector('*') === null) {
+                                // Only match if this is a leaf element (no children) to avoid false positives
+                                console.log('FamilyChartLayout: Click detected on person by name match:', matchingPerson.name);
+                                onPersonClick(matchingPerson);
+                                return;
+                            }
+                            
+                            // Check parent classes for node indicators
+                            const nodeClasses = ['node', 'family-chart-node', 'card', 'person', 'member'];
+                            const isNodeElement = nodeClasses.some(cls => target.classList.contains(cls));
+                            
+                            if (isNodeElement) {
+                                // Try to extract ID from the element or its children
+                                const idElement = target.querySelector('[data-person-id], [data-id], [data-node-id], [id]');
+                                if (idElement) {
+                                    const personId = idElement.getAttribute('data-person-id') || 
+                                                   idElement.getAttribute('data-id') ||
+                                                   idElement.getAttribute('data-node-id') ||
+                                                   idElement.getAttribute('id');
+                                    if (personId) {
+                                        const person = persons.find(p => p.id === personId);
+                                        if (person) {
+                                            console.log('FamilyChartLayout: Click detected on person from child element:', person.name);
+                                            onPersonClick(person);
+                                            return;
+                                        }
+                                    }
+                                }
+                                
+                                // Also try to find ID in the text content using regex
+                                const idMatch = target.innerHTML.match(/data-id="([^"]+)"|id="([^"]+)"/);
+                                if (idMatch) {
+                                    const extractedId = idMatch[1] || idMatch[2];
+                                    const person = persons.find(p => p.id === extractedId);
+                                    if (person) {
+                                        console.log('FamilyChartLayout: Click detected on person from HTML match:', person.name);
+                                        onPersonClick(person);
+                                        return;
+                                    }
+                                }
+                            }
+                            
+                            target = target.parentElement as HTMLElement;
                         }
-                    });
+                        
+                        console.log('FamilyChartLayout: Click event did not match any person');
+                    };
+                    
+                    containerRef.current.addEventListener('click', clickHandler);
+                    
+                    // Store the cleanup function
+                    const currentContainer = containerRef.current;
+                    cleanupClickHandler = () => {
+                        currentContainer.removeEventListener('click', clickHandler);
+                    };
                 }
 
                 if (isMounted) {
@@ -202,6 +291,9 @@ export function FamilyChartLayout({
 
         return () => {
             isMounted = false;
+            if (cleanupClickHandler) {
+                cleanupClickHandler();
+            }
         };
     }, [persons, connections, width, height, onPersonClick]);
 
