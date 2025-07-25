@@ -9,7 +9,7 @@ const Hero = () => {
         <div className="text-center mb-8 sm:mb-12 lg:mb-16 animate-gentle-fade">
           <div className="mb-4 sm:mb-6 lg:mb-8">
             <span className="text-xxs uppercase tracking-widest text-coral-600 font-medium">
-              Connecting Families
+              Transforming Donor Conception
             </span>
           </div>
           
@@ -19,14 +19,14 @@ const Hero = () => {
             <span className="text-coral-600">Shapes</span>
           </h1>
           
-          <div className="max-w-2xl mx-auto mb-8 sm:mb-10 lg:mb-12">
+          <div className="max-w-3xl mx-auto mb-8 sm:mb-10 lg:mb-12">
             <p className="text-xxs uppercase tracking-wider text-sage-600 mb-2 sm:mb-3 lg:mb-4 font-medium">
-              Where love takes form
+              Transparency • Security • Community
             </p>
             <p className="text-base sm:text-lg text-navy-700 leading-relaxed font-light px-4 sm:px-0">
-              A sophisticated space designed to nurture family connections, 
-              share memories, and celebrate the unique shapes that love creates 
-              within every family.
+              Addressing the donor gamete industry's systemic failures through secure data sharing, 
+              oversight tools for clinics and cryobanks, and empowering families with safe spaces 
+              to connect, track relationships, and exchange critical medical updates.
             </p>
           </div>
 

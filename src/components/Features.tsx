@@ -1,37 +1,37 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Camera, Calendar, MessageCircle, Shield, Heart } from "lucide-react";
+import { Database, Users, AlertTriangle, MessageCircle, Shield, Heart } from "lucide-react";
 
 const features = [
   {
-    icon: Users,
-    title: "Family Circles",
-    description: "Create intimate spaces for your immediate and extended family members to connect and share."
+    icon: Database,
+    title: "Secure Data Sharing",
+    description: "Advanced infrastructure for cryobanks and clinics to securely share donor data and maintain transparency."
   },
   {
-    icon: Camera,
-    title: "Memory Vault",
-    description: "Preserve precious moments with our sophisticated photo and video sharing platform."
-  },
-  {
-    icon: Calendar,
-    title: "Family Events",
-    description: "Coordinate gatherings, celebrations, and milestones with elegant planning tools."
-  },
-  {
-    icon: MessageCircle,
-    title: "Thoughtful Messaging",
-    description: "Engage in meaningful conversations with beautifully designed communication features."
+    icon: AlertTriangle,
+    title: "Super-Donor Prevention",
+    description: "Automated monitoring and flagging systems to prevent excessive donations and identify concerning patterns."
   },
   {
     icon: Shield,
-    title: "Privacy First",
-    description: "Your family's data remains secure with our industry-leading privacy protections."
+    title: "Industry Oversight",
+    description: "Comprehensive tools to flag bad actors and maintain accountability across the donor conception ecosystem."
+  },
+  {
+    icon: Users,
+    title: "Family Connections",
+    description: "Safe spaces for donor-conceived families to connect, discover relationships, and build community."
+  },
+  {
+    icon: MessageCircle,
+    title: "Medical Updates",
+    description: "Critical medical information sharing between donors, families, and healthcare providers when needed."
   },
   {
     icon: Heart,
-    title: "Connection Insights",
-    description: "Discover patterns in how your family connects and grows closer together."
+    title: "Relationship Tracking",
+    description: "Powerful visualization tools to map and understand complex family relationships and donor connections."
   }
 ];
 
@@ -41,15 +41,15 @@ const Features = () => {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12 sm:mb-16 lg:mb-20">
           <span className="text-xxs uppercase tracking-widest text-coral-600 font-medium mb-3 sm:mb-4 block">
-            Features
+            Platform Capabilities
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight text-navy-900 mb-4 sm:mb-6 tracking-tighter">
-            Thoughtfully
+            Industry
             <br />
-            <span className="text-coral-600">Designed</span>
+            <span className="text-coral-600">Solutions</span>
           </h2>
-          <p className="text-xxs uppercase tracking-wider text-sage-600 max-w-xl mx-auto px-4 sm:px-0">
-            Every feature crafted with intention to strengthen family bonds
+          <p className="text-xxs uppercase tracking-wider text-sage-600 max-w-2xl mx-auto px-4 sm:px-0">
+            Comprehensive tools for transparency, oversight, and family empowerment
           </p>
         </div>
 
