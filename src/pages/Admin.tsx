@@ -1,7 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, TestTube, Database, Settings, Bug } from 'lucide-react';
+import { ExternalLink, TestTube, Database, Settings, Bug, Trash2 } from 'lucide-react';
 import { DatabaseTest } from '@/components/debug/DatabaseTest';
+import { useToast } from '@/hooks/use-toast';
+import { ConnectionService } from '@/services/connectionService';
 
 export default function Admin() {
   const openVitestUI = () => {
