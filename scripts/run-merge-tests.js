@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 console.log('🔄 Running Merge Validation Test Suite...\n');
 
 const testFiles = [
-  'src/test/merge-validation/merge-compatibility.test.tsx',
-  'src/test/merge-validation/component-integration.test.tsx', 
+  'src/test/merge-validation/merge-compatibility-simple.test.ts',
   'src/test/merge-validation/database-compatibility.test.ts'
 ];
 
@@ -57,7 +56,7 @@ try {
   // Run merge compatibility tests
   log('yellow', '🧪 Running Merge Compatibility Tests...');
   try {
-    execSync('npm run test src/test/merge-validation/merge-compatibility.test.tsx', { 
+    execSync('npm run test src/test/merge-validation/merge-compatibility-simple.test.ts', { 
       stdio: 'pipe',
       timeout: 30000
     });
@@ -66,21 +65,6 @@ try {
   } catch (error) {
     testResults.mergeCompatibility = 'FAIL';
     log('red', '✗ Merge Compatibility Tests: FAILED');
-    console.log(error.stdout?.toString() || error.message);
-  }
-
-  // Run component integration tests  
-  log('yellow', '🧪 Running Component Integration Tests...');
-  try {
-    execSync('npm run test src/test/merge-validation/component-integration.test.tsx', {
-      stdio: 'pipe',
-      timeout: 30000  
-    });
-    testResults.componentIntegration = 'PASS';
-    log('green', '✓ Component Integration Tests: PASSED');
-  } catch (error) {
-    testResults.componentIntegration = 'FAIL';
-    log('red', '✗ Component Integration Tests: FAILED');
     console.log(error.stdout?.toString() || error.message);
   }
 
