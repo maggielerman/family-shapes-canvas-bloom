@@ -116,8 +116,7 @@ export const DatabaseTest = () => {
           id,
           from_person_id,
           to_person_id,
-          relationship_type,
-          family_tree_id
+          relationship_type
         `)
         .limit(1);
       
@@ -146,17 +145,9 @@ export const DatabaseTest = () => {
           const testTreeId = treesData[0].id;
           addResult(`Testing with family tree: ${treesData[0].name} (${testTreeId})`);
           
-          // Test direct connections for this tree
-          const { data: directConns, error: directError } = await supabase
-            .from('connections')
-            .select('*')
-            .eq('family_tree_id', testTreeId);
-          
-          if (directError) {
-            addResult(`ERROR direct connections: ${directError.message}`);
-          } else {
-            addResult(`SUCCESS direct connections: Found ${directConns?.length || 0} records`);
-          }
+          // Note: Connections are no longer tied directly to family trees
+          addResult(`INFO: Connections are now only tied to people, not family trees directly`);
+          addResult(`Checking connections between family tree members...`);
           
           // Test family tree members
           const { data: members, error: membersError } = await supabase
@@ -169,20 +160,19 @@ export const DatabaseTest = () => {
           } else {
             addResult(`SUCCESS tree members: Found ${members?.length || 0} members`);
             
-            // Test member connections if we have members
+            // Test connections between tree members
             if (members && members.length > 0) {
               const personIds = members.map(m => m.person_id);
               const { data: memberConns, error: memberConnError } = await supabase
                 .from('connections')
                 .select('*')
-                .is('family_tree_id', null)
                 .in('from_person_id', personIds)
                 .in('to_person_id', personIds);
               
               if (memberConnError) {
                 addResult(`ERROR member connections: ${memberConnError.message}`);
               } else {
-                addResult(`SUCCESS member connections: Found ${memberConns?.length || 0} records`);
+                addResult(`SUCCESS member connections: Found ${memberConns?.length || 0} records between tree members`);
               }
             }
           }

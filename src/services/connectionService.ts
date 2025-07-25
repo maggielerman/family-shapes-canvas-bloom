@@ -68,7 +68,6 @@ export class ConnectionService {
           from_person_id: data.to_person_id,
           to_person_id: data.from_person_id,
           relationship_type: reciprocalType,
-          family_tree_id: data.family_tree_id,
           group_id: data.group_id,
           organization_id: data.organization_id,
           notes: data.notes,
@@ -153,17 +152,6 @@ export class ConnectionService {
    */
   static async getConnectionsForFamilyTree(familyTreeId: string): Promise<Connection[]> {
     try {
-      // Fetch connections directly associated with this family tree
-      const { data: treeConnections, error: treeError } = await supabase
-        .from('connections')
-        .select('*')
-        .eq('family_tree_id', familyTreeId);
-
-      if (treeError) {
-        console.error('Error fetching tree connections:', treeError);
-        throw treeError;
-      }
-
       // Get person IDs who are members of this family tree
       const { data: treeMembers, error: membersError } = await supabase
         .from('family_tree_members')
@@ -178,33 +166,26 @@ export class ConnectionService {
       const personIds = (treeMembers || []).map(m => m.person_id);
       console.log('Family tree members found:', personIds.length, 'persons');
 
-      let memberConnections: any[] = [];
+      let connections: any[] = [];
 
-      // Only fetch member connections if we have person IDs
+      // Only fetch connections if we have person IDs
       if (personIds.length > 0) {
         const { data: memberConns, error: memberError } = await supabase
           .from('connections')
           .select('*')
-          .is('family_tree_id', null)
           .in('from_person_id', personIds)
           .in('to_person_id', personIds);
 
         if (memberError) {
-          console.error('Error fetching member connections:', memberError);
+          console.error('Error fetching connections between tree members:', memberError);
           throw memberError;
         }
 
-        memberConnections = memberConns || [];
+        connections = memberConns || [];
       }
 
-      // Combine and deduplicate connections
-      const allConnections = [...(treeConnections || []), ...memberConnections];
-      const uniqueConnections = allConnections.filter((conn, index, self) => 
-        index === self.findIndex(c => c.id === conn.id)
-      );
-
-      console.log('Total connections found for family tree:', uniqueConnections.length);
-      return uniqueConnections as Connection[];
+      console.log('Total connections found for family tree:', connections.length);
+      return connections as Connection[];
     } catch (error) {
       console.error('Error in getConnectionsForFamilyTree:', error);
       throw error;
@@ -219,7 +200,6 @@ export class ConnectionService {
       .from('connections')
       .update({
         relationship_type: data.relationship_type,
-        family_tree_id: data.family_tree_id,
         group_id: data.group_id,
         organization_id: data.organization_id,
         notes: data.notes,
@@ -258,7 +238,6 @@ export class ConnectionService {
           const reciprocalData: UpdateConnectionData = {
             id: reciprocalConnections[0].id,
             relationship_type: reciprocalType,
-            family_tree_id: data.family_tree_id,
             group_id: data.group_id,
             organization_id: data.organization_id,
             notes: data.notes,
@@ -325,21 +304,14 @@ export class ConnectionService {
   static async connectionExists(
     fromPersonId: string, 
     toPersonId: string, 
-    relationshipType: RelationshipType,
-    familyTreeId?: string
+    relationshipType: RelationshipType
   ): Promise<boolean> {
-    let query = supabase
+    const { data, error } = await supabase
       .from('connections')
       .select('id')
       .eq('from_person_id', fromPersonId)
       .eq('to_person_id', toPersonId)
       .eq('relationship_type', relationshipType);
-
-    if (familyTreeId) {
-      query = query.eq('family_tree_id', familyTreeId);
-    }
-
-    const { data, error } = await query;
 
     if (error) throw error;
     return (data || []).length > 0;
