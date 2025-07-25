@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CreateFamilyTreeDialog } from "@/components/family-trees/CreateFamilyTreeDialog";
 import CreateOrganizationDialog from "@/components/organizations/CreateOrganizationDialog";
-import { DatabaseTest } from "@/components/debug/DatabaseTest";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -62,13 +61,6 @@ export default function Dashboard() {
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Welcome back! Here's what's happening with your family trees.</p>
-      </div>
-
-      {/* Debug Component - Remove this after debugging */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debug Mode</h3>
-        <p className="text-yellow-700 text-sm mb-4">This debug component will help identify database connection issues. Please run the test and check the console.</p>
-        <DatabaseTest />
       </div>
 
       {/* Rest of dashboard content */}
