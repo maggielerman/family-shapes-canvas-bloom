@@ -29,6 +29,7 @@ const Share = lazy(() => import("./pages/Share"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
+const UnionDemo = lazy(() => import("./pages/UnionDemo"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -85,7 +86,8 @@ const App = () => (
               <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDashboard /></SidebarLayout>} />
               <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
               
-
+              {/* Union Demo Route */}
+              <Route path="/union-demo" element={<UnionDemo />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
