@@ -7,10 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { Heart, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import { Heart, Eye, EyeOff, Building2, User } from "lucide-react";
 
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
