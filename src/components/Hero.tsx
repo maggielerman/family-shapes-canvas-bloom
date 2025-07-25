@@ -15,20 +15,64 @@ const Hero = () => {
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-extralight text-navy-900 mb-4 sm:mb-6 lg:mb-8 leading-none tracking-tighter">
-            Reproductive
+            Industry-Leading
             <br />
-            <span className="text-coral-600">Healthcare</span>
+            <span className="text-coral-600">Donor Oversight</span>
           </h1>
           
-          <div className="max-w-3xl mx-auto mb-8 sm:mb-10 lg:mb-12">
-            <p className="text-xxs uppercase tracking-wider text-sage-600 mb-2 sm:mb-3 lg:mb-4 font-medium">
-              Transparency • Oversight • Compliance
+          <div className="max-w-4xl mx-auto mb-8 sm:mb-10 lg:mb-12">
+            <p className="text-xxs uppercase tracking-wider text-sage-600 mb-4 sm:mb-6 font-medium">
+              The Complete Solution for Modern Reproductive Healthcare
             </p>
-            <p className="text-base sm:text-lg text-navy-700 leading-relaxed font-light px-4 sm:px-0">
-              Comprehensive platform equipping cryobanks and fertility clinics with secure data sharing, 
-              automated oversight tools, and industry-wide transparency to prevent super-donors 
-              and maintain the highest standards of reproductive healthcare.
+            <p className="text-lg sm:text-xl text-navy-700 leading-relaxed font-light px-4 sm:px-0 mb-6 sm:mb-8">
+              Comprehensive platform empowering cryobanks and fertility clinics with the tools, 
+              transparency, and oversight needed for responsible donor management.
             </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 text-left px-4 sm:px-0">
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 rounded-full bg-coral-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-sm font-medium text-navy-900 mb-1">Regulatory Compliance</h3>
+                  <p className="text-xs text-navy-600">Stay ahead of evolving regulations</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 rounded-full bg-coral-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-sm font-medium text-navy-900 mb-1">Data Security & Privacy</h3>
+                  <p className="text-xs text-navy-600">Enterprise-grade protection</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 rounded-full bg-coral-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-sm font-medium text-navy-900 mb-1">Super-Donor Prevention</h3>
+                  <p className="text-xs text-navy-600">Automated monitoring & alerts</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 rounded-full bg-coral-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-sm font-medium text-navy-900 mb-1">Operational Efficiency</h3>
+                  <p className="text-xs text-navy-600">Streamlined workflows</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 rounded-full bg-coral-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-sm font-medium text-navy-900 mb-1">Industry Collaboration</h3>
+                  <p className="text-xs text-navy-600">Cross-clinic data sharing</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 rounded-full bg-coral-600 mt-2 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-sm font-medium text-navy-900 mb-1">Full Transparency</h3>
+                  <p className="text-xs text-navy-600">Comprehensive audit trails</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4 sm:px-0">
