@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, TestTube, Database, Settings, Trash2 } from 'lucide-react';
+import { ExternalLink, TestTube, Database, Settings, Trash2, TreePine } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ConnectionService } from '@/services/connectionService';
+import { FamilyChartTestSuite } from '@/test/components/FamilyChartTestSuite';
+import { FamilyChartLibraryAnalysis } from '@/test/components/FamilyChartLibraryAnalysis';
+import { FamilyChartFixedImplementation } from '@/test/components/FamilyChartFixedImplementation';
 
 export default function Admin() {
   const [isCleaning, setIsCleaning] = useState(false);
@@ -260,6 +263,38 @@ export default function Admin() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Family Chart Test Suite Card */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TreePine className="w-5 h-5" />
+                Family Chart Test Suite
+              </CardTitle>
+              <CardDescription>
+                Comprehensive testing for the family-chart library implementation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Test the family-chart library integration, data transformation, and chart rendering.
+                </p>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const testSuite = document.getElementById('family-chart-test-suite');
+                    if (testSuite) {
+                      testSuite.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="w-full"
+                >
+                  View Test Suite
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Instructions */}
@@ -298,6 +333,30 @@ export default function Admin() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Family Chart Test Suite */}
+        <div id="family-chart-test-suite" className="mt-8">
+          <FamilyChartTestSuite 
+            persons={[]} 
+            connections={[]} 
+          />
+        </div>
+
+        {/* Family Chart Library Analysis */}
+        <div id="family-chart-analysis" className="mt-8">
+          <FamilyChartLibraryAnalysis 
+            persons={[]} 
+            connections={[]} 
+          />
+        </div>
+
+        {/* Family Chart Fixed Implementation */}
+        <div id="family-chart-fixed" className="mt-8">
+          <FamilyChartFixedImplementation 
+            persons={[]} 
+            connections={[]} 
+          />
+        </div>
       </div>
     </div>
   );

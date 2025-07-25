@@ -10,7 +10,6 @@ import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
 import { RelationshipFilter } from './RelationshipFilter';
-import { FamilyTreePersonCardSVG } from './FamilyTreePersonCard';
 import { GenerationLegend } from './GenerationLegend';
 import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './relationshipConstants';
 

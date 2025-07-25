@@ -7,7 +7,6 @@ import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
 import { RelationshipFilter } from './RelationshipFilter';
-import { FamilyTreePersonCardSVG } from './FamilyTreePersonCard';
 import { GenerationLegend } from './GenerationLegend';
 import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './relationshipConstants';
 
@@ -164,7 +163,7 @@ export function ForceDirectedLayout({
       .force('link', d3.forceLink(links).id((d: any) => d.id).distance(300))
       .force('charge', d3.forceManyBody().strength(-600))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(140));
+      .force('collision', d3.forceCollide().radius(45));
 
     const g = svg.append('g');
 
@@ -210,226 +209,88 @@ export function ForceDirectedLayout({
         }
       });
 
-    // Add vertical FamilyTreePersonCard components
+    // Add circular nodes
     node.each(function(d) {
       const nodeElement = d3.select(this);
       const person = d.person;
       const generationInfo = currentGenerationMap.get(person.id);
       const generationColor = generationInfo?.color || '#e5e7eb';
+      const nodeRadius = 30;
       
-      // Create FamilyTreePersonCardSVG component
-      const cardGroup = nodeElement.append('g');
-      
-      // Card shadow
-      cardGroup.append('rect')
-        .attr('width', 192)
-        .attr('height', 256)
-        .attr('x', -96)
-        .attr('y', -128)
-        .attr('rx', 8)
-        .attr('ry', 8)
-        .attr('fill', '#00000010')
-        .attr('transform', 'translate(2, 2)');
-      
-      // Card background with generation color border
-      cardGroup.append('rect')
-        .attr('width', 192)
-        .attr('height', 256)
-        .attr('x', -96)
-        .attr('y', -128)
-        .attr('rx', 8)
-        .attr('ry', 8)
+      // Main circle with generation color
+      const circle = nodeElement.append('circle')
+        .attr('r', nodeRadius)
         .attr('fill', 'white')
         .attr('stroke', generationColor)
-        .attr('stroke-width', 3);
+        .attr('stroke-width', 4);
 
-      // Avatar circle background
-      cardGroup.append('circle')
-        .attr('cx', 0)
-        .attr('cy', -80)
-        .attr('r', 32)
-        .attr('fill', '#f3f4f6')
-        .attr('stroke', '#e5e7eb')
-        .attr('stroke-width', 1);
+      // Special styling for self
+      if (person.is_self) {
+        circle.attr('stroke', '#dc2626')
+          .attr('stroke-width', 6);
+      }
 
-      // Avatar image or initials
+      // Profile image or initials
       if (person.profile_photo_url) {
-        cardGroup.append('image')
-          .attr('x', -32)
-          .attr('y', -112)
-          .attr('width', 64)
-          .attr('height', 64)
+        // Create a clipPath for the profile image
+        const clipId = `clip-${person.id}`;
+        const defs = nodeElement.append('defs');
+        defs.append('clipPath')
+          .attr('id', clipId)
+          .append('circle')
+          .attr('r', nodeRadius - 4)
+          .attr('cx', 0)
+          .attr('cy', 0);
+
+        nodeElement.append('image')
+          .attr('x', -(nodeRadius - 4))
+          .attr('y', -(nodeRadius - 4))
+          .attr('width', (nodeRadius - 4) * 2)
+          .attr('height', (nodeRadius - 4) * 2)
           .attr('href', person.profile_photo_url)
-          .attr('clip-path', 'circle(32px at 32px 32px)')
+          .attr('clip-path', `url(#${clipId})`)
           .attr('preserveAspectRatio', 'xMidYMid slice');
       } else {
+        // Show initials
         const initials = person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-        cardGroup.append('text')
-          .attr('x', 0)
-          .attr('y', -72)
+        nodeElement.append('text')
           .attr('text-anchor', 'middle')
-          .attr('fill', '#6b7280')
-          .attr('font-size', '16px')
+          .attr('dy', '0.35em')
+          .attr('fill', '#374151')
+          .attr('font-size', '14px')
           .attr('font-weight', '600')
           .text(initials);
       }
 
-      // Name
-      cardGroup.append('text')
-        .attr('x', 0)
-        .attr('y', -20)
-        .attr('text-anchor', 'middle')
-        .attr('fill', '#111827')
-        .attr('font-size', '14px')
-        .attr('font-weight', '600')
-        .text(person.name.length > 18 ? person.name.substring(0, 18) + '...' : person.name);
-
-      // Age (if available)
-      let yOffset = 0;
-      if (person.date_of_birth) {
-        const birthDate = new Date(person.date_of_birth);
-        if (!isNaN(birthDate.getTime())) {
-          const age = new Date().getFullYear() - birthDate.getFullYear();
-          cardGroup.append('text')
-            .attr('x', 0)
-            .attr('y', yOffset)
-            .attr('text-anchor', 'middle')
-            .attr('fill', '#6b7280')
-            .attr('font-size', '12px')
-            .text(`Age ${age}`);
-          yOffset += 20;
-        }
-      }
-
-      // Contact info (email or phone)
-      if (person.email) {
-        cardGroup.append('text')
-          .attr('x', 0)
-          .attr('y', yOffset)
-          .attr('text-anchor', 'middle')
-          .attr('fill', '#9ca3af')
-          .attr('font-size', '10px')
-          .text(person.email.length > 20 ? person.email.substring(0, 20) + '...' : person.email);
-        yOffset += 20;
-      } else if (person.phone) {
-        cardGroup.append('text')
-          .attr('x', 0)
-          .attr('y', yOffset)
-          .attr('text-anchor', 'middle')
-          .attr('fill', '#9ca3af')
-          .attr('font-size', '10px')
-          .text(person.phone);
-        yOffset += 20;
-      }
-
-      // Notes
-      if (person.notes) {
-        cardGroup.append('text')
-          .attr('x', 0)
-          .attr('y', yOffset)
-          .attr('text-anchor', 'middle')
-          .attr('fill', '#d1d5db')
-          .attr('font-size', '9px')
-          .text(person.notes.length > 25 ? person.notes.substring(0, 25) + '...' : person.notes);
-      }
-
-      // Badges at bottom
-      let badgeY = 72;
-      let badgeX = -60;
-
-      // Status badge
-      const statusColor = person.status === 'living' ? '#047857' : '#374151';
-      const statusBg = person.status === 'living' ? '#ecfdf5' : '#f9fafb';
-      const statusStroke = person.status === 'living' ? '#10b981' : '#6b7280';
-      
-      cardGroup.append('rect')
-        .attr('x', badgeX)
-        .attr('y', badgeY)
-        .attr('width', 50)
-        .attr('height', 18)
-        .attr('rx', 9)
-        .attr('fill', statusBg)
-        .attr('stroke', statusStroke)
-        .attr('stroke-width', 1);
+      // Add status indicators as small circles
+      if (person.donor) {
+        nodeElement.append('circle')
+          .attr('cx', 20)
+          .attr('cy', -20)
+          .attr('r', 6)
+          .attr('fill', '#f59e0b')
+          .attr('stroke', 'white')
+          .attr('stroke-width', 2);
         
-      cardGroup.append('text')
-        .attr('x', badgeX + 25)
-        .attr('y', badgeY + 11)
-        .attr('text-anchor', 'middle')
-        .attr('fill', statusColor)
-        .attr('font-size', '9px')
-        .attr('font-weight', '500')
-        .text(person.status);
-      
-      badgeX += 55;
-
-      // Self badge
-      if (person.is_self) {
-        cardGroup.append('rect')
-          .attr('x', badgeX)
-          .attr('y', badgeY)
-          .attr('width', 30)
-          .attr('height', 18)
-          .attr('rx', 9)
-          .attr('fill', '#dc2626')
-          .attr('stroke', '#dc2626')
-          .attr('stroke-width', 1);
-          
-        cardGroup.append('text')
-          .attr('x', badgeX + 15)
-          .attr('y', badgeY + 11)
+        nodeElement.append('text')
+          .attr('x', 20)
+          .attr('y', -17)
           .attr('text-anchor', 'middle')
           .attr('fill', 'white')
-          .attr('font-size', '9px')
-          .attr('font-weight', '500')
-          .text('Self');
-        
-        badgeX += 35;
+          .attr('font-size', '8px')
+          .attr('font-weight', 'bold')
+          .text('D');
       }
 
-      // Donor badge
-      if (person.donor) {
-        cardGroup.append('rect')
-          .attr('x', badgeX)
-          .attr('y', badgeY)
-          .attr('width', 35)
-          .attr('height', 18)
-          .attr('rx', 9)
-          .attr('fill', '#fed7aa')
-          .attr('stroke', '#ea580c')
-          .attr('stroke-width', 1);
-          
-        cardGroup.append('text')
-          .attr('x', badgeX + 17.5)
-          .attr('y', badgeY + 11)
-          .attr('text-anchor', 'middle')
-          .attr('fill', '#ea580c')
-          .attr('font-size', '9px')
-          .attr('font-weight', '500')
-          .text('Donor');
-      }
-
-      // Gender badge (second row if needed)
-      if (person.gender) {
-        cardGroup.append('rect')
-          .attr('x', -60)
-          .attr('y', badgeY + 25)
-          .attr('width', 40)
-          .attr('height', 18)
-          .attr('rx', 9)
-          .attr('fill', '#dbeafe')
-          .attr('stroke', '#3b82f6')
-          .attr('stroke-width', 1);
-          
-        cardGroup.append('text')
-          .attr('x', -40)
-          .attr('y', badgeY + 36)
-          .attr('text-anchor', 'middle')
-          .attr('fill', '#1d4ed8')
-          .attr('font-size', '9px')
-          .attr('font-weight', '500')
-          .text(person.gender.charAt(0).toUpperCase() + person.gender.slice(1));
-      }
+      // Name label below the circle
+      nodeElement.append('text')
+        .attr('x', 0)
+        .attr('y', nodeRadius + 15)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#374151')
+        .attr('font-size', '12px')
+        .attr('font-weight', '500')
+        .text(person.name.length > 15 ? person.name.substring(0, 15) + '...' : person.name);
     });
 
     // Add zoom and pan

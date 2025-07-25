@@ -1,7 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Network, Target, Share2, TreePine } from 'lucide-react';
+import { Network, Target, Share2, TreePine, GitBranch } from 'lucide-react';
 
-type LayoutType = 'force' | 'radial' | 'dagre' | 'family-chart';
+type LayoutType = 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow';
 
 interface LayoutOption {
   value: LayoutType;
@@ -11,6 +11,12 @@ interface LayoutOption {
 }
 
 const LAYOUT_OPTIONS: LayoutOption[] = [
+  {
+    value: 'reactflow',
+    label: 'ReactFlow',
+    description: 'Modern family tree',
+    icon: GitBranch
+  },
   {
     value: 'force',
     label: 'Force Directed',

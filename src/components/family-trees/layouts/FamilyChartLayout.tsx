@@ -4,7 +4,6 @@ import { Connection } from '@/types/connection';
 import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
-import { transformToFamilyChartData, findRootNode } from '@/utils/familyChartAdapter';
 
 interface RelationshipType {
   value: string;
@@ -23,6 +22,112 @@ interface FamilyChartLayoutProps {
   onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart') => void;
 }
 
+// Fixed data transformation function with correct gender format
+const transformToFamilyChartFormat = (persons: Person[], connections: Connection[]) => {
+  const nodes = persons.map(person => {
+    const node: any = {
+      id: person.id,
+      name: person.name || 'Unknown',
+      // Convert gender to M/F format as expected by the library
+      gender: person.gender === 'male' ? 'M' : person.gender === 'female' ? 'F' : undefined,
+      img: person.profile_photo_url || undefined,
+      pids: [], // Initialize partner IDs
+      _data: person // Store original data for reference
+    };
+
+    // Find parent connections
+    const parentConnections = connections.filter(conn => {
+      if (conn.relationship_type === 'parent' && conn.to_person_id === person.id) {
+        return true;
+      }
+      if (conn.relationship_type === 'child' && conn.from_person_id === person.id) {
+        return true;
+      }
+      return false;
+    });
+
+    // Set parent IDs
+    parentConnections.forEach(conn => {
+      let parentId: string;
+      
+      if (conn.relationship_type === 'parent' && conn.to_person_id === person.id) {
+        parentId = conn.from_person_id;
+      } else if (conn.relationship_type === 'child' && conn.from_person_id === person.id) {
+        parentId = conn.to_person_id;
+      } else {
+        return;
+      }
+      
+      const parent = persons.find(p => p.id === parentId);
+      if (parent) {
+        if (parent.gender === 'male') {
+          if (!node.fid) {
+            node.fid = parent.id;
+          }
+        } else if (parent.gender === 'female') {
+          if (!node.mid) {
+            node.mid = parent.id;
+          }
+        } else {
+          // Unknown gender - assign to available slot
+          if (!node.fid) {
+            node.fid = parent.id;
+          } else if (!node.mid) {
+            node.mid = parent.id;
+          }
+        }
+      }
+    });
+
+    // Find spouse connections
+    const spouseConnections = connections.filter(
+      conn => (conn.from_person_id === person.id || conn.to_person_id === person.id) &&
+      (conn.relationship_type === 'spouse' || conn.relationship_type === 'partner')
+    );
+
+    // Set partner IDs
+    spouseConnections.forEach(conn => {
+      const partnerId = conn.from_person_id === person.id ? conn.to_person_id : conn.from_person_id;
+      if (!node.pids.includes(partnerId)) {
+        node.pids.push(partnerId);
+      }
+    });
+
+    return node;
+  });
+
+  return nodes;
+};
+
+// Find root node function
+const findRootNode = (nodes: any[], persons: Person[]): string | undefined => {
+  // First, try to find a person marked as self
+  const selfPerson = persons.find(p => p.is_self === true);
+  if (selfPerson) {
+    return selfPerson.id;
+  }
+  
+  // If no self person, find someone without parents
+  const rootNode = nodes.find(node => !node.mid && !node.fid);
+  if (rootNode) {
+    return rootNode.id;
+  }
+  
+  // Fallback to first node
+  return nodes.length > 0 ? nodes[0].id : undefined;
+};
+
+// Comprehensive error logging
+const logChartError = (error: any, context: string, persons: Person[], connections: Connection[]) => {
+  console.error(`FamilyChartLayout ${context}:`, error);
+  console.error('Library info:', {
+    persons: persons.length,
+    connections: connections.length,
+    error: error.message,
+    stack: error.stack
+  });
+};
+
 export function FamilyChartLayout({ 
   persons, 
   connections, 
@@ -39,224 +144,280 @@ export function FamilyChartLayout({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!containerRef.current || persons.length === 0) return;
+    useEffect(() => {
+        if (persons.length === 0) {
+      console.log('FamilyChartLayout: No persons available');
+            return;
+        }
 
-    const initChart = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+        if (!containerRef.current) {
+      console.log('FamilyChartLayout: Container not available');
+            return;
+        }
+
+        let isMounted = true;
+        let chartInstance: any = null;
+
+        const initChart = async () => {
+            try {
+        console.log('FamilyChartLayout: Starting chart initialization...');
+
+                setIsLoading(true);
+                setError(null);
+
+                // Import the family-chart library
+                const familyChartModule = await import('family-chart');
+        const familyChart = familyChartModule.default || familyChartModule;
         
-        // Import the family-chart library
-        const FamilyTree = (await import('family-chart')).default;
+        console.log('FamilyChartLayout: Library imported successfully');
+        console.log('FamilyChartLayout: Available methods:', Object.keys(familyChart));
+                
+        // Check if component is still mounted
+                if (!isMounted || !containerRef.current) {
+          console.log('FamilyChartLayout: Component unmounted during initialization');
+                    return;
+                }
+                
+        // Add a small delay to ensure DOM is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Clear the container
-        containerRef.current!.innerHTML = '';
-        
-        // Transform our data to family-chart format
-        const familyData = transformToFamilyChartData(persons, connections);
-        
-        if (familyData.nodes.length === 0) {
-          containerRef.current!.innerHTML = '<div class="flex items-center justify-center h-full text-muted-foreground">No family data available</div>';
+        // Check again after delay
+        if (!isMounted || !containerRef.current) {
+          console.log('FamilyChartLayout: Component unmounted after delay');
           return;
         }
 
-        // Find the root node
-        const rootId = findRootNode(familyData.nodes, persons);
-        
-        // Create the family tree with beautiful styling
-        const familyTree = new FamilyTree(containerRef.current!, {
-          // Tree configuration
-          rootId: rootId,
-          width: width,
-          height: height,
-          
-          // Node styling - inspired by the beautiful examples
-          nodeWidth: 180,
-          nodeHeight: 200,
-          nodePadding: 20,
-          
-          // Layout configuration
-          levelHeight: 200,
-          siblingSeparation: 100,
-          subtreeSeparation: 150,
-          
-          // Enable interactions
-          zoom: true,
-          fit: true,
-          
-          // Custom node template with beautiful design
-          template: (node: any) => {
-            const person = node.person || {};
-            const avatar = person.profile_photo_url || '/placeholder.svg';
-            const name = node.name || 'Unknown';
-            const birthday = node.birthday ? new Date(node.birthday).getFullYear() : '';
-            
-            return `
-              <div class="family-chart-node" data-person-id="${node.id}" style="
-                width: 180px;
-                height: 200px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 16px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                border: 3px solid rgba(255, 255, 255, 0.2);
-                color: white;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 16px;
-                text-align: center;
-                position: relative;
-                overflow: hidden;
-              ">
-                <!-- Background pattern -->
-                <div style="
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  right: 0;
-                  bottom: 0;
-                  background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><path d="m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>') repeat;
-                  opacity: 0.1;
-                "></div>
-                
-                <!-- Content -->
-                <div style="position: relative; z-index: 1;">
-                  <!-- Avatar -->
-                  <div style="
-                    width: 80px;
-                    height: 80px;
-                    border-radius: 50%;
-                    background: white;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin-bottom: 12px;
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-                    overflow: hidden;
-                  ">
-                    <img src="${avatar}" alt="${name}" style="
-                      width: 100%;
-                      height: 100%;
-                      object-fit: cover;
-                      border-radius: 50%;
-                    " onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div style="
-                      display: none;
-                      width: 100%;
-                      height: 100%;
-                      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                      align-items: center;
-                      justify-content: center;
-                      color: white;
-                      font-weight: bold;
-                      font-size: 24px;
-                    ">${name.charAt(0).toUpperCase()}</div>
-                  </div>
-                  
-                  <!-- Name -->
-                  <div style="
-                    font-weight: 600;
-                    font-size: 16px;
-                    margin-bottom: 4px;
-                    line-height: 1.2;
-                    max-width: 140px;
-                    word-wrap: break-word;
-                  ">${name}</div>
-                  
-                  <!-- Birth year -->
-                  ${birthday ? `<div style="
-                    font-size: 12px;
-                    opacity: 0.8;
-                    font-weight: 400;
-                  ">Born ${birthday}</div>` : ''}
-                  
-                  <!-- Gender indicator -->
-                  <div style="
-                    position: absolute;
-                    top: 12px;
-                    right: 12px;
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 50%;
-                    background: rgba(255, 255, 255, 0.2);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 12px;
-                    font-weight: bold;
-                  ">${node.gender === 'M' ? '♂' : node.gender === 'F' ? '♀' : '●'}</div>
-                </div>
-              </div>
-            `;
-          },
-          
-          // Custom connector styling
-          connectorStyle: {
-            stroke: 'rgba(102, 126, 234, 0.6)',
-            strokeWidth: 2,
-            strokeDasharray: 'none'
-          }
+        // Transform data with correct format
+        const nodes = transformToFamilyChartFormat(persons, connections);
+        const rootId = findRootNode(nodes, persons);
+
+        console.log('FamilyChartLayout: Data transformed:', {
+          nodesCount: nodes.length,
+          rootId,
+          sampleNode: nodes[0]
         });
 
-        // Set the data
-        familyTree.setData(familyData.nodes);
-        
-        // Add click handlers
-        containerRef.current!.addEventListener('click', (event) => {
-          const nodeElement = (event.target as Element).closest('.family-chart-node');
-          if (nodeElement && onPersonClick) {
-            const personId = nodeElement.getAttribute('data-person-id');
-            const person = persons.find(p => p.id === personId);
-            if (person) {
-              onPersonClick(person);
+        if (!rootId) {
+          throw new Error('No root node found');
+        }
+
+        // Clear container
+        containerRef.current.innerHTML = '';
+
+        // Try the most likely API signature first
+        let chartInstance = null;
+
+        if (typeof familyChart.createChart === 'function') {
+          console.log('FamilyChartLayout: Using createChart method');
+          chartInstance = familyChart.createChart(containerRef.current, {
+            nodes: nodes,
+            rootId: rootId,
+            nodeBinding: {
+              field_0: 'name',
+              img_0: 'img',
+              field_1: 'birthday'
+            },
+            width: width,
+            height: height
+          });
+          
+          // Set up the getCard function if it's missing
+          if (chartInstance && !chartInstance.getCard) {
+            console.log('FamilyChartLayout: Setting up getCard function');
+            // Use the library's CardHtml function if available
+            if (familyChart.CardHtml) {
+              chartInstance.getCard = () => familyChart.CardHtml;
+            } else {
+              // Fallback to a simple card function
+              chartInstance.getCard = () => {
+                return (d: any) => {
+                  const card = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                  card.setAttribute('class', 'card');
+                  
+                  // Create text element for name
+                  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                  text.setAttribute('x', '0');
+                  text.setAttribute('y', '0');
+                  text.setAttribute('text-anchor', 'middle');
+                  text.setAttribute('dominant-baseline', 'middle');
+                  text.textContent = d.data.name || 'Unknown';
+                  
+                  card.appendChild(text);
+                  return card;
+                };
+              };
             }
           }
+        } else if (typeof familyChart === 'function') {
+          console.log('FamilyChartLayout: Using constructor approach');
+          chartInstance = new familyChart(containerRef.current, {
+            data: nodes,
+            rootId: rootId,
+            nodeBinding: {
+              field_0: 'name',
+              img_0: 'img',
+              field_1: 'birthday'
+            }
+          });
+        } else if (familyChart.FamilyChart && typeof familyChart.FamilyChart === 'function') {
+          console.log('FamilyChartLayout: Using FamilyChart constructor');
+          chartInstance = new familyChart.FamilyChart(containerRef.current, {
+            data: nodes,
+            rootId: rootId
+          });
+        } else {
+          throw new Error('No compatible chart creation method found');
+        }
+
+        // Trigger chart update if needed
+        if (chartInstance && chartInstance.store && typeof chartInstance.store.updateTree === 'function') {
+          console.log('FamilyChartLayout: Triggering chart update...');
+          chartInstance.store.updateTree();
+        }
+
+        // Wait a bit for rendering
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Check if content was rendered
+        const hasContent = containerRef.current.innerHTML.trim().length > 0;
+        console.log('FamilyChartLayout: Chart rendering check:', {
+          hasContent,
+          innerHTML: containerRef.current.innerHTML.substring(0, 200),
+          elementCount: containerRef.current.children.length
         });
 
-        // Store chart reference
-        setChart(familyTree);
-        
-        // Set initial zoom level
-        setZoomLevel(1);
-        
+        if (!hasContent) {
+          console.warn('FamilyChartLayout: No content rendered, but chart was created');
+        }
+
+        if (isMounted) {
+          setChart(chartInstance);
+          setZoomLevel(1);
+        }
+
       } catch (error) {
-        console.error('Error initializing family chart:', error);
-        setError('Failed to load family chart');
-        if (containerRef.current) {
-          containerRef.current.innerHTML = '<div class="flex items-center justify-center h-full text-red-500">Error loading family tree</div>';
+        logChartError(error, 'Chart Creation', persons, connections);
+        if (isMounted) {
+          setError(`Failed to create chart: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          if (containerRef.current) {
+            containerRef.current.textContent = '';
+            const errorDiv = document.createElement('div');
+            errorDiv.style.padding = '20px';
+            errorDiv.style.textAlign = 'center';
+            errorDiv.style.color = '#666';
+            
+            const title = document.createElement('h3');
+            title.textContent = 'Unable to render family chart';
+            errorDiv.appendChild(title);
+            
+            const errorText = document.createElement('p');
+            errorText.textContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            errorDiv.appendChild(errorText);
+            
+            const helpText = document.createElement('p');
+            helpText.style.fontSize = '0.9em';
+            helpText.textContent = 'Check browser console for details';
+            errorDiv.appendChild(helpText);
+            
+            containerRef.current.appendChild(errorDiv);
+          }
         }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initChart();
-  }, [persons, connections, width, height, onPersonClick]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [persons, connections, width, height]);
+
+  // Add click handler using DOM event delegation
+  useEffect(() => {
+    if (!onPersonClick || !containerRef.current) return;
+
+    const clickHandler = (event: MouseEvent) => {
+      let target = event.target as HTMLElement;
+      
+      while (target && target !== containerRef.current) {
+        // Check for person ID in data attributes
+        const personId = target.getAttribute('data-person-id') || 
+                         target.getAttribute('data-id') ||
+                         target.getAttribute('data-node-id') ||
+                         target.getAttribute('id');
+        
+        if (personId) {
+          const person = persons.find(p => p.id === personId);
+          if (person) {
+            console.log('FamilyChartLayout: Click detected on person:', person.name);
+            onPersonClick(person);
+            return;
+          }
+        }
+        
+        // Check for person name in text content
+        const textContent = target.textContent || '';
+        const nodeClasses = ['node', 'family-chart-node', 'card', 'person', 'member'];
+        
+        const matchingPersons = persons.filter(p => 
+          p.name && textContent.includes(p.name)
+        );
+        
+        if (matchingPersons.length > 0) {
+          const isLikelyPersonNode = 
+            nodeClasses.some(cls => target.classList.contains(cls)) ||
+            target.hasAttribute('data-person-id') ||
+            target.hasAttribute('data-id') ||
+            target.hasAttribute('data-node-id');
+          
+          if (isLikelyPersonNode) {
+            const matchingPerson = matchingPersons[0];
+            console.log('FamilyChartLayout: Click detected on person by name:', matchingPerson.name);
+            onPersonClick(matchingPerson);
+            return;
+          }
+        }
+        
+        target = target.parentElement as HTMLElement;
+      }
+    };
+    
+    containerRef.current.addEventListener('click', clickHandler);
+    
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.removeEventListener('click', clickHandler);
+      }
+    };
+  }, [persons, onPersonClick]);
 
   const handleCenterSelf = () => {
     if (!chart) return;
     
     const selfPerson = persons.find(person => person.is_self === true);
     if (selfPerson) {
-      chart.centerOn(selfPerson.id);
+      if (typeof chart.centerOn === 'function') {
+        chart.centerOn(selfPerson.id);
+      }
     }
   };
 
   const handleZoomToFit = () => {
     if (!chart) return;
-    chart.fit();
-    setZoomLevel(1);
+    if (typeof chart.fit === 'function') {
+      chart.fit();
+      setZoomLevel(1);
+    }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div data-testid="loading-spinner" className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -309,17 +470,9 @@ export function FamilyChartLayout({
       {/* Chart Container */}
       <div 
         ref={containerRef}
-        className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg overflow-hidden"
+        className="border rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden"
         style={{ width, height }}
       />
-      
-      {/* Custom styles for hover effects */}
-      <style jsx>{`
-        .family-chart-node:hover {
-          transform: translateY(-4px) scale(1.02);
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-      `}</style>
     </div>
   );
 } 
