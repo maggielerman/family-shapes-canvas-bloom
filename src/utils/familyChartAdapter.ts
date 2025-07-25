@@ -10,6 +10,12 @@ export interface FamilyChartNode {
   gender?: 'M' | 'F';
   birthday?: string;
   avatar?: string;
+  // Custom fields for handling complex family structures
+  _additionalFathers?: string[];    // Additional fathers when multiple exist
+  _additionalMothers?: string[];    // Additional mothers when multiple exist
+  _unknownGenderParents?: string[]; // Parents with unknown gender
+  _allParents?: string[];           // All parent IDs for reference
+  _personData?: Person;             // Original person data
   [key: string]: any;
 }
 
@@ -37,10 +43,9 @@ export function transformToFamilyChartData(
       gender: person.gender === 'male' ? 'M' : person.gender === 'female' ? 'F' : undefined,
       birthday: person.date_of_birth || undefined,
       avatar: person.profile_photo_url || undefined,
-      pids: [], // Partner IDs
-      // mid and fid will be set when processing parent relationships
-      // Add additional data for reference
-      person: person
+      pids: [], // Initialize partner IDs array
+      // Store the original person data for reference
+      _personData: person
     };
     
     nodeMap.set(person.id, node);
@@ -61,17 +66,56 @@ export function transformToFamilyChartData(
     switch (connection.relationship_type) {
       case 'parent':
         // from_person is parent of to_person
-        // Determine if parent is mother or father based on gender
-        if (fromNode.gender === 'F') {
-          toNode.mid = fromNode.id;
-        } else if (fromNode.gender === 'M') {
-          toNode.fid = fromNode.id;
-        } else {
-          // If gender is unknown, check if mid is already set
-          if (!toNode.mid) {
-            toNode.mid = fromNode.id;
-          } else if (!toNode.fid) {
+        // Store all parents in a custom array for reference
+        if (!toNode._allParents) toNode._allParents = [];
+        if (!toNode._allParents.includes(fromNode.id)) {
+          toNode._allParents.push(fromNode.id);
+        }
+        
+        // Set parent IDs on the child node
+        if (fromNode.gender === 'M') {
+          if (toNode.fid && toNode.fid !== fromNode.id) {
+            // Multiple fathers - store additional fathers in custom array
+            if (!toNode._additionalFathers) toNode._additionalFathers = [];
+            if (!toNode._additionalFathers.includes(fromNode.id)) {
+              toNode._additionalFathers.push(fromNode.id);
+              console.warn(`familyChartAdapter: Multiple fathers detected for ${toNode.name}. Additional father ${fromNode.name} stored in _additionalFathers array.`);
+            }
+          } else {
             toNode.fid = fromNode.id;
+          }
+        } else if (fromNode.gender === 'F') {
+          if (toNode.mid && toNode.mid !== fromNode.id) {
+            // Multiple mothers - store additional mothers in custom array
+            if (!toNode._additionalMothers) toNode._additionalMothers = [];
+            if (!toNode._additionalMothers.includes(fromNode.id)) {
+              toNode._additionalMothers.push(fromNode.id);
+              console.warn(`familyChartAdapter: Multiple mothers detected for ${toNode.name}. Additional mother ${fromNode.name} stored in _additionalMothers array.`);
+            }
+          } else {
+            toNode.mid = fromNode.id;
+          }
+        } else {
+          // Gender unknown - try to assign to available parent slot
+          // First check if this parent is already assigned
+          if (toNode.fid === fromNode.id || toNode.mid === fromNode.id) {
+            // Parent already assigned, skip
+            console.log(`familyChartAdapter: Parent ${fromNode.name} already assigned to ${toNode.name}, skipping duplicate.`);
+          } else if (!toNode.fid) {
+            // No father assigned yet, use this slot
+            toNode.fid = fromNode.id;
+            console.warn(`familyChartAdapter: Parent ${fromNode.name} with unknown gender assigned as father for ${toNode.name}.`);
+          } else if (!toNode.mid) {
+            // No mother assigned yet, use this slot
+            toNode.mid = fromNode.id;
+            console.warn(`familyChartAdapter: Parent ${fromNode.name} with unknown gender assigned as mother for ${toNode.name}.`);
+          } else {
+            // Both slots filled, store in unknown gender parents array
+            if (!toNode._unknownGenderParents) toNode._unknownGenderParents = [];
+            if (!toNode._unknownGenderParents.includes(fromNode.id)) {
+              toNode._unknownGenderParents.push(fromNode.id);
+              console.warn(`familyChartAdapter: Parent ${fromNode.name} has unknown gender and cannot be assigned to standard slots for child ${toNode.name}. Stored in _unknownGenderParents array.`);
+            }
           }
         }
         
@@ -80,17 +124,56 @@ export function transformToFamilyChartData(
         
       case 'child':
         // from_person is child of to_person
-        // Determine if parent is mother or father based on gender
-        if (toNode.gender === 'F') {
-          fromNode.mid = toNode.id;
-        } else if (toNode.gender === 'M') {
-          fromNode.fid = toNode.id;
-        } else {
-          // If gender is unknown, check if mid is already set
-          if (!fromNode.mid) {
-            fromNode.mid = toNode.id;
-          } else if (!fromNode.fid) {
+        // Store all parents in a custom array for reference
+        if (!fromNode._allParents) fromNode._allParents = [];
+        if (!fromNode._allParents.includes(toNode.id)) {
+          fromNode._allParents.push(toNode.id);
+        }
+        
+        // Set parent IDs on the child node
+        if (toNode.gender === 'M') {
+          if (fromNode.fid && fromNode.fid !== toNode.id) {
+            // Multiple fathers - store additional fathers in custom array
+            if (!fromNode._additionalFathers) fromNode._additionalFathers = [];
+            if (!fromNode._additionalFathers.includes(toNode.id)) {
+              fromNode._additionalFathers.push(toNode.id);
+              console.warn(`familyChartAdapter: Multiple fathers detected for ${fromNode.name}. Additional father ${toNode.name} stored in _additionalFathers array.`);
+            }
+          } else {
             fromNode.fid = toNode.id;
+          }
+        } else if (toNode.gender === 'F') {
+          if (fromNode.mid && fromNode.mid !== toNode.id) {
+            // Multiple mothers - store additional mothers in custom array
+            if (!fromNode._additionalMothers) fromNode._additionalMothers = [];
+            if (!fromNode._additionalMothers.includes(toNode.id)) {
+              fromNode._additionalMothers.push(toNode.id);
+              console.warn(`familyChartAdapter: Multiple mothers detected for ${fromNode.name}. Additional mother ${toNode.name} stored in _additionalMothers array.`);
+            }
+          } else {
+            fromNode.mid = toNode.id;
+          }
+        } else {
+          // Gender unknown - try to assign to available parent slot
+          // First check if this parent is already assigned
+          if (fromNode.fid === toNode.id || fromNode.mid === toNode.id) {
+            // Parent already assigned, skip
+            console.log(`familyChartAdapter: Parent ${toNode.name} already assigned to ${fromNode.name}, skipping duplicate.`);
+          } else if (!fromNode.fid) {
+            // No father assigned yet, use this slot
+            fromNode.fid = toNode.id;
+            console.warn(`familyChartAdapter: Parent ${toNode.name} with unknown gender assigned as father for ${fromNode.name}.`);
+          } else if (!fromNode.mid) {
+            // No mother assigned yet, use this slot
+            fromNode.mid = toNode.id;
+            console.warn(`familyChartAdapter: Parent ${toNode.name} with unknown gender assigned as mother for ${fromNode.name}.`);
+          } else {
+            // Both slots filled, store in unknown gender parents array
+            if (!fromNode._unknownGenderParents) fromNode._unknownGenderParents = [];
+            if (!fromNode._unknownGenderParents.includes(toNode.id)) {
+              fromNode._unknownGenderParents.push(toNode.id);
+              console.warn(`familyChartAdapter: Parent ${toNode.name} has unknown gender and cannot be assigned to standard slots for child ${fromNode.name}. Stored in _unknownGenderParents array.`);
+            }
           }
         }
         
@@ -99,7 +182,7 @@ export function transformToFamilyChartData(
         
       case 'spouse':
       case 'partner':
-        // Add partners/spouses
+        // Add partners/spouses using pids array
         if (!fromNode.pids) fromNode.pids = [];
         if (!toNode.pids) toNode.pids = [];
         
@@ -243,4 +326,42 @@ export function findRootNode(nodes: FamilyChartNode[], persons: Person[]): strin
   
   // Fallback to first node
   return nodes.length > 0 ? nodes[0].id : undefined;
+}
+
+/**
+ * Utility function to get all parent IDs for a node, including those in custom fields
+ */
+export function getAllParentIds(node: FamilyChartNode): string[] {
+  const parents: string[] = [];
+  
+  if (node.fid) parents.push(node.fid);
+  if (node.mid) parents.push(node.mid);
+  if (node._additionalFathers) parents.push(...node._additionalFathers);
+  if (node._additionalMothers) parents.push(...node._additionalMothers);
+  if (node._unknownGenderParents) parents.push(...node._unknownGenderParents);
+  
+  return parents;
+}
+
+/**
+ * Get detailed parent information for a node
+ */
+export function getParentInfo(node: FamilyChartNode): {
+  primary: { fathers: string[], mothers: string[] },
+  additional: { fathers: string[], mothers: string[] },
+  unknownGender: string[],
+  total: number
+} {
+  return {
+    primary: {
+      fathers: node.fid ? [node.fid] : [],
+      mothers: node.mid ? [node.mid] : []
+    },
+    additional: {
+      fathers: node._additionalFathers || [],
+      mothers: node._additionalMothers || []
+    },
+    unknownGender: node._unknownGenderParents || [],
+    total: getAllParentIds(node).length
+  };
 } 
