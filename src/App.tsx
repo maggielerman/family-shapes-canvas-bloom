@@ -10,7 +10,8 @@ import SidebarLayout from "@/components/layouts/SidebarLayout";
 
 // Lazy load heavy components for better performance
 const Index = lazy(() => import("./pages/Index"));
-const FamilyCommunity = lazy(() => import("./pages/FamilyCommunity"));
+const FamilyCommunity = lazy(() => import("@/pages/FamilyCommunity"));
+const DonorPortal = lazy(() => import("@/pages/DonorPortal"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -61,7 +62,8 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />
-              <Route path="/family-community" element={<FamilyCommunity />} />
+            <Route path="/family-community" element={<FamilyCommunity />} />
+            <Route path="/donor-portal" element={<DonorPortal />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<Auth />} />

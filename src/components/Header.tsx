@@ -57,6 +57,7 @@ const Header = () => {
   const navigationItems = [
     { href: "#features", label: "Features" },
     { href: "/family-community", label: "For Families" },
+    { href: "/donor-portal", label: "For Donors" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ];
