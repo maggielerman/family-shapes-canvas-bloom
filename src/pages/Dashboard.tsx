@@ -1,56 +1,124 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, TreePine, Users, Building2, BarChart3 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Plus, TreePine, Users, Building2, BarChart3, Home, Share2, User } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { CreateFamilyTreeDialog } from "@/components/family-trees/CreateFamilyTreeDialog";
 import CreateOrganizationDialog from "@/components/organizations/CreateOrganizationDialog";
+
+// Enhanced interfaces for better type safety
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
+interface Organization {
+  id: string;
+  name: string;
+  type: string;
+  description: string | null;
+  role: string;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [stats, setStats] = useState({
     familyTrees: 0,
     totalPeople: 0,
     organizations: 0,
     recentActivity: 0
   });
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [createTreeOpen, setCreateTreeOpen] = useState(false);
-  
 
   useEffect(() => {
     if (user) {
-      fetchDashboardStats();
+      fetchUserData();
     }
   }, [user]);
 
-  const fetchDashboardStats = async () => {
+  const fetchUserData = async () => {
     if (!user) return;
     
     try {
+      setLoading(true);
+
+      // Fetch user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      } else if (profileData && profileData.length > 0) {
+        setProfile(profileData[0]);
+      }
+
       // Fetch family trees count
       const { count: treesCount } = await supabase
         .from('family_trees')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      // Fetch organizations count (owned)
-      const { count: orgsCount } = await supabase
+      // Fetch owned organizations
+      const { data: ownedOrgs, error: ownedError } = await supabase
         .from('organizations')
-        .select('*', { count: 'exact', head: true })
+        .select('id, name, type, description')
         .eq('owner_id', user.id);
+
+      // Fetch organization memberships
+      const { data: memberOrgs, error: memberError } = await supabase
+        .from('organization_memberships')
+        .select(`
+          role,
+          organizations (
+            id,
+            name,
+            type,
+            description
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (ownedError || memberError) {
+        console.error('Error fetching organizations:', ownedError || memberError);
+      } else {
+        // Combine owned and member organizations
+        const owned = (ownedOrgs || []).map(org => ({ ...org, role: 'owner' }));
+        const member = (memberOrgs || [])
+          .filter(item => item.organizations)
+          .map(item => ({ ...item.organizations, role: item.role }));
+        
+        setOrganizations([...owned, ...member]);
+      }
 
       setStats({
         familyTrees: treesCount || 0,
         totalPeople: 0, // TODO: Calculate total people across all trees
-        organizations: orgsCount || 0,
+        organizations: (ownedOrgs?.length || 0) + (memberOrgs?.length || 0),
         recentActivity: 0 // TODO: Calculate recent activity
       });
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching dashboard data:', error);
+      toast({
+        title: "Error loading dashboard",
+        description: "Failed to load dashboard data. Please try refreshing.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -121,7 +189,53 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Organizations
+            </CardTitle>
+            <CardDescription>
+              Organizations you own or are a member of
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {organizations.length > 0 ? (
+              <div className="space-y-3">
+                {organizations.map((org) => (
+                  <div
+                    key={org.id}
+                    className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => navigate(`/organizations/${org.id}`)}
+                  >
+                    <div>
+                      <h4 className="font-medium">{org.name}</h4>
+                      <p className="text-sm text-muted-foreground capitalize">
+                        {org.type} • {org.description || 'No description'}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="capitalize">
+                      {org.role}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  You're not part of any organizations yet
+                </p>
+                <CreateOrganizationDialog onOrganizationCreated={fetchUserData} />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Quick Actions
+            </CardTitle>
             <CardDescription>Get started with your family tree journey</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -133,11 +247,10 @@ export default function Dashboard() {
               <Users className="mr-2 h-4 w-4" />
               Add Family Members
             </Button>
-                         <CreateOrganizationDialog 
-               onOrganizationCreated={() => {
-                 fetchDashboardStats();
-               }}
-             />
+            <Button variant="outline" onClick={() => navigate("/organizations")} className="w-full">
+              <Building2 className="mr-2 h-4 w-4" />
+              Manage Organizations
+            </Button>
           </CardContent>
         </Card>
 
@@ -159,7 +272,7 @@ export default function Dashboard() {
         onOpenChange={setCreateTreeOpen}
         onSuccess={() => {
           setCreateTreeOpen(false);
-          fetchDashboardStats();
+          fetchUserData();
         }}
       />
 
