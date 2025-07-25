@@ -72,17 +72,12 @@ const FeatureBullets = () => {
 
           {/* Right side - Image */}
           <div className="relative">
-            <div className="aspect-square bg-gradient-to-br from-coral-100 via-dusty-100 to-sage-100 rounded-2xl shadow-2xl overflow-hidden border border-warm-200">
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center mb-4 mx-auto shadow-lg">
-                    <div className="w-8 h-8 rounded bg-coral-600"></div>
-                  </div>
-                  <p className="text-xxs uppercase tracking-wider text-navy-600">
-                    Platform Dashboard
-                  </p>
-                </div>
-              </div>
+            <div className="aspect-square rounded-2xl shadow-2xl overflow-hidden border border-warm-200">
+              <img 
+                src="https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                alt="Colorful software code on computer monitor"
+                className="w-full h-full object-cover"
+              />
             </div>
             
             {/* Floating elements */}
