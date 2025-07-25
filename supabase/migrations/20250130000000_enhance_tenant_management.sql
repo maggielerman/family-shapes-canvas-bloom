@@ -108,7 +108,10 @@ CREATE TRIGGER on_auth_user_created
 GRANT EXECUTE ON FUNCTION create_organization_for_user(text, text, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION handle_new_user() TO authenticated;
 
--- Update RLS policies for user_profiles
+-- Ensure RLS is enabled on user_profiles table
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Update user_profiles RLS policies to handle organization_id
 DROP POLICY IF EXISTS "Users can view own profile" ON public.user_profiles;
 CREATE POLICY "Users can view own profile" ON public.user_profiles
     FOR SELECT USING (id = auth.uid());
@@ -128,10 +131,17 @@ DROP POLICY IF EXISTS "Users can update organizations" ON public.organizations;
 DROP POLICY IF EXISTS "Users can create organizations" ON public.organizations;
 DROP POLICY IF EXISTS "Users can delete organizations" ON public.organizations;
 
+-- Ensure RLS is enabled on organizations table
+ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+
 -- Now create our new policies
 DROP POLICY IF EXISTS "Organization owners can view their organization" ON public.organizations;
 CREATE POLICY "Organization owners can view their organization" ON public.organizations
     FOR SELECT USING (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS "Authenticated users can create organizations" ON public.organizations;
+CREATE POLICY "Authenticated users can create organizations" ON public.organizations
+    FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND owner_id = auth.uid());
 
 DROP POLICY IF EXISTS "Organization owners can update their organization" ON public.organizations;
 CREATE POLICY "Organization owners can update their organization" ON public.organizations
