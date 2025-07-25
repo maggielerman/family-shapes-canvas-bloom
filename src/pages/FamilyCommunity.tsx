@@ -4,6 +4,7 @@ import { Users, Heart, Shield, MessageSquare, Search, Network, ArrowRight, Check
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CTA from "@/components/CTA";
 
 const FamilyCommunity = () => {
   const features = [
@@ -236,6 +237,8 @@ const FamilyCommunity = () => {
           </div>
         </div>
       </section>
+
+      <CTA />
 
       <Footer />
     </div>
