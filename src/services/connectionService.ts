@@ -152,41 +152,63 @@ export class ConnectionService {
    * Get connections for a family tree
    */
   static async getConnectionsForFamilyTree(familyTreeId: string): Promise<Connection[]> {
-    // Fetch connections directly associated with this family tree
-    const { data: treeConnections, error: treeError } = await supabase
-      .from('connections')
-      .select('*')
-      .eq('family_tree_id', familyTreeId);
+    try {
+      // Fetch connections directly associated with this family tree
+      const { data: treeConnections, error: treeError } = await supabase
+        .from('connections')
+        .select('*')
+        .eq('family_tree_id', familyTreeId);
 
-    if (treeError) throw treeError;
+      if (treeError) {
+        console.error('Error fetching tree connections:', treeError);
+        throw treeError;
+      }
 
-    // Get person IDs who are members of this family tree
-    const { data: treeMembers, error: membersError } = await supabase
-      .from('family_tree_members')
-      .select('person_id')
-      .eq('family_tree_id', familyTreeId);
+      // Get person IDs who are members of this family tree
+      const { data: treeMembers, error: membersError } = await supabase
+        .from('family_tree_members')
+        .select('person_id')
+        .eq('family_tree_id', familyTreeId);
 
-    if (membersError) throw membersError;
+      if (membersError) {
+        console.error('Error fetching tree members:', membersError);
+        throw membersError;
+      }
 
-    const personIds = (treeMembers || []).map(m => m.person_id);
+      const personIds = (treeMembers || []).map(m => m.person_id);
+      console.log('Family tree members found:', personIds.length, 'persons');
 
-    // Fetch connections between people who are members of this tree (but don't have family_tree_id set)
-    const { data: memberConnections, error: memberError } = await supabase
-      .from('connections')
-      .select('*')
-      .is('family_tree_id', null)
-      .in('from_person_id', personIds)
-      .in('to_person_id', personIds);
+      let memberConnections: any[] = [];
 
-    if (memberError) throw memberError;
+      // Only fetch member connections if we have person IDs
+      if (personIds.length > 0) {
+        const { data: memberConns, error: memberError } = await supabase
+          .from('connections')
+          .select('*')
+          .is('family_tree_id', null)
+          .in('from_person_id', personIds)
+          .in('to_person_id', personIds);
 
-    // Combine and deduplicate connections
-    const allConnections = [...(treeConnections || []), ...(memberConnections || [])];
-    const uniqueConnections = allConnections.filter((conn, index, self) => 
-      index === self.findIndex(c => c.id === conn.id)
-    );
+        if (memberError) {
+          console.error('Error fetching member connections:', memberError);
+          throw memberError;
+        }
 
-    return uniqueConnections as Connection[];
+        memberConnections = memberConns || [];
+      }
+
+      // Combine and deduplicate connections
+      const allConnections = [...(treeConnections || []), ...memberConnections];
+      const uniqueConnections = allConnections.filter((conn, index, self) => 
+        index === self.findIndex(c => c.id === conn.id)
+      );
+
+      console.log('Total connections found for family tree:', uniqueConnections.length);
+      return uniqueConnections as Connection[];
+    } catch (error) {
+      console.error('Error in getConnectionsForFamilyTree:', error);
+      throw error;
+    }
   }
 
   /**

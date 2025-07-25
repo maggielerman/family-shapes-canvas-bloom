@@ -91,13 +91,22 @@ export function FamilyTreeVisualization({ familyTreeId, persons, onPersonAdded }
 
   const fetchConnections = async () => {
     try {
+      console.log('Fetching connections for family tree:', familyTreeId);
       const connectionsData = await ConnectionService.getConnectionsForFamilyTree(familyTreeId);
+      console.log('Successfully loaded connections:', connectionsData.length);
       setConnections(connectionsData);
     } catch (error) {
       console.error('Error fetching connections:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        familyTreeId
+      });
       toast({
         title: "Error",
-        description: "Failed to load connections",
+        description: `Failed to load connections: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
