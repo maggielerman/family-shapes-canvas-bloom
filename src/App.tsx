@@ -74,18 +74,18 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               
               {/* Protected routes with sidebar layout */}
-              <Route path="/dashboard" element={<ProtectedRoute><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><SidebarLayout><UserProfile /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/people" element={<ProtectedRoute><SidebarLayout><People /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/family-trees" element={<ProtectedRoute><SidebarLayout><FamilyTrees /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/family-trees/:id" element={<ProtectedRoute><SidebarLayout><FamilyTreeDetail /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/media" element={<ProtectedRoute><SidebarLayout><Media /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/share" element={<ProtectedRoute><SidebarLayout><Share /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/organizations" element={<ProtectedRoute><SidebarLayout><Organizations /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/organizations/:id/onboarding" element={<ProtectedRoute><OrganizationOnboardingPage /></ProtectedRoute>} />
-              <Route path="/organizations/:id" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><SidebarLayout><Settings /></SidebarLayout></ProtectedRoute>} />
-              
+              <Route path="/dashboard" element={<SidebarLayout><Dashboard /></SidebarLayout>} />
+              <Route path="/profile" element={<SidebarLayout><UserProfile /></SidebarLayout>} />
+              <Route path="/people" element={<SidebarLayout><People /></SidebarLayout>} />
+              <Route path="/family-trees" element={<SidebarLayout><FamilyTrees /></SidebarLayout>} />
+              <Route path="/family-trees/:id" element={<SidebarLayout><FamilyTreeDetail /></SidebarLayout>} />
+              <Route path="/connections" element={<SidebarLayout><Connections /></SidebarLayout>} />
+              <Route path="/media" element={<SidebarLayout><Media /></SidebarLayout>} />
+              <Route path="/share" element={<SidebarLayout><Share /></SidebarLayout>} />
+              <Route path="/organizations" element={<SidebarLayout><Organizations /></SidebarLayout>} />
+              <Route path="/organizations/:id/onboarding" element={<SidebarLayout><OrganizationOnboardingPage /></SidebarLayout>} />
+              <Route path="/organizations/:id" element={<SidebarLayout><OrganizationDashboard /></SidebarLayout>} />
+              <Route path="/settings" element={<SidebarLayout><Settings /></SidebarLayout>} />
 
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
