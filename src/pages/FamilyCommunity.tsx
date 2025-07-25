@@ -79,7 +79,7 @@ const FamilyCommunity = () => {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-navy-300 text-navy-700 hover:bg-navy-50 px-8 py-6 text-lg">
+            <Button asChild variant="text" size="lg" className="text-coral-600 hover:bg-navy-50 px-8 py-6 text-lg">
               <Link to="/about">
                 Learn More
               </Link>
