@@ -1,37 +1,39 @@
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Database, Users, AlertTriangle, MessageCircle, Shield, Heart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Database, Users, AlertTriangle, Network, FileText, BarChart3, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const features = [
   {
     icon: Database,
-    title: "Secure Data Sharing",
-    description: "Advanced infrastructure for cryobanks and clinics to securely share donor data and maintain transparency."
+    title: "Multi-Clinic Data Hub",
+    description: "Centralized platform enabling secure data sharing between cryobanks and fertility clinics for comprehensive donor oversight."
   },
   {
     icon: AlertTriangle,
-    title: "Super-Donor Prevention",
-    description: "Automated monitoring and flagging systems to prevent excessive donations and identify concerning patterns."
+    title: "Automated Donor Monitoring",
+    description: "Real-time tracking and alerts to prevent super-donor incidents across multiple facilities and geographic regions."
   },
   {
-    icon: Shield,
-    title: "Industry Oversight",
-    description: "Comprehensive tools to flag bad actors and maintain accountability across the donor conception ecosystem."
+    icon: Network,
+    title: "Secure Clinic Network",
+    description: "HIPAA-compliant communication infrastructure enabling coordinated oversight and standardized protocols."
+  },
+  {
+    icon: FileText,
+    title: "Regulatory Compliance",
+    description: "Automated reporting and documentation tools ensuring adherence to FDA guidelines and industry standards."
+  },
+  {
+    icon: BarChart3,
+    title: "Advanced Analytics",
+    description: "Real-time dashboards and predictive insights for informed decision-making and proactive risk management."
   },
   {
     icon: Users,
-    title: "Family Connections",
-    description: "Safe spaces for donor-conceived families to connect, discover relationships, and build community."
-  },
-  {
-    icon: MessageCircle,
-    title: "Medical Updates",
-    description: "Critical medical information sharing between donors, families, and healthcare providers when needed."
-  },
-  {
-    icon: Heart,
-    title: "Relationship Tracking",
-    description: "Powerful visualization tools to map and understand complex family relationships and donor connections."
+    title: "Risk Assessment Engine",
+    description: "AI-powered system to identify concerning patterns in donor behavior, medical history, and usage across clinics."
   }
 ];
 
@@ -41,19 +43,19 @@ const Features = () => {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12 sm:mb-16 lg:mb-20">
           <span className="text-xxs uppercase tracking-widest text-coral-600 font-medium mb-3 sm:mb-4 block">
-            Platform Capabilities
+            Enterprise Platform Features
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extralight text-navy-900 mb-4 sm:mb-6 tracking-tighter">
-            Industry
+            SaaS
             <br />
             <span className="text-coral-600">Solutions</span>
           </h2>
           <p className="text-xxs uppercase tracking-wider text-sage-600 max-w-2xl mx-auto px-4 sm:px-0">
-            Comprehensive tools for transparency, oversight, and family empowerment
+            Comprehensive platform addressing systemic failures in reproductive healthcare transparency
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 lg:mb-20">
           {features.map((feature, index) => (
             <Card 
               key={feature.title} 
@@ -75,6 +77,28 @@ const Features = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Family Solutions CTA */}
+        <div className="bg-white rounded-3xl border border-warm-200 p-8 sm:p-12 text-center shadow-xl">
+          <span className="text-xxs uppercase tracking-widest text-coral-600 font-medium mb-3 sm:mb-4 block">
+            Looking for Family Solutions?
+          </span>
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-extralight text-navy-900 mb-4 sm:mb-6 tracking-tighter">
+            Connect Your
+            <br />
+            <span className="text-coral-600">Donor Family</span>
+          </h3>
+          <p className="text-sm text-navy-600 leading-relaxed font-light mb-6 sm:mb-8 max-w-2xl mx-auto">
+            If you're a donor family looking to connect with siblings and share medical updates, 
+            we have a dedicated platform designed specifically for your journey.
+          </p>
+          <Button asChild size="lg" className="bg-coral-600 hover:bg-coral-700 text-white px-6 sm:px-8 py-4 sm:py-6 text-sm font-medium tracking-wide group">
+            <Link to="/family-community">
+              Explore Family Platform
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
