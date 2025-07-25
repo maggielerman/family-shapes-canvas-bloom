@@ -24,8 +24,8 @@ interface ForceDirectedLayoutProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
-  currentLayout: 'force' | 'radial' | 'dagre';
-  onLayoutChange: (layout: 'force' | 'radial' | 'dagre') => void;
+  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow';
+  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow') => void;
 }
 
 export function ForceDirectedLayout({ 

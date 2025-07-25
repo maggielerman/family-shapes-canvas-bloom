@@ -1,7 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Network, Target, Share2, TreePine } from 'lucide-react';
 
-type LayoutType = 'force' | 'radial' | 'dagre' | 'family-chart';
+type LayoutType = 'force' | 'radial' | 'dagre' | 'xyflow';
 
 interface LayoutOption {
   value: LayoutType;
@@ -30,9 +30,9 @@ const LAYOUT_OPTIONS: LayoutOption[] = [
     icon: Share2
   },
   {
-    value: 'family-chart',
-    label: 'Family Chart',
-    description: 'Beautiful family tree',
+    value: 'xyflow',
+    label: 'xyFlow',
+    description: 'xy flow',
     icon: TreePine
   }
 ];

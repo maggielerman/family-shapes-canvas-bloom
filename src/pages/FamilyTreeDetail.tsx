@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Users, Edit, Trash2, Upload, Share2, BarChart3, FileText } from "lucide-react";
+import { ArrowLeft, Plus, Users, Edit, Trash2, Upload, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ import { PersonCard } from "@/components/people/PersonCard";
 import { PersonCardDialog } from "@/components/people/PersonCard";
 import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { FamilyTreeVisualization } from "@/components/family-trees/FamilyTreeVisualization";
-import { FamilyTreeStats } from "@/components/family-trees/FamilyTreeStats";
 import { SharingSettingsDialog } from "@/components/family-trees/SharingSettingsDialog";
 import { FamilyTreeDocumentManager } from "@/components/family-trees/FamilyTreeDocumentManager";
 import { ConnectionManager } from "@/components/connections/ConnectionManager";
@@ -23,6 +22,7 @@ import { Person } from "@/types/person";
 import { Connection } from "@/types/connection";
 import { ConnectionService } from "@/services/connectionService";
 import { usePersonManagement } from '@/hooks/use-person-management';
+
 
 interface FamilyTree {
   id: string;
@@ -158,121 +158,116 @@ export default function FamilyTreeDetail() {
   const getVisibilityColor = (visibility: string) => {
     switch (visibility) {
       case 'public':
-        return 'bg-green-100 text-green-800';
-      case 'private':
-        return 'bg-red-100 text-red-800';
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'shared':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  if (loading) {
+  if (loading || !familyTree) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!familyTree) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Family tree not found</p>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/family-trees')}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Trees
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{familyTree.name}</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge className={getVisibilityColor(familyTree.visibility)}>
-                {familyTree.visibility}
-              </Badge>
-              {familyTree.description && (
-                <p className="text-sm text-muted-foreground">
-                  {familyTree.description}
-                </p>
-              )}
-            </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/family-trees')}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Trees
+        </Button>
+      </div>
+
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold">{familyTree.name}</h1>
+            <Badge className={getVisibilityColor(familyTree.visibility)}>
+              {familyTree.visibility}
+            </Badge>
           </div>
+          {familyTree.description && (
+            <p className="text-muted-foreground">{familyTree.description}</p>
+          )}
         </div>
-        
         <div className="flex gap-2">
-          <Button
+          <Button 
             variant="outline"
             onClick={() => setSharingDialogOpen(true)}
           >
             <Share2 className="w-4 h-4 mr-2" />
             Share
           </Button>
-          <Button onClick={() => setAddPersonDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Person
+          <Button variant="outline">
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Tree
+          </Button>
+          <Button variant="outline">
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Documents
           </Button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <Tabs defaultValue="people" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-          <TabsTrigger value="people" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            <span className="hidden lg:inline">People ({persons.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="connections" className="flex items-center gap-2">
-            <Edit className="w-4 h-4" />
-            <span className="hidden lg:inline">Connections</span>
-          </TabsTrigger>
-          <TabsTrigger value="tree" className="flex items-center gap-2">
-            <Upload className="w-4 h-4" />
-            <span className="hidden lg:inline">Tree</span>
-          </TabsTrigger>
-          <TabsTrigger value="statistics" className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" />
-            <span className="hidden lg:inline">Statistics</span>
-          </TabsTrigger>
-          <TabsTrigger value="media" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            <span className="hidden lg:inline">Media</span>
-          </TabsTrigger>
+      <Tabs defaultValue="tree" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="people">People</TabsTrigger>
+          <TabsTrigger value="connections">Connections</TabsTrigger>
+          <TabsTrigger value="tree">Tree View</TabsTrigger>
+          <TabsTrigger value="documents">Media</TabsTrigger>
         </TabsList>
 
         <TabsContent value="people" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Family Members</h2>
-            <Button onClick={() => setAddExistingPersonDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Existing Person
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setAddExistingPersonDialogOpen(true)}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Add Existing
+              </Button>
+              <Button onClick={() => setAddPersonDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Person
+              </Button>
+            </div>
           </div>
-          
+
           {persons.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Users className="h-12 w-12 text-muted-foreground mb-4" />
+            <Card className="text-center py-12">
+              <CardContent>
+                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
-                <p className="text-muted-foreground mb-4 text-center">
-                  Add your first family member to start building your family tree
+                <p className="text-muted-foreground mb-4">
+                  Start building your family tree by adding family members.
                 </p>
-                <Button onClick={() => setAddPersonDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add First Person
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setAddExistingPersonDialogOpen(true)}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Add Existing Person
+                  </Button>
+                  <Button onClick={() => setAddPersonDialogOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New Person
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (
@@ -338,86 +333,7 @@ export default function FamilyTreeDetail() {
           />
         </TabsContent>
 
-        <TabsContent value="statistics" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Family Tree Statistics</h2>
-          </div>
-          
-          {persons.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No statistics available</h3>
-                <p className="text-muted-foreground mb-4 text-center">
-                  Add family members to see detailed statistics about your family tree
-                </p>
-                <Button onClick={() => setAddPersonDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add First Person
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              <FamilyTreeStats 
-                persons={persons} 
-                connections={connections} 
-                showTitle={false}
-              />
-              
-              {/* Additional detailed statistics can be added here */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Tree Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Created:</span>
-                      <span>{new Date(familyTree.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Last Updated:</span>
-                      <span>{new Date(familyTree.updated_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Visibility:</span>
-                      <Badge className={getVisibilityColor(familyTree.visibility)}>
-                        {familyTree.visibility}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Member Breakdown</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Members:</span>
-                      <span className="font-semibold">{persons.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Male:</span>
-                      <span>{persons.filter(p => p.gender === 'male').length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Female:</span>
-                      <span>{persons.filter(p => p.gender === 'female').length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Other:</span>
-                      <span>{persons.filter(p => p.gender && !['male', 'female'].includes(p.gender)).length}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="media" className="space-y-6">
+        <TabsContent value="documents" className="space-y-6">
           <FamilyTreeDocumentManager familyTreeId={familyTree.id} />
         </TabsContent>
       </Tabs>
