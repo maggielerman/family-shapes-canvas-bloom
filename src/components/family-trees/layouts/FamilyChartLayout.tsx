@@ -4,7 +4,6 @@ import { Connection } from '@/types/connection';
 import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
-import { transformToFamilyChartData, transformToSimpleFamilyData, findRootNode } from '@/utils/familyChartAdapter';
 
 interface RelationshipType {
   value: string;
@@ -23,6 +22,112 @@ interface FamilyChartLayoutProps {
   onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart') => void;
 }
 
+// Fixed data transformation function with correct gender format
+const transformToFamilyChartFormat = (persons: Person[], connections: Connection[]) => {
+  const nodes = persons.map(person => {
+    const node: any = {
+      id: person.id,
+      name: person.name || 'Unknown',
+      // Convert gender to M/F format as expected by the library
+      gender: person.gender === 'male' ? 'M' : person.gender === 'female' ? 'F' : undefined,
+      img: person.profile_photo_url || undefined,
+      pids: [], // Initialize partner IDs
+      _data: person // Store original data for reference
+    };
+
+    // Find parent connections
+    const parentConnections = connections.filter(conn => {
+      if (conn.relationship_type === 'parent' && conn.to_person_id === person.id) {
+        return true;
+      }
+      if (conn.relationship_type === 'child' && conn.from_person_id === person.id) {
+        return true;
+      }
+      return false;
+    });
+
+    // Set parent IDs
+    parentConnections.forEach(conn => {
+      let parentId: string;
+      
+      if (conn.relationship_type === 'parent' && conn.to_person_id === person.id) {
+        parentId = conn.from_person_id;
+      } else if (conn.relationship_type === 'child' && conn.from_person_id === person.id) {
+        parentId = conn.to_person_id;
+      } else {
+        return;
+      }
+      
+      const parent = persons.find(p => p.id === parentId);
+      if (parent) {
+        if (parent.gender === 'male') {
+          if (!node.fid) {
+            node.fid = parent.id;
+          }
+        } else if (parent.gender === 'female') {
+          if (!node.mid) {
+            node.mid = parent.id;
+          }
+        } else {
+          // Unknown gender - assign to available slot
+          if (!node.fid) {
+            node.fid = parent.id;
+          } else if (!node.mid) {
+            node.mid = parent.id;
+          }
+        }
+      }
+    });
+
+    // Find spouse connections
+    const spouseConnections = connections.filter(
+      conn => (conn.from_person_id === person.id || conn.to_person_id === person.id) &&
+      (conn.relationship_type === 'spouse' || conn.relationship_type === 'partner')
+    );
+
+    // Set partner IDs
+    spouseConnections.forEach(conn => {
+      const partnerId = conn.from_person_id === person.id ? conn.to_person_id : conn.from_person_id;
+      if (!node.pids.includes(partnerId)) {
+        node.pids.push(partnerId);
+      }
+    });
+
+    return node;
+  });
+
+  return nodes;
+};
+
+// Find root node function
+const findRootNode = (nodes: any[], persons: Person[]): string | undefined => {
+  // First, try to find a person marked as self
+  const selfPerson = persons.find(p => p.is_self === true);
+  if (selfPerson) {
+    return selfPerson.id;
+  }
+  
+  // If no self person, find someone without parents
+  const rootNode = nodes.find(node => !node.mid && !node.fid);
+  if (rootNode) {
+    return rootNode.id;
+  }
+  
+  // Fallback to first node
+  return nodes.length > 0 ? nodes[0].id : undefined;
+};
+
+// Comprehensive error logging
+const logChartError = (error: any, context: string, persons: Person[], connections: Connection[]) => {
+  console.error(`FamilyChartLayout ${context}:`, error);
+  console.error('Library info:', {
+    persons: persons.length,
+    connections: connections.length,
+    error: error.message,
+    stack: error.stack
+  });
+};
+
 export function FamilyChartLayout({ 
   persons, 
   connections, 
@@ -39,444 +144,262 @@ export function FamilyChartLayout({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+    useEffect(() => {
         if (persons.length === 0) {
-            console.log('FamilyChartLayout: useEffect early return - no persons');
+      console.log('FamilyChartLayout: No persons available');
             return;
         }
 
-        // Check if container exists immediately
         if (!containerRef.current) {
-            console.log('FamilyChartLayout: No container ref available');
+      console.log('FamilyChartLayout: Container not available');
             return;
         }
 
         let isMounted = true;
-        let cleanupClickHandler: (() => void) | null = null;
+        let chartInstance: any = null;
 
         const initChart = async () => {
             try {
-                // Check container at the start of async function
-                if (!containerRef.current) {
-                    console.log('FamilyChartLayout: No container ref at start of initChart');
-                    return;
-                }
+        console.log('FamilyChartLayout: Starting chart initialization...');
 
                 setIsLoading(true);
                 setError(null);
 
-                console.log('FamilyChartLayout: Starting initChart...');
-
                 // Import the family-chart library
-                console.log('FamilyChartLayout: Importing family-chart...');
                 const familyChartModule = await import('family-chart');
-                console.log('FamilyChartLayout: Import successful');
+        const familyChart = familyChartModule.default || familyChartModule;
+        
+        console.log('FamilyChartLayout: Library imported successfully');
+        console.log('FamilyChartLayout: Available methods:', Object.keys(familyChart));
                 
-                // Check if component is still mounted after async import
+        // Check if component is still mounted
                 if (!isMounted || !containerRef.current) {
-                    console.log('FamilyChartLayout: Component unmounted or container lost after import');
+          console.log('FamilyChartLayout: Component unmounted during initialization');
                     return;
                 }
                 
-                const familyChart = familyChartModule.default || familyChartModule;
-                console.log('FamilyChartLayout: Got familyChart object');
-                
-                const { createChart, CardHtml } = familyChart;
-                console.log('FamilyChartLayout: Destructured createChart and CardHtml');
-                console.log('FamilyChartLayout: createChart type:', typeof createChart);
-                console.log('FamilyChartLayout: CardHtml type:', typeof CardHtml);
+        // Add a small delay to ensure DOM is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Check again after delay
+        if (!isMounted || !containerRef.current) {
+          console.log('FamilyChartLayout: Component unmounted after delay');
+          return;
+        }
 
-                // Clear the container
-                containerRef.current.innerHTML = '';
-                console.log('FamilyChartLayout: Container cleared');
+        // Transform data with correct format
+        const nodes = transformToFamilyChartFormat(persons, connections);
+        const rootId = findRootNode(nodes, persons);
 
-                // Transform our data to family-chart format
-                console.log('FamilyChartLayout: Transforming data...');
-                const familyData = transformToFamilyChartData(persons, connections);
-                const simpleData = transformToSimpleFamilyData(persons, connections);
-                console.log('FamilyChartLayout: Complex data transformation complete:', familyData);
-                console.log('FamilyChartLayout: Simple data transformation complete:', simpleData);
-                
-                if (familyData.nodes.length === 0) {
-                    console.log('FamilyChartLayout: No nodes found');
-                    if (containerRef.current) {
-                        containerRef.current.textContent = 'No family data available';
-                        containerRef.current.className = 'flex items-center justify-center h-full text-muted-foreground';
-                    }
-                    return;
-                }
+        console.log('FamilyChartLayout: Data transformed:', {
+          nodesCount: nodes.length,
+          rootId,
+          sampleNode: nodes[0]
+        });
 
-                // Find the root node
-                console.log('FamilyChartLayout: Finding root node...');
-                const rootId = findRootNode(familyData.nodes, persons);
-                const simpleRootId = findRootNode(simpleData, persons);
-                console.log('FamilyChartLayout: Root ID found:', rootId);
-                console.log('FamilyChartLayout: Simple Root ID found:', simpleRootId);
-                
-                if (!rootId) {
-                    throw new Error('No root node found');
-                }
+        if (!rootId) {
+          throw new Error('No root node found');
+        }
 
-                // Final container check before rendering
-                if (!containerRef.current) {
-                    console.log('FamilyChartLayout: Container lost before rendering');
-                    return;
-                }
+        // Clear container
+        containerRef.current.innerHTML = '';
 
-                console.log('FamilyChartLayout: About to call createChart function');
-                console.log('FamilyChartLayout: Container element:', containerRef.current);
-                console.log('FamilyChartLayout: Root ID:', rootId);
-                console.log('FamilyChartLayout: Width/Height:', width, height);
-                console.log('FamilyChartLayout: Data nodes count:', familyData.nodes.length);
-                console.log('FamilyChartLayout: First few nodes:', familyData.nodes.slice(0, 3));
-                
-                let familyTree;
-                
-                // Create a factory function to handle different possible API signatures
-                const createFamilyChart = () => {
-                    // First, let's check what we actually imported
-                    console.log('FamilyChartLayout: familyChart module type:', typeof familyChart);
-                    console.log('FamilyChartLayout: familyChart module keys:', Object.keys(familyChart));
-                    
-                    // If createChart is not a function, try to find the correct method
-                    if (typeof createChart !== 'function') {
-                        // Check if familyChart itself is the constructor
-                        if (typeof familyChart === 'function') {
-                            console.log('FamilyChartLayout: familyChart is a function, using it directly');
-                            return new familyChart(containerRef.current, {
-                                data: familyData.nodes,
-                                rootId: rootId
-                            });
-                        }
-                        
-                        // Check for other possible entry points
-                        const possibleMethods = ['FamilyChart', 'create', 'init', 'render'];
-                        for (const method of possibleMethods) {
-                            if (typeof familyChart[method] === 'function') {
-                                console.log(`FamilyChartLayout: Found method ${method}, trying it`);
-                                return familyChart[method](containerRef.current, {
-                                    data: familyData.nodes,
-                                    rootId: rootId
-                                });
-                            }
-                        }
-                        
-                        throw new Error('Could not find a valid chart creation method');
-                    }
-                    
-                    // If createChart exists, try different API signatures
-                    const signatures = [
-                        // Signature 0: Preferred pattern with nodes array and nodeBinding mapping
-                        () => createChart(containerRef.current, {
-                            nodes: familyData.nodes,
-                            rootId: rootId,
-                            nodeBinding: {
-                                field_0: 'name',
-                                img_0: 'img',
-                                field_1: 'birthday'
-                            },
-                            width: width,
-                            height: height
-                        }),
-                        // Signature 1: Standard D3 pattern (container, config) with simple data
-                        () => createChart(containerRef.current, {
-                            nodes: simpleData,
-                            rootId: simpleRootId || rootId,
-                            nodeBinding: {
-                                field_0: 'name',
-                                img_0: 'img',
-                                field_1: 'birthday'
-                            },
-                            width: width,
-                            height: height
-                        }),
-                        
-                        // Signature 2: Standard D3 pattern with complex data
-                        () => createChart(containerRef.current, {
-                            nodes: familyData.nodes,
-                            rootId: rootId,
-                            nodeBinding: {
-                                field_0: 'name',
-                                img_0: 'img',
-                                field_1: 'birthday'
-                            },
-                            width: width,
-                            height: height
-                        }),
-                        
-                        // Signature 3: Data first, then container (simple data)
-                        () => createChart(simpleData, containerRef.current),
-                        
-                        // Signature 4: Data first, then container (complex data)
-                        () => createChart(familyData.nodes, containerRef.current),
-                        
-                        // Signature 5: Container only, with chained methods
-                        () => {
-                            const chart = createChart(containerRef.current);
-                            if (chart && typeof chart.data === 'function') {
-                                return chart.data(simpleData);
-                            }
-                            return chart;
-                        },
-                        
-                        // Signature 6: Constructor pattern with simple data
-                        () => new createChart(containerRef.current, simpleData),
-                        
-                        // Signature 7: jQuery-like pattern with simple data
-                        () => createChart({
-                            container: containerRef.current,
-                            data: simpleData,
-                            rootId: simpleRootId || rootId
-                        }),
-                        
-                        // Signature 8: Direct instantiation with container and options
-                        () => {
-                            if (typeof familyChart === 'function') {
-                                return new familyChart(containerRef.current, {
-                                    data: simpleData,
-                                    main_id: simpleRootId || rootId
-                                });
-                            }
-                            throw new Error('familyChart is not a constructor');
-                        }
-                    ];
-                    
-                    // Try each signature until one works
-                    for (let i = 0; i < signatures.length; i++) {
-                        try {
-                            console.log(`FamilyChartLayout: Trying signature ${i + 1}`);
-                            const result = signatures[i]();
-                            if (result) {
-                                console.log(`FamilyChartLayout: Signature ${i + 1} succeeded`);
-                                return result;
-                            }
-                        } catch (e) {
-                            console.log(`FamilyChartLayout: Signature ${i + 1} failed:`, e.message);
-                        }
-                    }
-                    
-                    throw new Error('All chart creation methods failed');
+        // Try the most likely API signature first
+        let chartInstance = null;
+
+        if (typeof familyChart.createChart === 'function') {
+          console.log('FamilyChartLayout: Using createChart method');
+          chartInstance = familyChart.createChart(containerRef.current, {
+            nodes: nodes,
+            rootId: rootId,
+            nodeBinding: {
+              field_0: 'name',
+              img_0: 'img',
+              field_1: 'birthday'
+            },
+            width: width,
+            height: height
+          });
+          
+          // Set up the getCard function if it's missing
+          if (chartInstance && !chartInstance.getCard) {
+            console.log('FamilyChartLayout: Setting up getCard function');
+            // Use the library's CardHtml function if available
+            if (familyChart.CardHtml) {
+              chartInstance.getCard = () => familyChart.CardHtml;
+            } else {
+              // Fallback to a simple card function
+              chartInstance.getCard = () => {
+                return (d: any) => {
+                  const card = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                  card.setAttribute('class', 'card');
+                  
+                  // Create text element for name
+                  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                  text.setAttribute('x', '0');
+                  text.setAttribute('y', '0');
+                  text.setAttribute('text-anchor', 'middle');
+                  text.setAttribute('dominant-baseline', 'middle');
+                  text.textContent = d.data.name || 'Unknown';
+                  
+                  card.appendChild(text);
+                  return card;
                 };
-                
-                try {
-                    familyTree = createFamilyChart();
-                    console.log('FamilyChartLayout: Family tree created successfully:', familyTree);
-                } catch (error) {
-                    console.error('FamilyChartLayout: Failed to create family tree:', error);
-                    
-                    // As a last resort, render a simple message
-                    if (containerRef.current) {
-                        containerRef.current.innerHTML = `
-                            <div style="padding: 20px; text-align: center;">
-                                <h3>Unable to render family chart</h3>
-                                <p>The family-chart library failed to initialize properly.</p>
-                                <p style="font-size: 0.9em; color: #666;">Error: ${error.message}</p>
-                            </div>
-                        `;
-                    }
-                    throw error;
-                }
-                
-                console.log('FamilyChartLayout: Container after chart creation:', containerRef.current.innerHTML);
-
-                // Log the DOM structure to understand what the library creates
-                if (containerRef.current) {
-                    const firstNode = containerRef.current.querySelector('[data-id], [data-person-id], [data-node-id], .node, .family-chart-node, .card');
-                    if (firstNode) {
-                        console.log('FamilyChartLayout: Found node element:', firstNode);
-                        console.log('FamilyChartLayout: Node attributes:', Array.from(firstNode.attributes).map(attr => `${attr.name}="${attr.value}"`).join(' '));
-                    } else {
-                        console.log('FamilyChartLayout: No node elements found with expected selectors');
-                    }
-                }
-
-                // Add click handler using DOM event delegation instead of library API
-                if (onPersonClick && containerRef.current) {
-                    // Use event delegation to handle clicks on nodes
-                    const clickHandler = (event: MouseEvent) => {
-                        // Find the clicked element or its parent that represents a node
-                        let target = event.target as HTMLElement;
-                        
-                        // Traverse up the DOM tree to find a node element
-                        while (target && target !== containerRef.current) {
-                            // Check for various possible node identifiers
-                            // Try data attributes first
-                            const personId = target.getAttribute('data-person-id') || 
-                                           target.getAttribute('data-id') ||
-                                           target.getAttribute('data-node-id') ||
-                                           target.getAttribute('id');
-                            
-                            if (personId) {
-                                const person = persons.find(p => p.id === personId);
-                                if (person) {
-                                    console.log('FamilyChartLayout: Click detected on person:', person.name);
-                                    onPersonClick(person);
-                                    return;
-                                }
-                            }
-                            
-                            // Check if this element or its parents contain text that matches a person name
-                            // This is a fallback if IDs are not properly set in the DOM
-                            const textContent = target.textContent || '';
-                            
-                            // Define node classes that indicate person elements
-                            const nodeClasses = ['node', 'family-chart-node', 'card', 'person', 'member'];
-                            
-                            // Find all persons whose names appear in the text content
-                            const matchingPersons = persons.filter(p => 
-                                p.name && textContent.includes(p.name)
-                            );
-                            
-                            // If we have matches, select the most specific one (longest name)
-                            // This prevents "John" from matching when "Johnson" is the actual target
-                            let matchingPerson = null;
-                            if (matchingPersons.length > 0) {
-                                // Sort by name length descending to get the most specific match first
-                                matchingPersons.sort((a, b) => (b.name?.length || 0) - (a.name?.length || 0));
-                                
-                                // Additional check: try to find exact word boundary matches
-                                for (const person of matchingPersons) {
-                                    if (!person.name) continue;
-                                    
-                                    // Create a regex to match the name as a whole word
-                                    const wordBoundaryRegex = new RegExp(`\\b${person.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
-                                    if (wordBoundaryRegex.test(textContent)) {
-                                        matchingPerson = person;
-                                        break;
-                                    }
-                                }
-                                
-                                // If no exact word boundary match, use the longest name match
-                                if (!matchingPerson) {
-                                    matchingPerson = matchingPersons[0];
-                                }
-                            }
-                            
-                            if (matchingPerson) {
-                                // Check if this element is likely a person node
-                                // Allow clicks on elements that contain person names even if they have child elements
-                                const isLikelyPersonNode = 
-                                    // Element has person-related classes
-                                    nodeClasses.some(cls => target.classList.contains(cls)) ||
-                                    // Element has person-related data attributes
-                                    target.hasAttribute('data-person-id') ||
-                                    target.hasAttribute('data-id') ||
-                                    target.hasAttribute('data-node-id') ||
-                                    // Element is within the chart container and not in unrelated UI
-                                    ((function() {
-                                        // Check if we're within the chart container
-                                        const chartContainer = target.closest('[data-id], [data-person-id], [data-node-id], .node, .family-chart-node, .card');
-                                        const isInChartContainer = chartContainer !== null || target === containerRef.current || containerRef.current?.contains(target);
-                                        
-                                        // Exclude common navigation/UI elements
-                                        const isExcludedElement = target.closest('nav, header, footer, aside, .sidebar, .navigation, .menu, .toolbar') !== null;
-                                        
-                                        return isInChartContainer && !isExcludedElement;
-                                    })() &&
-                                     // And the element seems to be a clickable person node
-                                     ((target.hasAttribute('role') && ['button', 'link', 'treeitem'].includes(target.getAttribute('role') || '')) ||
-                                      target.tagName === 'BUTTON' || target.tagName === 'A' ||
-                                      // Or the element's primary content is the person's name
-                                      (target.textContent?.trim() === matchingPerson.name && target.children.length <= 2) || 
-                                      // Or has a direct text node with the exact name
-                                      Array.from(target.childNodes).some(node => 
-                                         node.nodeType === Node.TEXT_NODE && 
-                                         node.textContent?.trim() === matchingPerson.name
-                                      )));
-                                
-                                if (isLikelyPersonNode) {
-                                    console.log('FamilyChartLayout: Click detected on person by name match:', matchingPerson.name);
-                                    onPersonClick(matchingPerson);
-                                    return;
-                                }
-                            }
-                            
-                            // Check parent classes for node indicators
-                            const isNodeElement = nodeClasses.some(cls => target.classList.contains(cls));
-                            
-                            if (isNodeElement) {
-                                // Try to extract ID from the element or its children
-                                const idElement = target.querySelector('[data-person-id], [data-id], [data-node-id], [id]');
-                                if (idElement) {
-                                    const personId = idElement.getAttribute('data-person-id') || 
-                                                   idElement.getAttribute('data-id') ||
-                                                   idElement.getAttribute('data-node-id') ||
-                                                   idElement.getAttribute('id');
-                                    if (personId) {
-                                        const person = persons.find(p => p.id === personId);
-                                        if (person) {
-                                            console.log('FamilyChartLayout: Click detected on person from child element:', person.name);
-                                            onPersonClick(person);
-                                            return;
-                                        }
-                                    }
-                                }
-                                
-                                // Also try to find ID in the text content using regex
-                                const idMatch = target.innerHTML.match(/data-id="([^"]+)"|id="([^"]+)"/);
-                                if (idMatch) {
-                                    const extractedId = idMatch[1] || idMatch[2];
-                                    const person = persons.find(p => p.id === extractedId);
-                                    if (person) {
-                                        console.log('FamilyChartLayout: Click detected on person from HTML match:', person.name);
-                                        onPersonClick(person);
-                                        return;
-                                    }
-                                }
-                            }
-                            
-                            target = target.parentElement as HTMLElement;
-                        }
-                        
-                        console.log('FamilyChartLayout: Click event did not match any person');
-                    };
-                    
-                    containerRef.current.addEventListener('click', clickHandler);
-                    
-                    // Store the cleanup function
-                    const currentContainer = containerRef.current;
-                    cleanupClickHandler = () => {
-                        currentContainer.removeEventListener('click', clickHandler);
-                    };
-                }
-
-                if (isMounted) {
-                    setChart(familyTree);
-                    setZoomLevel(1);
-                }
-            } catch (error) {
-                console.error('FamilyChartLayout: Error in initChart:', error);
-                if (isMounted) {
-                    setError(`Failed to load family chart: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                    if (containerRef.current) {
-                        containerRef.current.textContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-                        containerRef.current.className = 'flex items-center justify-center h-full text-red-500';
-                    }
-                }
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
+              };
             }
-        };
-
-        // Start the chart initialization immediately
-        initChart();
-
-        return () => {
-            isMounted = false;
-            if (cleanupClickHandler) {
-                cleanupClickHandler();
+          }
+        } else if (typeof familyChart === 'function') {
+          console.log('FamilyChartLayout: Using constructor approach');
+          chartInstance = new familyChart(containerRef.current, {
+            data: nodes,
+            rootId: rootId,
+            nodeBinding: {
+              field_0: 'name',
+              img_0: 'img',
+              field_1: 'birthday'
             }
-        };
-    }, [persons, connections, width, height, onPersonClick]);
+          });
+        } else if (familyChart.FamilyChart && typeof familyChart.FamilyChart === 'function') {
+          console.log('FamilyChartLayout: Using FamilyChart constructor');
+          chartInstance = new familyChart.FamilyChart(containerRef.current, {
+            data: nodes,
+            rootId: rootId
+          });
+        } else {
+          throw new Error('No compatible chart creation method found');
+        }
+
+        // Trigger chart update if needed
+        if (chartInstance && chartInstance.store && typeof chartInstance.store.updateTree === 'function') {
+          console.log('FamilyChartLayout: Triggering chart update...');
+          chartInstance.store.updateTree();
+        }
+
+        // Wait a bit for rendering
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Check if content was rendered
+        const hasContent = containerRef.current.innerHTML.trim().length > 0;
+        console.log('FamilyChartLayout: Chart rendering check:', {
+          hasContent,
+          innerHTML: containerRef.current.innerHTML.substring(0, 200),
+          elementCount: containerRef.current.children.length
+        });
+
+        if (!hasContent) {
+          console.warn('FamilyChartLayout: No content rendered, but chart was created');
+        }
+
+        if (isMounted) {
+          setChart(chartInstance);
+          setZoomLevel(1);
+        }
+
+      } catch (error) {
+        logChartError(error, 'Chart Creation', persons, connections);
+        if (isMounted) {
+          setError(`Failed to create chart: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          if (containerRef.current) {
+            containerRef.current.textContent = '';
+            const errorDiv = document.createElement('div');
+            errorDiv.style.padding = '20px';
+            errorDiv.style.textAlign = 'center';
+            errorDiv.style.color = '#666';
+            
+            const title = document.createElement('h3');
+            title.textContent = 'Unable to render family chart';
+            errorDiv.appendChild(title);
+            
+            const errorText = document.createElement('p');
+            errorText.textContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            errorDiv.appendChild(errorText);
+            
+            const helpText = document.createElement('p');
+            helpText.style.fontSize = '0.9em';
+            helpText.textContent = 'Check browser console for details';
+            errorDiv.appendChild(helpText);
+            
+            containerRef.current.appendChild(errorDiv);
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initChart();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [persons, connections, width, height]);
+
+  // Add click handler using DOM event delegation
+  useEffect(() => {
+    if (!onPersonClick || !containerRef.current) return;
+
+    const clickHandler = (event: MouseEvent) => {
+      let target = event.target as HTMLElement;
+      
+      while (target && target !== containerRef.current) {
+        // Check for person ID in data attributes
+        const personId = target.getAttribute('data-person-id') || 
+                         target.getAttribute('data-id') ||
+                         target.getAttribute('data-node-id') ||
+                         target.getAttribute('id');
+        
+        if (personId) {
+          const person = persons.find(p => p.id === personId);
+          if (person) {
+            console.log('FamilyChartLayout: Click detected on person:', person.name);
+            onPersonClick(person);
+            return;
+          }
+        }
+        
+        // Check for person name in text content
+        const textContent = target.textContent || '';
+        const nodeClasses = ['node', 'family-chart-node', 'card', 'person', 'member'];
+        
+        const matchingPersons = persons.filter(p => 
+          p.name && textContent.includes(p.name)
+        );
+        
+        if (matchingPersons.length > 0) {
+          const isLikelyPersonNode = 
+            nodeClasses.some(cls => target.classList.contains(cls)) ||
+            target.hasAttribute('data-person-id') ||
+            target.hasAttribute('data-id') ||
+            target.hasAttribute('data-node-id');
+          
+          if (isLikelyPersonNode) {
+            const matchingPerson = matchingPersons[0];
+            console.log('FamilyChartLayout: Click detected on person by name:', matchingPerson.name);
+            onPersonClick(matchingPerson);
+            return;
+          }
+        }
+        
+        target = target.parentElement as HTMLElement;
+      }
+    };
+    
+    containerRef.current.addEventListener('click', clickHandler);
+    
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.removeEventListener('click', clickHandler);
+      }
+    };
+  }, [persons, onPersonClick]);
 
   const handleCenterSelf = () => {
     if (!chart) return;
     
     const selfPerson = persons.find(person => person.is_self === true);
     if (selfPerson) {
-      // Try to center on the person if the chart has this method
       if (typeof chart.centerOn === 'function') {
         chart.centerOn(selfPerson.id);
       }
@@ -485,7 +408,6 @@ export function FamilyChartLayout({
 
   const handleZoomToFit = () => {
     if (!chart) return;
-    // Try to fit the chart if it has this method
     if (typeof chart.fit === 'function') {
       chart.fit();
       setZoomLevel(1);
@@ -495,7 +417,7 @@ export function FamilyChartLayout({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div data-testid="loading-spinner" className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
