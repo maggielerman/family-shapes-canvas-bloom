@@ -314,7 +314,7 @@ export function FamilyChartLayout({
       />
       
       {/* Custom styles for hover effects */}
-      <style jsx>{`
+      <style>{`
         .family-chart-node:hover {
           transform: translateY(-4px) scale(1.02);
           box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);

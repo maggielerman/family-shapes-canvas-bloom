@@ -96,7 +96,7 @@ export function OrganizationSettings({ organizationId, organization, isOwner, on
       const { error } = await supabase
         .from('organizations')
         .update({
-          settings: settings
+          settings: settings as any
         })
         .eq('id', organizationId);
 

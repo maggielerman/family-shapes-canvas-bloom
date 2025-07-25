@@ -12,7 +12,7 @@ interface PersonNodeData {
   generation?: number;
 }
 
-export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
+export const PersonNode = memo(({ data }: { data: PersonNodeData }) => {
   const person = data.person as Person;
   const generationColor = data.generationColor;
   const generation = data.generation;
@@ -34,7 +34,7 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
           <Avatar 
             className="w-16 h-16 ring-2 shadow-md"
             style={{ 
-              ringColor: generationColor || 'hsl(var(--border))'
+              borderColor: generationColor || 'hsl(var(--border))'
             }}
           >
             <AvatarImage src={person.profile_photo_url || undefined} />
