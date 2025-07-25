@@ -166,18 +166,40 @@ export function FamilyChartLayout({
                     
                     // If createChart exists, try different API signatures
                     const signatures = [
+                        // Signature 0: Preferred pattern with nodes array and nodeBinding mapping
+                        () => createChart(containerRef.current, {
+                            nodes: familyData.nodes,
+                            rootId: rootId,
+                            nodeBinding: {
+                                field_0: 'name',
+                                img_0: 'img',
+                                field_1: 'birthday'
+                            },
+                            width: width,
+                            height: height
+                        }),
                         // Signature 1: Standard D3 pattern (container, config) with simple data
                         () => createChart(containerRef.current, {
-                            data: simpleData,
+                            nodes: simpleData,
                             rootId: simpleRootId || rootId,
+                            nodeBinding: {
+                                field_0: 'name',
+                                img_0: 'img',
+                                field_1: 'birthday'
+                            },
                             width: width,
                             height: height
                         }),
                         
                         // Signature 2: Standard D3 pattern with complex data
                         () => createChart(containerRef.current, {
-                            data: familyData.nodes,
+                            nodes: familyData.nodes,
                             rootId: rootId,
+                            nodeBinding: {
+                                field_0: 'name',
+                                img_0: 'img',
+                                field_1: 'birthday'
+                            },
                             width: width,
                             height: height
                         }),

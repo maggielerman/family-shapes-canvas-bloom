@@ -9,7 +9,7 @@ export interface FamilyChartNode {
   name: string;
   gender?: 'M' | 'F';
   birthday?: string;
-  avatar?: string;
+  img?: string;
   // Custom fields for handling complex family structures
   _additionalFathers?: string[];    // Additional fathers when multiple exist
   _additionalMothers?: string[];    // Additional mothers when multiple exist
@@ -42,7 +42,7 @@ export function transformToFamilyChartData(
       name: person.name || 'Unknown',
       gender: person.gender === 'male' ? 'M' : person.gender === 'female' ? 'F' : undefined,
       birthday: person.date_of_birth || undefined,
-      avatar: person.profile_photo_url || undefined,
+      img: person.profile_photo_url || undefined,
       pids: [], // Initialize partner IDs array
       // Store the original person data for reference
       _personData: person
