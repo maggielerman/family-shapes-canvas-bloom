@@ -228,7 +228,7 @@ const FamilyCommunity = () => {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-coral-600 px-8 py-6 text-lg">
+            <Button asChild variant="text" size="lg" className="border-white text-white hover:bg-white hover:text-coral-600 px-8 py-6 text-lg">
               <Link to="/contact">
                 Contact Us
               </Link>
