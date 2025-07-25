@@ -15,7 +15,8 @@ import {
   Users,
   Share2,
   Image,
-  Search
+  Search,
+  Network
 } from "lucide-react";
 import {
   Sidebar,
@@ -58,12 +59,14 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   };
 
   const sidebarItems = [
-    { path: "/dashboard", label: "Dashboard", icon: Home },
-    { path: "/family-trees", label: "Family Trees", icon: TreePine },
-    { path: "/people", label: "People", icon: Users },
-    { path: "/organizations", label: "Organizations", icon: Building2 },
-    { path: "/media", label: "Media", icon: Image },
-    { path: "/share", label: "Share", icon: Share2 },
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
+    { icon: User, label: "Profile", path: "/profile" },
+    { icon: Users, label: "People", path: "/people" },
+    { icon: TreePine, label: "Family Trees", path: "/family-trees" },
+    { icon: Network, label: "Connections", path: "/connections" },
+    { icon: Image, label: "Media", path: "/media" },
+    { icon: Share2, label: "Share", path: "/share" },
+    { icon: Building2, label: "Organizations", path: "/organizations" },
   ];
 
   // Show loading while auth is still loading
