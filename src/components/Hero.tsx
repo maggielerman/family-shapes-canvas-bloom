@@ -67,10 +67,6 @@ const Hero = () => {
               </div>
             </div>
           </div>
-          
-          {/* Floating elements - hidden on very small screens */}
-          <div className="hidden sm:block absolute -top-4 -left-4 w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-coral-300 to-dusty-300 opacity-60 blur-sm"></div>
-          <div className="hidden sm:block absolute -bottom-6 -right-6 w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-sage-300 to-coral-200 opacity-40 blur-sm"></div>
         </div>
       </div>
     </section>
