@@ -117,55 +117,20 @@ export class ConnectionService {
    * Get connections for a family tree
    */
   static async getConnectionsForFamilyTree(familyTreeId: string): Promise<Connection[]> {
-<<<<<<< HEAD
-    try {
-      // Get person IDs who are members of this family tree
-      const { data: treeMembers, error: membersError } = await supabase
-        .from('family_tree_members')
-        .select('person_id')
-        .eq('family_tree_id', familyTreeId);
-
-      if (membersError) {
-        console.error('Error fetching tree members:', membersError);
-        throw membersError;
-      }
-
-      const personIds = (treeMembers || []).map(m => m.person_id);
-      console.log('Family tree members found:', personIds.length, 'persons');
-=======
     // Get person IDs who are members of this family tree
     const { data: treeMembers, error: membersError } = await supabase
       .from('family_tree_members')
       .select('person_id')
       .eq('family_tree_id', familyTreeId);
->>>>>>> origin/main
 
-      let connections: any[] = [];
-
-      // Only fetch connections if we have person IDs
-      if (personIds.length > 0) {
-        const { data: memberConns, error: memberError } = await supabase
-          .from('connections')
-          .select('*')
-          .in('from_person_id', personIds)
-          .in('to_person_id', personIds);
-
-<<<<<<< HEAD
-        if (memberError) {
-          console.error('Error fetching connections between tree members:', memberError);
-          throw memberError;
-        }
-
-        connections = memberConns || [];
-      }
-
-      console.log('Total connections found for family tree:', connections.length);
-      return connections as Connection[];
-    } catch (error) {
-      console.error('Error in getConnectionsForFamilyTree:', error);
-      throw error;
+    if (membersError) {
+      console.error('Error fetching tree members:', membersError);
+      throw membersError;
     }
-=======
+
+    const personIds = (treeMembers || []).map(m => m.person_id);
+    console.log('Family tree members found:', personIds.length, 'persons');
+
     if (personIds.length === 0) {
       return [];
     }
@@ -193,7 +158,6 @@ export class ConnectionService {
 
     if (error) throw error;
     return data as Connection[];
->>>>>>> origin/main
   }
 
   /**
