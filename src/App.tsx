@@ -30,6 +30,7 @@ const Share = lazy(() => import("./pages/Share"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Connections = lazy(() => import("./pages/Connections"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
