@@ -85,6 +85,28 @@ export class ConnectionService {
   }
 
   /**
+   * Get all connections for the current user
+   */
+  static async getConnections(): Promise<ConnectionWithDetails[]> {
+    // Get current user for authorization
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error('No user found');
+
+    // Get the current user's person record
+    const { data: personData, error: personError } = await supabase
+      .from('persons')
+      .select('id')
+      .eq('user_id', userData.user.id)
+      .single();
+
+    if (personError || !personData) {
+      throw new Error('Person record not found for current user');
+    }
+
+    return this.getConnectionsForPerson(personData.id);
+  }
+
+  /**
    * Get connections for a specific person (both incoming and outgoing)
    */
   static async getConnectionsForPerson(personId: string): Promise<ConnectionWithDetails[]> {

@@ -27,6 +27,7 @@ const OrganizationInvitePage = lazy(() => import("./pages/OrganizationInvitePage
 const PublicFamilyTree = lazy(() => import("./pages/PublicFamilyTree"));
 const Media = lazy(() => import("./pages/Media"));
 const Share = lazy(() => import("./pages/Share"));
+const Connections = lazy(() => import("./pages/Connections"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
