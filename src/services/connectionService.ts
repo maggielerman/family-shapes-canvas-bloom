@@ -192,42 +192,7 @@ export class ConnectionService {
     // are displayed as bidirectional in the UI
     const mainConnection = await this.updateConnection(data);
 
-<<<<<<< HEAD
-    // Find and update the reciprocal connection
-    const reciprocalType = ConnectionUtils.getReciprocalType(data.relationship_type as RelationshipType);
-    let reciprocalConnection: Connection | undefined;
-
-    if (reciprocalType && data.relationship_type) {
-      try {
-        // Find the reciprocal connection
-        const { data: reciprocalConnections, error: findError } = await supabase
-          .from('connections')
-          .select('*')
-          .eq('from_person_id', mainConnection.to_person_id)
-          .eq('to_person_id', mainConnection.from_person_id)
-          .eq('relationship_type', reciprocalType);
-
-        if (!findError && reciprocalConnections && reciprocalConnections.length > 0) {
-          const reciprocalData: UpdateConnectionData = {
-            id: reciprocalConnections[0].id,
-            relationship_type: reciprocalType,
-            group_id: data.group_id,
-            organization_id: data.organization_id,
-            notes: data.notes,
-            metadata: data.metadata
-          };
-
-          reciprocalConnection = await this.updateConnection(reciprocalData);
-        }
-      } catch (error) {
-        console.error('Failed to update reciprocal connection:', error);
-      }
-    }
-
-    return { main: mainConnection, reciprocal: reciprocalConnection };
-=======
     return { main: mainConnection, reciprocal: undefined };
->>>>>>> origin/main
   }
 
   /**
@@ -264,21 +229,12 @@ export class ConnectionService {
     toPersonId: string, 
     relationshipType: RelationshipType
   ): Promise<boolean> {
-<<<<<<< HEAD
-    const { data, error } = await supabase
-      .from('connections')
-      .select('id')
-      .eq('from_person_id', fromPersonId)
-      .eq('to_person_id', toPersonId)
-      .eq('relationship_type', relationshipType);
-=======
     // Check both directions for ALL relationship types since all relationships
     // are displayed as bidirectional in the UI
     const { data, error } = await supabase
       .from('connections')
       .select('id')
       .or(`and(from_person_id.eq.${fromPersonId},to_person_id.eq.${toPersonId},relationship_type.eq.${relationshipType}),and(from_person_id.eq.${toPersonId},to_person_id.eq.${fromPersonId},relationship_type.eq.${relationshipType})`);
->>>>>>> origin/main
 
     if (error) throw error;
     return (data || []).length > 0;
