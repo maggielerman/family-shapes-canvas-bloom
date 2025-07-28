@@ -72,8 +72,6 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-
->>>>>>> origin/main
   const handlePersonClick = (person: Person) => {
     setViewingPerson(person);
   };
