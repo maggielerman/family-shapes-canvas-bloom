@@ -39,19 +39,26 @@ const UserProfile = () => {
     
     try {
       setLoading(true);
+      console.log('Loading profile for user:', user.id, user.email);
       
-      // Load from user_profiles table
-      const { data: profile, error } = await supabase
+      // Load from user_profiles table - get the most recent one if multiple exist
+      const { data: profiles, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .order('updated_at', { ascending: false })
+        .limit(1);
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.log('Profile data:', profiles, 'Error:', error);
+
+      // Handle case where profile doesn't exist (not an error)
+      if (error) {
+        console.error('Error loading profile:', error);
         throw error;
-      }
-
-      if (profile) {
+      } else if (profiles && profiles.length > 0) {
+        // Profile exists, use the most recent one
+        const profile = profiles[0];
+        console.log('Profile found, loading data');
         setProfileData({
           firstName: profile.full_name?.split(' ')[0] || '',
           lastName: profile.full_name?.split(' ').slice(1).join(' ') || '',
@@ -62,12 +69,17 @@ const UserProfile = () => {
           memberSince: new Date(user.created_at).toLocaleDateString()
         });
       } else {
-        // Set default values from auth user
-        setProfileData(prev => ({
-          ...prev,
+        // No profile exists, create default from auth user
+        console.log('No profile found, using auth user data');
+        setProfileData({
+          firstName: user.user_metadata?.full_name?.split(' ')[0] || '',
+          lastName: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
           email: user.email || '',
+          phone: '',
+          location: '',
+          bio: '',
           memberSince: new Date(user.created_at).toLocaleDateString()
-        }));
+        });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -75,6 +87,17 @@ const UserProfile = () => {
         title: "Error",
         description: "Failed to load profile data",
         variant: "destructive",
+      });
+      
+      // Set fallback data from auth user even on error
+      setProfileData({
+        firstName: user.user_metadata?.full_name?.split(' ')[0] || '',
+        lastName: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: '',
+        location: '',
+        bio: '',
+        memberSince: new Date(user.created_at).toLocaleDateString()
       });
     } finally {
       setLoading(false);

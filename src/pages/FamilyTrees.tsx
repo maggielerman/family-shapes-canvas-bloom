@@ -38,7 +38,10 @@ export default function FamilyTrees() {
 
   const fetchFamilyTrees = async () => {
     try {
-      const { data, error } = await supabase
+      console.log('Fetching family trees...');
+      
+      // First get basic family trees data
+      const { data: treesData, error: treesError } = await supabase
         .from('family_trees')
         .select(`
           *,
@@ -46,10 +49,12 @@ export default function FamilyTrees() {
         `)
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Family trees data:', treesData, 'Error:', treesError);
+
+      if (treesError) throw treesError;
 
       // Get connection counts for each tree using the junction table approach
-      const treesWithCounts = await Promise.all((data || []).map(async (tree: any) => {
+      const treesWithCounts = await Promise.all((treesData || []).map(async (tree: any) => {
         // Get person IDs who are members of this tree
         const { data: membersData } = await supabase
           .from('family_tree_members')
@@ -79,6 +84,7 @@ export default function FamilyTrees() {
         };
       }));
       
+      console.log('Final trees with counts:', treesWithCounts);
       setFamilyTrees(treesWithCounts);
     } catch (error) {
       console.error('Error fetching family trees:', error);

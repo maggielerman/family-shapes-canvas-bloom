@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import ContextSwitcher from "@/components/navigation/ContextSwitcher";
 import { 
   Heart, 
   User, 
@@ -39,7 +40,7 @@ interface SidebarLayoutProps {
 }
 
 const SidebarLayout = ({ children }: SidebarLayoutProps) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
@@ -88,14 +89,24 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
     { icon: Building2, label: "Organizations", path: "/organizations" },
   ];
 
+  // Show loading while auth is still loading
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
     <SidebarProvider>
       <Sidebar variant="inset">
-        <SidebarHeader className="border-b px-2 py-2">
-          <Link to="/" className="flex items-center gap-2 px-4 py-2 hover:bg-sidebar-accent rounded-md transition-colors">
+        <SidebarHeader className="border-b px-2 py-4">
+          {/* App Logo */}
+          <Link to="/" className="flex items-center gap-2 px-4 py-2 mb-3 hover:bg-sidebar-accent rounded-md transition-colors">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
               <Heart className="w-4 h-4 text-white" />
             </div>
@@ -104,6 +115,11 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
               <span className="truncate text-xs">Family Tree Management</span>
             </div>
           </Link>
+          
+          {/* Context Switcher */}
+          <div className="px-4">
+            <ContextSwitcher />
+          </div>
         </SidebarHeader>
         <SidebarContent className="px-2 py-2">
           <SidebarGroup>
@@ -147,10 +163,10 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     onClick={handleSignOut}
-                    tooltip="Sign Out"
+                    tooltip="Sign out"
                   >
                     <LogOut />
-                    <span>Sign Out</span>
+                    <span>Sign out</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -159,23 +175,8 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="h-4 w-px bg-sidebar-border" />
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email} />
-                <AvatarFallback className="bg-coral-600 text-white text-sm">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{displayName}</span>
-                <span className="truncate text-xs">{user?.email}</span>
-              </div>
-            </div>
-          </div>
+        <header className="flex h-16 shrink-0 items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           {children}

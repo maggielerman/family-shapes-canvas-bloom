@@ -74,7 +74,7 @@ export class ConnectionService {
       .from('connections')
       .select(`
         *,
-        to_person:persons!connections_to_person_id_fkey(name)
+        to_person:persons(name)
       `)
       .eq('from_person_id', personId);
 
@@ -85,7 +85,7 @@ export class ConnectionService {
       .from('connections')
       .select(`
         *,
-        from_person:persons!connections_from_person_id_fkey(name)
+        from_person:persons(name)
       `)
       .eq('to_person_id', personId);
 
@@ -123,9 +123,13 @@ export class ConnectionService {
       .select('person_id')
       .eq('family_tree_id', familyTreeId);
 
-    if (membersError) throw membersError;
+    if (membersError) {
+      console.error('Error fetching tree members:', membersError);
+      throw membersError;
+    }
 
     const personIds = (treeMembers || []).map(m => m.person_id);
+    console.log('Family tree members found:', personIds.length, 'persons');
 
     if (personIds.length === 0) {
       return [];

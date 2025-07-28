@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, TestTube, Database, Settings, Trash2 } from 'lucide-react';
+import { ExternalLink, TestTube, Database, Settings, Bug, Trash2 } from 'lucide-react';
+import { DatabaseTest } from '@/components/debug/DatabaseTest';
 import { useToast } from '@/hooks/use-toast';
 import { ConnectionService } from '@/services/connectionService';
 
@@ -89,6 +90,22 @@ export default function Admin() {
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
           <p className="text-muted-foreground">Development tools and system administration</p>
         </div>
+
+        {/* Database Debug Component */}
+        <Card className="mb-6 border-orange-200 bg-orange-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-800">
+              <Bug className="w-5 h-5" />
+              Database Connectivity Testing
+            </CardTitle>
+            <CardDescription className="text-orange-700">
+              Test database connections, RLS policies, and query functionality
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DatabaseTest />
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Vitest UI Card */}
