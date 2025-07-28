@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
 import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
+import ReactFlowFamilyTreeCanvas from './layouts/ReactFlowFamilyTreeCanvas';
 
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
@@ -138,6 +139,16 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                   persons={persons}
                   connections={connections}
                   relationshipTypes={relationshipTypes}
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  onPersonClick={handlePersonClick}
+                  currentLayout={currentLayout}
+                  onLayoutChange={handleLayoutChange}
+                />
+              ) : currentLayout === 'xyflow' ? (
+                <ReactFlowFamilyTreeCanvas
+                  persons={persons}
+                  connections={connections}
                   width={dimensions.width}
                   height={dimensions.height}
                   onPersonClick={handlePersonClick}
