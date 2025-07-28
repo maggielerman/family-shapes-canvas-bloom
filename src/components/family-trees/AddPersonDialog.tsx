@@ -51,20 +51,30 @@ export function AddPersonDialog({
   const [pendingPersonData, setPendingPersonData] = useState<CreatePersonData | null>(null);
 
   const handleImageUploaded = (uploadedFile: any) => {
+    console.log('Image uploaded successfully:', uploadedFile);
     setUploadedPhoto(uploadedFile);
   };
 
   const getPhotoUrl = () => {
     if (!uploadedPhoto) return undefined;
+    console.log('Getting photo URL for:', uploadedPhoto);
+    
+    // Use the getFileUrl helper from useFileUpload hook
     const { data } = supabase.storage
       .from(uploadedPhoto.bucket_name)
       .getPublicUrl(uploadedPhoto.file_path);
-    return data.publicUrl;
+    
+    const publicUrl = data.publicUrl;
+    console.log('Generated public URL:', publicUrl);
+    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    const photoUrl = getPhotoUrl();
+    console.log('Photo URL for person:', photoUrl);
 
     const personData: CreatePersonData = {
       name: name.trim(),
@@ -74,8 +84,10 @@ export function AddPersonDialog({
       phone: phone.trim() || undefined,
       notes: notes.trim() || undefined,
       status,
-      profile_photo_url: getPhotoUrl(),
+      profile_photo_url: photoUrl,
     };
+
+    console.log('Person data being submitted:', personData);
 
     if (isDonor && onDonorSubmit) {
       // Store person data and open donor dialog

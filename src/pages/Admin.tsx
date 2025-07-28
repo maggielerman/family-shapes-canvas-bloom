@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, TestTube, Database, Settings, Bug, Trash2 } from 'lucide-react';
@@ -6,10 +7,80 @@ import { useToast } from '@/hooks/use-toast';
 import { ConnectionService } from '@/services/connectionService';
 
 export default function Admin() {
+  const [isCleaning, setIsCleaning] = useState(false);
+  const [isDebugging, setIsDebugging] = useState(false);
+  const [debugResult, setDebugResult] = useState<{
+    total: number;
+    byType: Record<string, number>;
+    duplicates: Array<{
+      type: string;
+      personA: string;
+      personB: string;
+      count: number;
+      connectionIds: string[];
+    }>;
+  } | null>(null);
+  const { toast } = useToast();
+
   const openVitestUI = () => {
     // In development, Vitest UI is typically served on port 51204
     const vitestUrl = 'http://localhost:51204';
     window.open(vitestUrl, '_blank');
+  };
+
+  const handleDebugConnections = async () => {
+    setIsDebugging(true);
+    try {
+      const result = await ConnectionService.debugConnections();
+      setDebugResult(result);
+      
+      // Log to console for detailed debugging
+      console.log('Debug Results:', result);
+      
+      toast({
+        title: "Debug Complete",
+        description: `Found ${result.total} connections. ${result.duplicates.length} duplicate groups detected.`,
+      });
+    } catch (error) {
+      console.error('Debug error:', error);
+      toast({
+        title: "Debug Error",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDebugging(false);
+    }
+  };
+
+  const handleCleanupDuplicates = async () => {
+    if (!window.confirm('This will remove duplicate connections from the database. Continue?')) {
+      return;
+    }
+
+    setIsCleaning(true);
+    try {
+      const result = await ConnectionService.cleanupDuplicateConnections();
+      
+      toast({
+        title: "Cleanup Complete",
+        description: `Removed ${result.removed} duplicate connections. ${result.errors.length} errors occurred.`,
+        variant: result.errors.length > 0 ? "destructive" : "default",
+      });
+
+      if (result.errors.length > 0) {
+        console.error('Cleanup errors:', result.errors);
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      toast({
+        title: "Cleanup Error",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCleaning(false);
+    }
   };
 
   return (
@@ -95,6 +166,88 @@ export default function Admin() {
             </CardContent>
           </Card>
 
+          {/* Database Cleanup Card */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                Database Cleanup
+              </CardTitle>
+              <CardDescription>
+                Remove duplicate connections for all relationship types
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Clean up duplicate database records for all relationship types (parent/child, sibling, partner, etc.).
+                </p>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDebugConnections}
+                    disabled={isDebugging}
+                  >
+                    {isDebugging ? "Checking..." : "Check for Duplicates"}
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleCleanupDuplicates}
+                    disabled={isCleaning}
+                  >
+                    {isCleaning ? "Cleaning..." : "Remove Duplicates"}
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => window.open('/connections', '_blank')}
+                  >
+                    Test Connections Page
+                  </Button>
+                </div>
+
+                {/* Debug Results Display */}
+                {debugResult && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <h4 className="font-medium mb-2">Debug Results:</h4>
+                    <div className="space-y-2 text-sm">
+                      <div><strong>Total bidirectional connections:</strong> {debugResult.total}</div>
+                      <div><strong>Duplicate groups found:</strong> {debugResult.duplicates.length}</div>
+                      
+                      {Object.entries(debugResult.byType).length > 0 && (
+                        <div>
+                          <strong>By relationship type:</strong>
+                          <ul className="ml-4 mt-1">
+                            {Object.entries(debugResult.byType).map(([type, count]) => (
+                              <li key={type}>• {type}: {count}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {debugResult.duplicates.length > 0 && (
+                        <div>
+                          <strong>Duplicate groups:</strong>
+                          <ul className="ml-4 mt-1 space-y-1">
+                            {debugResult.duplicates.map((dup, index) => (
+                              <li key={index} className="text-xs">
+                                • {dup.type}: {dup.personA} ↔ {dup.personB} ({dup.count} records)
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs text-muted-foreground">
+                  This will permanently remove duplicate connection records
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Development Tools Card */}
           <Card className="hover:shadow-md transition-shadow">
             <CardHeader>
@@ -152,6 +305,12 @@ export default function Admin() {
               <h4 className="font-medium mb-2">3. Database Management</h4>
               <p className="text-sm text-muted-foreground">
                 Use the Supabase dashboard to inspect tables, run queries, and manage your database schema.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">4. Database Cleanup</h4>
+              <p className="text-sm text-muted-foreground">
+                Use the cleanup tool to remove duplicate bidirectional connections that may have been created before the fix.
               </p>
             </div>
           </CardContent>

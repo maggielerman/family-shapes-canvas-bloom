@@ -112,7 +112,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const FamilyTrees = lazy(() => import("./pages/FamilyTrees"));
 
 // FamilyTreeVisualization.tsx - Chart components lazy loaded
-const TreeLayout = lazy(() => import("./layouts/TreeLayout"));
+
 const XYFlowTreeBuilder = lazy(() => import("./XYFlowTreeBuilder"));
 ```
 

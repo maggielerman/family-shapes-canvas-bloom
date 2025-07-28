@@ -18,8 +18,10 @@ import {
   Lock,
   Globe
 } from "lucide-react";
-import { TreeLayout } from "./layouts/TreeLayout";
+
 import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
+import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
+import { RadialLayout } from "./layouts/RadialLayout";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -73,9 +75,14 @@ export function PublicFamilyTreeViewer({
   const [connections, setConnections] = useState<PublicConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
+  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre'>('force');
 
   // Use centralized relationship types
   const relationshipTypes = RelationshipTypeHelpers.getForSelection();
+
+  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre') => {
+    setCurrentLayout(layout);
+  };
 
   useEffect(() => {
     if (familyTreeId) {
@@ -179,11 +186,15 @@ export function PublicFamilyTreeViewer({
       if (membersError) throw membersError;
       setPersons((membersData || []).map(member => member.person));
 
-      // Fetch connections
+      // Get person IDs who are members of this family tree
+      const personIds = (membersData || []).map(member => member.person.id);
+
+      // Fetch connections between people who are members of this tree
       const { data: connectionsData, error: connectionsError } = await supabase
         .from('connections')
         .select('*')
-        .eq('family_tree_id', familyTreeId);
+        .in('from_person_id', personIds)
+        .in('to_person_id', personIds);
 
       if (connectionsError) throw connectionsError;
       setConnections(connectionsData || []);
@@ -308,14 +319,33 @@ export function PublicFamilyTreeViewer({
                     </AlertDescription>
                   </Alert>
                 </div>
-                <TreeLayout
-                  persons={persons as any[]}
-                  connections={connections as any[]}
-                  relationshipTypes={relationshipTypes}
-                  width={800}
-                  height={600}
-                  onPersonClick={() => {}}
-                />
+                {currentLayout === 'force' ? (
+                  <ForceDirectedLayout
+                    persons={persons as any[]}
+                    connections={connections as any[]}
+                    relationshipTypes={relationshipTypes}
+                    width={800}
+                    height={600}
+                    onPersonClick={() => {}}
+                    currentLayout={currentLayout}
+                    onLayoutChange={handleLayoutChange}
+                  />
+                ) : currentLayout === 'radial' ? (
+                  <RadialLayout
+                    persons={persons as any[]}
+                    connections={connections as any[]}
+                    relationshipTypes={relationshipTypes}
+                    width={800}
+                    height={600}
+                    onPersonClick={() => {}}
+                    currentLayout={currentLayout}
+                    onLayoutChange={handleLayoutChange}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-96">
+                    <div className="text-muted-foreground">Dagre layout not available in public view</div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -330,11 +360,11 @@ export function PublicFamilyTreeViewer({
                         <img
                           src={person.profile_photo_url}
                           alt={person.name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-16 h-16 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-primary" />
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="w-8 h-8 text-primary" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">

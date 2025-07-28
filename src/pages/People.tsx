@@ -20,7 +20,7 @@ import {
   Users,
   Loader2
 } from "lucide-react";
-import { PersonCard } from "@/components/family-trees/PersonCard";
+import { PersonCard } from "@/components/people/PersonCard";
 import { PersonCardDialog } from "@/components/people/PersonCard";
 import { EditPersonDialog } from "@/components/people/EditPersonDialog";
 import { DeletePersonDialog } from "@/components/people/DeletePersonDialog";
@@ -88,8 +88,10 @@ export default function People() {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from('persons')
+      // Use the persons_with_trees view to get persons and their tree counts in one query
+      // The view uses SECURITY INVOKER, so RLS policies automatically filter by user_id
+      const { data: personsData, error: personsError } = await supabase
+        .from('persons_with_trees')
         .select(`
           id,
           name,
@@ -107,38 +109,67 @@ export default function People() {
           used_iui,
           fertility_treatments,
           is_self,
-          created_at
+          created_at,
+          family_trees
         `)
-        .eq('user_id', user.id)
         .order('is_self', { ascending: false })
         .order('name');
 
-      if (error) throw error;
+      if (personsError) throw personsError;
 
-      // Get counts for each person
-      const personsWithCounts = await Promise.all(
-        (data || []).map(async (person) => {
-          // Count family trees this person is in using the family_tree_members junction table
-          const { count: treeCount } = await supabase
-            .from('family_tree_members')
-            .select('*', { count: 'exact', head: true })
-            .eq('person_id', person.id);
+      if (!personsData || personsData.length === 0) {
+        setPersons([]);
+        return;
+      }
 
-          // Count connections
-          const { count: connectionCount } = await supabase
-            .from('connections')
-            .select('*', { count: 'exact', head: true })
-            .or(`from_person_id.eq.${person.id},to_person_id.eq.${person.id}`);
+      const personIds = personsData.map(p => p.id);
 
-          return {
-            ...person,
-            _count: {
-              family_trees: treeCount || 0,
-              connections: connectionCount || 0
-            }
-          };
-        })
-      );
+      // Get all connection counts for each person
+      // Use a single query with OR condition to get all connections involving these persons
+      let allConnections: any[] = [];
+
+      if (personIds.length > 0) {
+        const { data: connectionsData, error: connectionsError } = await supabase
+          .from('connections')
+          .select('from_person_id, to_person_id')
+          .or(`from_person_id.in.(${personIds.join(',')}),to_person_id.in.(${personIds.join(',')})`);
+
+        if (connectionsError) throw connectionsError;
+        allConnections = connectionsData || [];
+      }
+
+      // Create lookup map for connection counts
+      const connectionCountMap = new Map();
+      allConnections.forEach(connection => {
+        // Count connections where the person is either the from_person_id or to_person_id
+        // Avoid double-counting self-connections by checking if from_person_id equals to_person_id
+        if (personIds.includes(connection.from_person_id)) {
+          connectionCountMap.set(connection.from_person_id, (connectionCountMap.get(connection.from_person_id) || 0) + 1);
+        }
+        if (personIds.includes(connection.to_person_id) && connection.from_person_id !== connection.to_person_id) {
+          // Only count to_person_id if it's not a self-connection (already counted above)
+          connectionCountMap.set(connection.to_person_id, (connectionCountMap.get(connection.to_person_id) || 0) + 1);
+        }
+      });
+
+      // Combine the data
+      const personsWithCounts = personsData.map(person => {
+        // Count family trees - handle both array and number cases
+        let familyTreesCount = 0;
+        if (Array.isArray(person.family_trees)) {
+          familyTreesCount = person.family_trees.length;
+        } else if (typeof person.family_trees === 'number') {
+          familyTreesCount = person.family_trees;
+        }
+        
+        return {
+          ...person,
+          _count: {
+            family_trees: familyTreesCount,
+            connections: connectionCountMap.get(person.id) || 0
+          }
+        };
+      });
 
       setPersons(personsWithCounts);
     } catch (error) {
@@ -155,7 +186,13 @@ export default function People() {
 
   const handleDeletePerson = async (personId: string) => {
     try {
-      // Delete all connections first
+      // Delete donor record first (if person is a donor)
+      await supabase
+        .from('donors')
+        .delete()
+        .eq('person_id', personId);
+
+      // Delete all connections
       await supabase
         .from('connections')
         .delete()
@@ -356,6 +393,8 @@ export default function People() {
                 onDelete={(p) => setDeletingPerson(p)}
                 onClick={() => setViewingPerson(person)}
                 showActions={true}
+                onPersonUpdated={fetchPersons}
+                variant="card"
               />
               <div className="mt-2 text-xs text-muted-foreground text-center">
                 {getStatsForPerson(person)}

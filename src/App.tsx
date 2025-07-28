@@ -23,6 +23,7 @@ const UserProfile = lazy(() => import("./pages/UserProfile"));
 const FamilyTrees = lazy(() => import("./pages/FamilyTrees"));
 const People = lazy(() => import("./pages/People"));
 const FamilyTreeDetail = lazy(() => import("./pages/FamilyTreeDetail"));
+const Connections = lazy(() => import("./pages/Connections"));
 const OrganizationInvitePage = lazy(() => import("./pages/OrganizationInvitePage"));
 const PublicFamilyTree = lazy(() => import("./pages/PublicFamilyTree"));
 const Media = lazy(() => import("./pages/Media"));
@@ -43,7 +44,7 @@ const queryClient = new QueryClient({
     queries: {
       // Optimize query caching for better performance
       staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -79,6 +80,7 @@ const App = () => (
               <Route path="/people" element={<ProtectedRoute><SidebarLayout><People /></SidebarLayout></ProtectedRoute>} />
               <Route path="/family-trees" element={<ProtectedRoute><SidebarLayout><FamilyTrees /></SidebarLayout></ProtectedRoute>} />
               <Route path="/family-trees/:id" element={<ProtectedRoute><SidebarLayout><FamilyTreeDetail /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/connections" element={<ProtectedRoute><SidebarLayout><Connections /></SidebarLayout></ProtectedRoute>} />
               <Route path="/media" element={<ProtectedRoute><SidebarLayout><Media /></SidebarLayout></ProtectedRoute>} />
               <Route path="/share" element={<ProtectedRoute><SidebarLayout><Share /></SidebarLayout></ProtectedRoute>} />
               <Route path="/organizations" element={<ProtectedRoute><SidebarLayout><Organizations /></SidebarLayout></ProtectedRoute>} />

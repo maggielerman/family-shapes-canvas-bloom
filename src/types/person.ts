@@ -150,6 +150,7 @@ export const PersonUtils = {
     
     // This would need to be implemented with actual Supabase query
     // For now, return null - this should be implemented in a service layer
+    // The actual implementation is in usePersonManagement hook
     return null;
   }
 }; 

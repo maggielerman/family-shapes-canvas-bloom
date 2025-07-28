@@ -53,35 +53,16 @@ export class ConnectionService {
 
   /**
    * Create a connection with its reciprocal relationship
+   * Note: We no longer create reciprocal database records since all relationships
+   * are displayed as bidirectional in the UI
    */
   static async createConnectionWithReciprocal(data: CreateConnectionData): Promise<{ main: Connection; reciprocal?: Connection }> {
-    // Create the main connection
+    // Create the main connection only
+    // No longer create reciprocal database records since all relationships
+    // are displayed as bidirectional in the UI
     const mainConnection = await this.createConnection(data);
 
-    // Create reciprocal connection if applicable
-    const reciprocalType = ConnectionUtils.getReciprocalType(data.relationship_type as RelationshipType);
-    let reciprocalConnection: Connection | undefined;
-
-    if (reciprocalType && reciprocalType !== data.relationship_type) {
-      try {
-        const reciprocalData: CreateConnectionData = {
-          from_person_id: data.to_person_id,
-          to_person_id: data.from_person_id,
-          relationship_type: reciprocalType,
-          group_id: data.group_id,
-          organization_id: data.organization_id,
-          notes: data.notes,
-          metadata: data.metadata
-        };
-
-        reciprocalConnection = await this.createConnection(reciprocalData);
-      } catch (error) {
-        console.error('Failed to create reciprocal connection:', error);
-        // Don't throw here - the main connection was created successfully
-      }
-    }
-
-    return { main: mainConnection, reciprocal: reciprocalConnection };
+    return { main: mainConnection, reciprocal: undefined };
   }
 
   /**
@@ -110,7 +91,7 @@ export class ConnectionService {
 
     if (incomingError) throw incomingError;
 
-    // Transform and deduplicate
+    // Transform connections with details
     const outgoing = (outgoingConnections || []).map(conn => ({
       ...conn,
       direction: 'outgoing' as const,
@@ -125,32 +106,18 @@ export class ConnectionService {
       other_person_id: conn.from_person_id
     }));
 
-    // Deduplicate reciprocal relationships
-    const uniqueConnections: ConnectionWithDetails[] = [];
-    
-    for (const outConn of outgoing) {
-      uniqueConnections.push(outConn);
-    }
-    
-    for (const inConn of incoming) {
-      // Only show incoming connections if there's no corresponding outgoing one
-      const hasCorrespondingOutgoing = outgoing.some(outConn => 
-        outConn.to_person_id === inConn.from_person_id &&
-        ConnectionUtils.areEquivalent(outConn, inConn)
-      );
-      
-      if (!hasCorrespondingOutgoing) {
-        uniqueConnections.push(inConn);
-      }
-    }
+    // Combine all connections
+    const allConnections = [...outgoing, ...incoming];
 
-    return uniqueConnections;
+    // Use ConnectionUtils.deduplicate to properly handle bidirectional relationships
+    return ConnectionUtils.deduplicate(allConnections) as ConnectionWithDetails[];
   }
 
   /**
    * Get connections for a family tree
    */
   static async getConnectionsForFamilyTree(familyTreeId: string): Promise<Connection[]> {
+<<<<<<< HEAD
     try {
       // Get person IDs who are members of this family tree
       const { data: treeMembers, error: membersError } = await supabase
@@ -165,6 +132,13 @@ export class ConnectionService {
 
       const personIds = (treeMembers || []).map(m => m.person_id);
       console.log('Family tree members found:', personIds.length, 'persons');
+=======
+    // Get person IDs who are members of this family tree
+    const { data: treeMembers, error: membersError } = await supabase
+      .from('family_tree_members')
+      .select('person_id')
+      .eq('family_tree_id', familyTreeId);
+>>>>>>> origin/main
 
       let connections: any[] = [];
 
@@ -176,6 +150,7 @@ export class ConnectionService {
           .in('from_person_id', personIds)
           .in('to_person_id', personIds);
 
+<<<<<<< HEAD
         if (memberError) {
           console.error('Error fetching connections between tree members:', memberError);
           throw memberError;
@@ -190,6 +165,35 @@ export class ConnectionService {
       console.error('Error in getConnectionsForFamilyTree:', error);
       throw error;
     }
+=======
+    if (personIds.length === 0) {
+      return [];
+    }
+
+    // Fetch connections between people who are members of this tree
+    const { data: connections, error: connectionsError } = await supabase
+      .from('connections')
+      .select('*')
+      .in('from_person_id', personIds)
+      .in('to_person_id', personIds);
+
+    if (connectionsError) throw connectionsError;
+
+    return connections as Connection[];
+  }
+
+  /**
+   * Get all connections
+   */
+  static async getAllConnections(): Promise<Connection[]> {
+    const { data, error } = await supabase
+      .from('connections')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data as Connection[];
+>>>>>>> origin/main
   }
 
   /**
@@ -215,11 +219,16 @@ export class ConnectionService {
 
   /**
    * Update a connection and its reciprocal relationship
+   * Note: We no longer manage reciprocal database records since all relationships
+   * are displayed as bidirectional in the UI
    */
   static async updateConnectionWithReciprocal(data: UpdateConnectionData): Promise<{ main: Connection; reciprocal?: Connection }> {
-    // Update the main connection
+    // Update the main connection only
+    // No longer manage reciprocal database records since all relationships
+    // are displayed as bidirectional in the UI
     const mainConnection = await this.updateConnection(data);
 
+<<<<<<< HEAD
     // Find and update the reciprocal connection
     const reciprocalType = ConnectionUtils.getReciprocalType(data.relationship_type as RelationshipType);
     let reciprocalConnection: Connection | undefined;
@@ -252,6 +261,9 @@ export class ConnectionService {
     }
 
     return { main: mainConnection, reciprocal: reciprocalConnection };
+=======
+    return { main: mainConnection, reciprocal: undefined };
+>>>>>>> origin/main
   }
 
   /**
@@ -268,52 +280,182 @@ export class ConnectionService {
 
   /**
    * Delete a connection and its reciprocal relationship
+   * Note: We no longer manage reciprocal database records since all relationships
+   * are displayed as bidirectional in the UI
    */
   static async deleteConnectionWithReciprocal(connectionId: string): Promise<void> {
-    // Get the connection details first
-    const { data: connection, error: fetchError } = await supabase
-      .from('connections')
-      .select('*')
-      .eq('id', connectionId)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    // Delete reciprocal connection first
-    const reciprocalType = ConnectionUtils.getReciprocalType(connection.relationship_type as RelationshipType);
-    if (reciprocalType) {
-      try {
-        await supabase
-          .from('connections')
-          .delete()
-          .eq('from_person_id', connection.to_person_id)
-          .eq('to_person_id', connection.from_person_id)
-          .eq('relationship_type', reciprocalType);
-      } catch (error) {
-        console.error('Failed to delete reciprocal connection:', error);
-      }
-    }
-
-    // Delete the main connection
+    // Delete the main connection only
+    // No longer manage reciprocal database records since all relationships
+    // are displayed as bidirectional in the UI
     await this.deleteConnection(connectionId);
   }
 
   /**
    * Check if a connection exists
+   * Note: We now check both directions for ALL relationship types since all relationships
+   * are displayed as bidirectional in the UI
    */
   static async connectionExists(
     fromPersonId: string, 
     toPersonId: string, 
     relationshipType: RelationshipType
   ): Promise<boolean> {
+<<<<<<< HEAD
     const { data, error } = await supabase
       .from('connections')
       .select('id')
       .eq('from_person_id', fromPersonId)
       .eq('to_person_id', toPersonId)
       .eq('relationship_type', relationshipType);
+=======
+    // Check both directions for ALL relationship types since all relationships
+    // are displayed as bidirectional in the UI
+    const { data, error } = await supabase
+      .from('connections')
+      .select('id')
+      .or(`and(from_person_id.eq.${fromPersonId},to_person_id.eq.${toPersonId},relationship_type.eq.${relationshipType}),and(from_person_id.eq.${toPersonId},to_person_id.eq.${fromPersonId},relationship_type.eq.${relationshipType})`);
+>>>>>>> origin/main
 
     if (error) throw error;
     return (data || []).length > 0;
+  }
+
+  /**
+   * Clean up duplicate connections for ALL relationship types
+   * This method removes duplicate records for any relationship type
+   */
+  static async cleanupDuplicateConnections(): Promise<{ removed: number; errors: string[] }> {
+    const errors: string[] = [];
+    let removed = 0;
+
+    try {
+      // Get all relationship types
+      const allRelationshipTypes = ['parent', 'child', 'sibling', 'half_sibling', 'step_sibling', 'partner', 'spouse', 'donor', 'biological_parent', 'social_parent', 'other'];
+      
+      for (const relationshipType of allRelationshipTypes) {
+        const { data: connections, error } = await supabase
+          .from('connections')
+          .select('*')
+          .eq('relationship_type', relationshipType);
+
+        if (error) {
+          errors.push(`Error fetching ${relationshipType} connections: ${error.message}`);
+          continue;
+        }
+
+        if (!connections || connections.length === 0) continue;
+
+        // Group connections by the people involved (regardless of direction)
+        const connectionGroups = new Map<string, any[]>();
+        
+        for (const connection of connections) {
+          // Create a key that's the same regardless of direction
+          const key = `${connection.relationship_type}:${[connection.from_person_id, connection.to_person_id].sort().join('-')}`;
+          
+          if (!connectionGroups.has(key)) {
+            connectionGroups.set(key, []);
+          }
+          connectionGroups.get(key)!.push(connection);
+        }
+
+        // Remove duplicates, keeping only the first one
+        for (const [key, groupConnections] of connectionGroups) {
+          if (groupConnections.length > 1) {
+            // Keep the first connection, delete the rest
+            const toDelete = groupConnections.slice(1);
+            
+            for (const connection of toDelete) {
+              const { error: deleteError } = await supabase
+                .from('connections')
+                .delete()
+                .eq('id', connection.id);
+
+              if (deleteError) {
+                errors.push(`Error deleting duplicate connection ${connection.id}: ${deleteError.message}`);
+              } else {
+                removed++;
+              }
+            }
+          }
+        }
+      }
+
+      return { removed, errors };
+    } catch (error) {
+      errors.push(`Unexpected error during cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return { removed, errors };
+    }
+  }
+
+  /**
+   * Debug method to check current connections for ALL relationship types
+   */
+  static async debugConnections(): Promise<{
+    total: number;
+    byType: Record<string, number>;
+    duplicates: Array<{
+      type: string;
+      personA: string;
+      personB: string;
+      count: number;
+      connectionIds: string[];
+    }>;
+  }> {
+    const allRelationshipTypes = ['parent', 'child', 'sibling', 'half_sibling', 'step_sibling', 'partner', 'spouse', 'donor', 'biological_parent', 'social_parent', 'other'];
+    const result = {
+      total: 0,
+      byType: {} as Record<string, number>,
+      duplicates: [] as Array<{
+        type: string;
+        personA: string;
+        personB: string;
+        count: number;
+        connectionIds: string[];
+      }>
+    };
+
+    for (const relationshipType of allRelationshipTypes) {
+      const { data: connections, error } = await supabase
+        .from('connections')
+        .select('*')
+        .eq('relationship_type', relationshipType);
+
+      if (error) {
+        console.error(`Error fetching ${relationshipType} connections:`, error);
+        continue;
+      }
+
+      const connectionsList = connections || [];
+      result.byType[relationshipType] = connectionsList.length;
+      result.total += connectionsList.length;
+
+      // Check for duplicates
+      const connectionGroups = new Map<string, any[]>();
+      
+      for (const connection of connectionsList) {
+        // Create a key that's the same regardless of direction
+        const key = `${connection.relationship_type}:${[connection.from_person_id, connection.to_person_id].sort().join('-')}`;
+        if (!connectionGroups.has(key)) {
+          connectionGroups.set(key, []);
+        }
+        connectionGroups.get(key)!.push(connection);
+      }
+
+      // Find duplicates
+      for (const [key, groupConnections] of connectionGroups) {
+        if (groupConnections.length > 1) {
+          const [personA, personB] = key.split(':')[1].split('-');
+          result.duplicates.push({
+            type: relationshipType,
+            personA,
+            personB,
+            count: groupConnections.length,
+            connectionIds: groupConnections.map(c => c.id)
+          });
+        }
+      }
+    }
+
+    return result;
   }
 } 

@@ -53,10 +53,33 @@ export type Database = {
           },
         ]
       }
+      audit_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       connections: {
         Row: {
           created_at: string | null
-          family_tree_id: string | null
           from_person_id: string | null
           group_id: string | null
           id: string
@@ -69,7 +92,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          family_tree_id?: string | null
           from_person_id?: string | null
           group_id?: string | null
           id?: string
@@ -82,7 +104,6 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          family_tree_id?: string | null
           from_person_id?: string | null
           group_id?: string | null
           id?: string
@@ -94,13 +115,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "connections_family_tree_id_fkey"
-            columns: ["family_tree_id"]
-            isOneToOne: false
-            referencedRelation: "family_trees"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "connections_from_person_id_fkey"
             columns: ["from_person_id"]
@@ -158,6 +172,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      deletion_backups: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
       }
       donors: {
         Row: {
@@ -501,6 +536,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      function_deployments: {
+        Row: {
+          changes_description: string | null
+          deployed_at: string | null
+          function_name: string
+          id: string
+          status: string | null
+          version: string
+        }
+        Insert: {
+          changes_description?: string | null
+          deployed_at?: string | null
+          function_name: string
+          id?: string
+          status?: string | null
+          version: string
+        }
+        Update: {
+          changes_description?: string | null
+          deployed_at?: string | null
+          function_name?: string
+          id?: string
+          status?: string | null
+          version?: string
+        }
+        Relationships: []
       }
       group_memberships: {
         Row: {
@@ -1246,6 +1308,14 @@ export type Database = {
       column_exists: {
         Args: { table_name: string; column_name: string }
         Returns: boolean
+      }
+      delete_user_data: {
+        Args: { p_user_uuid: string }
+        Returns: undefined
+      }
+      export_user_data_json: {
+        Args: { p_user_uuid: string; p_include?: Json }
+        Returns: Json
       }
       get_family_members: {
         Args: { group_uuid: string }

@@ -21,7 +21,7 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
 
   return (
     <Card 
-      className="w-48 shadow-lg border-2 hover:border-primary/50 transition-colors"
+      className="w-56 shadow-lg border-2 hover:border-primary/50 transition-colors"
       style={{
         borderColor: generationColor || 'hsl(var(--border))',
         backgroundColor: generationColor ? `${generationColor}10` : undefined
@@ -29,17 +29,17 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
     >
       <Handle type="target" position={Position.Top} className="w-3 h-3" />
       
-      <CardContent className="p-3">
-        <div className="flex items-center gap-3 mb-2">
+      <CardContent className="p-4">
+        <div className="flex flex-col items-center gap-3 mb-3">
           <Avatar 
-            className="w-10 h-10 ring-2"
+            className="w-16 h-16 ring-2 shadow-md"
             style={{ 
               ringColor: generationColor || 'hsl(var(--border))'
             }}
           >
             <AvatarImage src={person.profile_photo_url || undefined} />
             <AvatarFallback 
-              className="text-xs"
+              className="text-lg font-semibold"
               style={{
                 backgroundColor: generationColor || undefined,
                 color: generationColor ? '#ffffff' : undefined
@@ -49,8 +49,8 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
             </AvatarFallback>
           </Avatar>
           
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-sm truncate">
+          <div className="text-center">
+            <div className="font-semibold text-sm truncate max-w-full">
               {person.name}
             </div>
             <div className="text-xs text-muted-foreground">
@@ -69,7 +69,7 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
           </div>
         </div>
 
-        <div className="space-y-1">
+        <div className="flex flex-wrap gap-1 justify-center">
           {person.gender && (
             <Badge variant="secondary" className="text-xs">
               {person.gender}
@@ -100,12 +100,6 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
             </Badge>
           )}
         </div>
-
-        {person.birth_place && (
-          <div className="text-xs text-muted-foreground mt-2 truncate">
-            📍 {person.birth_place}
-          </div>
-        )}
       </CardContent>
       
       <Handle type="source" position={Position.Bottom} className="w-3 h-3" />

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createMockPerson, createMockConnection, createMockFamilyTree } from './utils/test-helpers'
+import { getReciprocalRelationship, getReciprocalAttributes } from '@/utils/relationshipHierarchies'
 
 // Test relationship hierarchy logic
 describe('Relationship Hierarchies', () => {
@@ -9,17 +10,6 @@ describe('Relationship Hierarchies', () => {
 
   describe('Reciprocal Relationships', () => {
     it('should create correct reciprocal relationships for parent-child', () => {
-      const getReciprocalRelationship = (relationshipType: string) => {
-        const reciprocals: Record<string, string> = {
-          'parent': 'child',
-          'child': 'parent',
-          'partner': 'partner',
-          'sibling': 'sibling',
-          'donor': 'child',
-          'gestational_carrier': 'child'
-        }
-        return reciprocals[relationshipType]
-      }
 
       expect(getReciprocalRelationship('parent')).toBe('child')
       expect(getReciprocalRelationship('child')).toBe('parent')
@@ -30,20 +20,6 @@ describe('Relationship Hierarchies', () => {
     })
 
     it('should preserve biological attributes in reciprocal relationships', () => {
-      const getReciprocalAttributes = (relationshipType: string, attributes: string[]) => {
-        const preservedAttributes = attributes.filter(attr => {
-          return ['biological', 'adopted', 'step', 'foster', 'legal', 'intended', 'ivf', 'iui', 'donor_conceived'].includes(attr)
-        })
-        
-        if (relationshipType === 'sibling') {
-          const siblingAttributes = attributes.filter(attr => 
-            ['full', 'half', 'donor_sibling', 'step_sibling'].includes(attr)
-          )
-          return [...preservedAttributes, ...siblingAttributes]
-        }
-        
-        return preservedAttributes
-      }
 
       const parentAttributes = ['biological', 'legal', 'temporary_attr']
       const reciprocalAttributes = getReciprocalAttributes('parent', parentAttributes)
@@ -54,20 +30,6 @@ describe('Relationship Hierarchies', () => {
     })
 
     it('should handle sibling attributes correctly', () => {
-      const getReciprocalAttributes = (relationshipType: string, attributes: string[]) => {
-        const preservedAttributes = attributes.filter(attr => {
-          return ['biological', 'adopted', 'step', 'foster', 'legal', 'intended', 'ivf', 'iui', 'donor_conceived'].includes(attr)
-        })
-        
-        if (relationshipType === 'sibling') {
-          const siblingAttributes = attributes.filter(attr => 
-            ['full', 'half', 'donor_sibling', 'step_sibling'].includes(attr)
-          )
-          return [...preservedAttributes, ...siblingAttributes]
-        }
-        
-        return preservedAttributes
-      }
 
       const siblingAttributes = ['biological', 'full', 'temporary_attr']
       const reciprocalAttributes = getReciprocalAttributes('sibling', siblingAttributes)

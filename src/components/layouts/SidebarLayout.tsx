@@ -46,15 +46,35 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const location = useLocation();
 
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
+    console.log('Sidebar sign out clicked');
+    try {
+      const { error } = await signOut();
+      console.log('Sidebar sign out result:', { error });
+      
+      // Treat session_not_found as success
+      const isSuccess = !error || (error && error.message && error.message.includes('session_not_found'));
+      
+      if (!isSuccess) {
+        toast({
+          title: "Error signing out",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Sidebar sign out successful, navigating to home');
+        navigate("/");
+        // Force a page reload to ensure clean state
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    } catch (err) {
+      console.error('Sidebar sign out error:', err);
       toast({
         title: "Error signing out",
-        description: error.message,
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
-    } else {
-      navigate("/");
     }
   };
 
@@ -86,7 +106,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
       <Sidebar variant="inset">
         <SidebarHeader className="border-b px-2 py-4">
           {/* App Logo */}
-          <div className="flex items-center gap-2 px-4 py-2 mb-3">
+          <Link to="/" className="flex items-center gap-2 px-4 py-2 mb-3 hover:bg-sidebar-accent rounded-md transition-colors">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
               <Heart className="w-4 h-4 text-white" />
             </div>
@@ -94,7 +114,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
               <span className="truncate font-semibold">Family Shapes</span>
               <span className="truncate text-xs">Family Tree Management</span>
             </div>
-          </div>
+          </Link>
           
           {/* Context Switcher */}
           <div className="px-4">

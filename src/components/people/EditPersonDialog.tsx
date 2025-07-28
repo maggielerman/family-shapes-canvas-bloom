@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,9 @@ import {
   Save,
   User,
   UserCircle,
-  Loader2
+  Loader2,
+  Camera,
+  X
 } from "lucide-react";
 
 interface Person {
@@ -69,6 +72,8 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [uploadedPhoto, setUploadedPhoto] = useState<any>(null);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   
   const [formData, setFormData] = useState({
     name: person.name,
@@ -105,7 +110,28 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
       used_ivf: person.used_ivf || false,
       used_iui: person.used_iui || false
     });
+    setUploadedPhoto(null);
+    setShowPhotoUpload(false);
   }, [person]);
+
+  const handleImageUploaded = (uploadedFile: any) => {
+    console.log('Image uploaded successfully:', uploadedFile);
+    setUploadedPhoto(uploadedFile);
+    setShowPhotoUpload(false);
+  };
+
+  const getPhotoUrl = () => {
+    if (!uploadedPhoto) return undefined;
+    console.log('Getting photo URL for:', uploadedPhoto);
+    
+    const { data } = supabase.storage
+      .from(uploadedPhoto.bucket_name)
+      .getPublicUrl(uploadedPhoto.file_path);
+    
+    const publicUrl = data.publicUrl;
+    console.log('Generated public URL:', publicUrl);
+    return publicUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +140,9 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
     setLoading(true);
 
     try {
+      // Get the photo URL if a new photo was uploaded
+      const photoUrl = uploadedPhoto ? getPhotoUrl() : formData.profile_photo_url;
+
       const updateData = {
         name: formData.name,
         date_of_birth: formData.date_of_birth || null,
@@ -125,7 +154,7 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
         address: formData.address || null,
         preferred_contact_method: formData.preferred_contact_method,
         notes: formData.notes || null,
-        profile_photo_url: formData.profile_photo_url || null,
+        profile_photo_url: photoUrl || null,
         donor: formData.donor,
         used_ivf: formData.used_ivf,
         used_iui: formData.used_iui
@@ -159,6 +188,24 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
     }
   };
 
+  const handleDeletePhoto = async () => {
+    try {
+      setFormData({ ...formData, profile_photo_url: "" });
+      setUploadedPhoto(null);
+      toast({
+        title: "Photo Removed",
+        description: "Profile photo has been removed"
+      });
+    } catch (error) {
+      console.error('Error removing photo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove photo",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
@@ -168,12 +215,46 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={formData.profile_photo_url || undefined} alt={formData.name} />
-              <AvatarFallback className="text-lg font-semibold">
-                {getInitials(formData.name)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative group">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={formData.profile_photo_url || undefined} alt={formData.name} />
+                <AvatarFallback className="text-lg font-semibold">
+                  {getInitials(formData.name)}
+                </AvatarFallback>
+              </Avatar>
+              
+              {/* Photo management overlay */}
+              <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPhotoUpload(true);
+                    }}
+                    className="h-8 w-8 p-0 rounded-full"
+                    title="Change photo"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                  {formData.profile_photo_url && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePhoto();
+                      }}
+                      className="h-8 w-8 p-0 rounded-full"
+                      title="Remove photo"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
             <div>
               <DialogTitle className="text-2xl">Edit Person Details</DialogTitle>
               <DialogDescription>
@@ -200,52 +281,28 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <Tabs defaultValue="details" className="w-full">
+          <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="medical">Medical</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="details" className="space-y-4 mt-4">
+
+            <TabsContent value="basic" className="space-y-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">
-                    <User className="h-4 w-4 inline mr-2" />
-                    Full Name *
-                  </Label>
+                  <Label htmlFor="name">Full Name *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Enter full name"
+                    placeholder="e.g., John Smith"
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="gender">
-                    <UserCircle className="h-4 w-4 inline mr-2" />
-                    Gender
-                  </Label>
-                  <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="non-binary">Non-Binary</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="date_of_birth">
-                    <Calendar className="h-4 w-4 inline mr-2" />
-                    Date of Birth
-                  </Label>
+                  <Label htmlFor="date_of_birth">Date of Birth</Label>
                   <Input
                     id="date_of_birth"
                     type="date"
@@ -253,23 +310,41 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
                     onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="birth_place">
-                    <MapPin className="h-4 w-4 inline mr-2" />
-                    Birth Place
-                  </Label>
+                  <Label htmlFor="birth_place">Birth Place</Label>
                   <Input
                     id="birth_place"
                     value={formData.birth_place}
                     onChange={(e) => setFormData({ ...formData, birth_place: e.target.value })}
-                    placeholder="Enter birth place"
+                    placeholder="e.g., New York, NY"
                   />
                 </div>
-                
+
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(value) => setFormData({ ...formData, gender: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="non-binary">Non-binary</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value })}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -278,16 +353,6 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
                       <SelectItem value="deceased">Deceased</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="profile_photo_url">Profile Photo URL</Label>
-                  <Input
-                    id="profile_photo_url"
-                    value={formData.profile_photo_url}
-                    onChange={(e) => setFormData({ ...formData, profile_photo_url: e.target.value })}
-                    placeholder="https://example.com/photo.jpg"
-                  />
                 </div>
               </div>
               
@@ -302,108 +367,89 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
                 />
               </div>
             </TabsContent>
-            
+
             <TabsContent value="contact" className="space-y-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">
-                    <Mail className="h-4 w-4 inline mr-2" />
-                    Email Address
-                  </Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="Enter email address"
+                    placeholder="john@example.com"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="phone">
-                    <Phone className="h-4 w-4 inline mr-2" />
-                    Phone Number
-                  </Label>
+                  <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="Enter phone number"
+                    placeholder="+1 (555) 123-4567"
                   />
                 </div>
-                
+
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">
-                    <MapPin className="h-4 w-4 inline mr-2" />
-                    Address
-                  </Label>
+                  <Label htmlFor="address">Address</Label>
                   <Textarea
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="Enter full address"
+                    placeholder="123 Main St, City, State, ZIP"
                     rows={2}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="preferred_contact_method">Preferred Contact Method</Label>
-                  <Select value={formData.preferred_contact_method} onValueChange={(value) => setFormData({ ...formData, preferred_contact_method: value })}>
+                  <Select
+                    value={formData.preferred_contact_method}
+                    onValueChange={(value) => setFormData({ ...formData, preferred_contact_method: value })}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="email">Email</SelectItem>
                       <SelectItem value="phone">Phone</SelectItem>
-                      <SelectItem value="text">Text Message</SelectItem>
+                      <SelectItem value="mail">Mail</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="medical" className="space-y-4 mt-4">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-3 flex items-center">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Fertility Treatments
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="used_ivf"
-                        checked={formData.used_ivf}
-                        onCheckedChange={(checked) => setFormData({ ...formData, used_ivf: checked })}
-                      />
-                      <Label htmlFor="used_ivf">Used IVF (In Vitro Fertilization)</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="used_iui"
-                        checked={formData.used_iui}
-                        onCheckedChange={(checked) => setFormData({ ...formData, used_iui: checked })}
-                      />
-                      <Label htmlFor="used_iui">Used IUI (Intrauterine Insemination)</Label>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="donor"
+                    checked={formData.donor}
+                    onCheckedChange={(checked) => setFormData({ ...formData, donor: checked })}
+                  />
+                  <Label htmlFor="donor">Is a donor</Label>
                 </div>
-                
-                <div>
-                  <h4 className="font-medium mb-3 flex items-center">
-                    <Dna className="h-4 w-4 mr-2" />
-                    Donor Information
-                  </h4>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="donor"
-                      checked={formData.donor}
-                      onCheckedChange={(checked) => setFormData({ ...formData, donor: checked })}
-                    />
-                    <Label htmlFor="donor">This person is a donor</Label>
-                  </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="used_ivf"
+                    checked={formData.used_ivf}
+                    onCheckedChange={(checked) => setFormData({ ...formData, used_ivf: checked })}
+                  />
+                  <Label htmlFor="used_ivf">Used IVF</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="used_iui"
+                    checked={formData.used_iui}
+                    onCheckedChange={(checked) => setFormData({ ...formData, used_iui: checked })}
+                  />
+                  <Label htmlFor="used_iui">Used IUI</Label>
                 </div>
               </div>
             </TabsContent>
@@ -414,20 +460,36 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              )}
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
             </Button>
           </DialogFooter>
         </form>
+
+        {/* Photo upload dialog */}
+        {showPhotoUpload && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowPhotoUpload(false)}>
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold mb-4">Change Profile Photo</h3>
+              <div className="space-y-4">
+                <ImageUpload
+                  onImageUploaded={handleImageUploaded}
+                  disabled={loading}
+                />
+                {uploadedPhoto && (
+                  <p className="text-sm text-muted-foreground">
+                    New photo will be applied when you save changes.
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setShowPhotoUpload(false)} className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
