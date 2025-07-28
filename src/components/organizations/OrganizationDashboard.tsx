@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -53,15 +53,41 @@ export function OrganizationDashboard() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [membership, setMembership] = useState<OrganizationMembership | null>(null);
   const [loading, setLoading] = useState(true);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     fetchOrganizationData();
   }, [id, user]);
+
+  // Detect current route and set appropriate tab
+  useEffect(() => {
+    const path = location.pathname;
+    const orgId = id;
+    
+    if (path === `/organizations/${orgId}`) {
+      setActiveTab("overview");
+    } else if (path === `/organizations/${orgId}/members`) {
+      setActiveTab("members");
+    } else if (path === `/organizations/${orgId}/donors`) {
+      setActiveTab("donors");
+    } else if (path === `/organizations/${orgId}/siblings`) {
+      setActiveTab("siblings");
+    } else if (path === `/organizations/${orgId}/groups`) {
+      setActiveTab("groups");
+    } else if (path === `/organizations/${orgId}/trees`) {
+      setActiveTab("trees");
+    } else if (path === `/organizations/${orgId}/analytics`) {
+      setActiveTab("analytics");
+    } else if (path === `/organizations/${orgId}/settings`) {
+      setActiveTab("settings");
+    }
+  }, [location.pathname, id]);
 
   const fetchOrganizationData = async () => {
     if (!id || !user) return;
@@ -231,7 +257,7 @@ export function OrganizationDashboard() {
       </Card>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>

@@ -16,7 +16,14 @@ import {
   Share2,
   Image,
   Search,
-  Network
+  Network,
+  BarChart3,
+  Calendar,
+  FileText,
+  Shield,
+  Database,
+  UserPlus,
+  GitBranch
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,16 +41,63 @@ import {
   SidebarTrigger,
   useSidebar
 } from "@/components/ui/sidebar";
+import { useState, useEffect } from "react";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
 }
+
+// Individual user navigation items
+const IndividualUserNav = [
+  { icon: Home, label: "Dashboard", path: "/dashboard" },
+  { icon: User, label: "Profile", path: "/profile" },
+  { icon: Users, label: "People", path: "/people" },
+  { icon: TreePine, label: "Family Trees", path: "/family-trees" },
+  { icon: Network, label: "Connections", path: "/connections" },
+  { icon: Image, label: "Media", path: "/media" },
+  { icon: Share2, label: "Share", path: "/share" },
+  { icon: Building2, label: "Organizations", path: "/organizations" },
+];
+
+// Organization navigation items
+const OrganizationNav = [
+  { icon: Home, label: "Overview", path: "/organizations/:orgId" },
+  { icon: Users, label: "Members", path: "/organizations/:orgId/members" },
+  { icon: Database, label: "Donor Database", path: "/organizations/:orgId/donors" },
+  { icon: GitBranch, label: "Sibling Groups", path: "/organizations/:orgId/siblings" },
+  { icon: Building2, label: "Groups", path: "/organizations/:orgId/groups" },
+  { icon: TreePine, label: "Family Trees", path: "/organizations/:orgId/trees" },
+  { icon: BarChart3, label: "Analytics", path: "/organizations/:orgId/analytics" },
+  { icon: Shield, label: "Settings", path: "/organizations/:orgId/settings" },
+];
 
 const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
+  const [currentContext, setCurrentContext] = useState<string>("personal");
+  const [sidebarItems, setSidebarItems] = useState(IndividualUserNav);
+
+  // Detect current context and update sidebar items accordingly
+  useEffect(() => {
+    const path = location.pathname;
+    const orgMatch = path.match(/\/organizations\/([^\/]+)/);
+    
+    if (orgMatch) {
+      const orgId = orgMatch[1];
+      setCurrentContext(orgId);
+      // Update navigation items for organization context
+      const orgNav = OrganizationNav.map(item => ({
+        ...item,
+        path: item.path.replace(':orgId', orgId)
+      }));
+      setSidebarItems(orgNav);
+    } else {
+      setCurrentContext("personal");
+      setSidebarItems(IndividualUserNav);
+    }
+  }, [location.pathname]);
 
   const handleSignOut = async () => {
     console.log('Sidebar sign out clicked');
@@ -77,17 +131,6 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
       });
     }
   };
-
-  const sidebarItems = [
-    { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: User, label: "Profile", path: "/profile" },
-    { icon: Users, label: "People", path: "/people" },
-    { icon: TreePine, label: "Family Trees", path: "/family-trees" },
-    { icon: Network, label: "Connections", path: "/connections" },
-    { icon: Image, label: "Media", path: "/media" },
-    { icon: Share2, label: "Share", path: "/share" },
-    { icon: Building2, label: "Organizations", path: "/organizations" },
-  ];
 
   // Show loading while auth is still loading
   if (loading) {
@@ -123,7 +166,9 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
         </SidebarHeader>
         <SidebarContent className="px-2 py-2">
           <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupLabel>
+              {currentContext === "personal" ? "Navigation" : "Organization"}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {sidebarItems.map((item) => {
