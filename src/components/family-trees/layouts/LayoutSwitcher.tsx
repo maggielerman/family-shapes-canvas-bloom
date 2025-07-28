@@ -1,7 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Network, Target, Share2, TreePine } from 'lucide-react';
 
-type LayoutType = 'force' | 'radial' | 'dagre' | 'reactflow' | 'xyflow';
+type LayoutType = 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow';
 
 interface LayoutOption {
   value: LayoutType;
