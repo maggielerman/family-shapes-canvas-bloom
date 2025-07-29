@@ -160,12 +160,36 @@ const Header = () => {
               </Button>
            
 
-              <Button asChild
-                size="sm" 
-                className="bg-coral-600 hover:bg-coral-700 text-white text-sm font-small tracking-wider px-3 sm:px-4 lg:px-6"
-              >
-               <Link to="/auth">Get Started</Link>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    className="bg-coral-600 hover:bg-coral-700 text-white text-sm font-small tracking-wider px-3 sm:px-4 lg:px-6"
+                  >
+                    Get Started
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/signup?role=family" className="cursor-pointer">
+                      <span className="font-medium">Families</span>
+                      <span className="text-xs text-muted-foreground ml-auto">Start Beta</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/waitlist/clinic" className="cursor-pointer">
+                      <span className="font-medium">Cryobanks & Clinics</span>
+                      <span className="text-xs text-muted-foreground ml-auto">Join Waitlist</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/waitlist/donor" className="cursor-pointer">
+                      <span className="font-medium">Donors</span>
+                      <span className="text-xs text-muted-foreground ml-auto">Join Waitlist</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
             
           )}
