@@ -42,6 +42,12 @@ A comprehensive web application for building interactive family trees, managing 
 - **User Confirmation**: Automatic confirmation emails to form submitters
 - **Support Team Notifications**: Instant notifications for customer inquiries
 
+### 🚀 Unified Onboarding
+- **Interactive Get Started Page**: Role-based user experience for all audiences
+- **Family Onboarding**: Immediate access to signup and dashboard
+- **Organization Waitlist**: Cryobank and clinic registration system
+- **Donor Interest Tracking**: Donor feature interest collection
+
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 18, TypeScript, Vite
@@ -144,6 +150,7 @@ Comprehensive documentation is available in the [`documentation/`](./documentati
 - **Testing Documentation**: Comprehensive test coverage and strategies
 - [Contact Form Implementation](./documentation/CONTACT_FORM_IMPLEMENTATION.md) - Details on the Resend email integration
 - [Responsive Utilities Guide](./documentation/RESPONSIVE_UTILITIES.md) - Standardized responsive patterns and utilities
+- [Get Started Page](./documentation/GET_STARTED_PAGE.md) - Interactive onboarding for all user types
 
 ## 🌐 Deployment
 

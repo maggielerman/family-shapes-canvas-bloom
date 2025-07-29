@@ -164,7 +164,7 @@ const Header = () => {
                 size="sm" 
                 className="bg-coral-600 hover:bg-coral-700 text-white text-sm font-small tracking-wider px-3 sm:px-4 lg:px-6"
               >
-               <Link to="/auth">Get Started</Link>
+               <Link to="/get-started">Get Started</Link>
               </Button>
             </>
             

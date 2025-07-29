@@ -11,6 +11,7 @@ We've created a comprehensive set of responsive utilities that use the `md:` bre
 ### Page Layout
 ```css
 .responsive-page          /* space-y-4 md:space-y-6 */
+.responsive-page-container /* px-6 lg:px-12 py-16 */
 .responsive-header        /* flex flex-col md:flex-row md:justify-between md:items-start gap-3 md:gap-4 */
 .responsive-title         /* text-2xl md:text-3xl font-bold */
 .responsive-description   /* text-sm md:text-base text-muted-foreground */
