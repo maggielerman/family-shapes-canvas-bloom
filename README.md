@@ -36,6 +36,12 @@ A comprehensive web application for building interactive family trees, managing 
 - **Role Indicators**: Clear visual representation of user roles across organizations
 - **Smart Routing**: Automatic redirection based on account type and setup status
 
+### 📧 Contact & Communication
+- **Professional Contact Form**: Secure form submission with email notifications
+- **Resend Integration**: Reliable email delivery via Resend service
+- **User Confirmation**: Automatic confirmation emails to form submitters
+- **Support Team Notifications**: Instant notifications for customer inquiries
+
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 18, TypeScript, Vite
@@ -43,6 +49,7 @@ A comprehensive web application for building interactive family trees, managing 
 - **Visualization**: XYFlow (React Flow) with multiple layout engines
 - **Database**: Supabase (PostgreSQL) with Row Level Security
 - **Authentication**: Supabase Auth with organization account support
+- **Email Service**: Resend for reliable email delivery
 - **Deployment**: Netlify with custom domain support
 
 ## 🚀 Getting Started
@@ -131,6 +138,7 @@ Comprehensive documentation is available in the [`documentation/`](./documentati
 
 - **Implementation Summaries**: Detailed breakdowns of major features
 - **Feature Documentation**: In-depth guides for organization features, layouts, and more
+- **Contact Form Implementation**: Complete guide for the contact form with Resend integration
 - **Deployment Guides**: Step-by-step deployment instructions
 - **Performance Optimizations**: Performance improvements and fixes
 - **Testing Documentation**: Comprehensive test coverage and strategies

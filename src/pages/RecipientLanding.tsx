@@ -2,7 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Heart, Shield, MessageSquare, Search, Network, ArrowRight, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import CTA from "@/components/CTA";
+import CTA from "@/components/marketing/recipient-landing/CTA";
+import RecipientFeatures from "@/components/marketing/recipient-landing/RecipientFeatures";
+import RecipientHero from "@/components/marketing/recipient-landing/RecipientHero";
+import RecipientHero2 from "@/components/marketing/recipient-landing/RecipientHero2";
 
 const RecipientLanding = () => {
   const features = [
@@ -58,33 +61,10 @@ const RecipientLanding = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      
-      {/* Hero Section */}
-      <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20 lg:py-28">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-navy-800 mb-6 lg:mb-8 leading-tight">
-            Connect Your
-            <span className="block text-coral-600 font-normal">Donor Family</span>
-          </h1>
-          <p className="text-lg sm:text-xl lg:text-2xl text-navy-600 mb-8 lg:mb-12 max-w-4xl mx-auto leading-relaxed">
-            Join thousands of donor families connecting, sharing, and supporting each other. 
-            Build meaningful relationships with your genetic family in a safe, private environment.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button asChild size="lg" className="bg-coral-600 hover:bg-coral-700 text-white px-8 py-6 text-lg">
-              <Link to="/auth">
-                Join the Community
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="lg" className="text-coral-600 hover:bg-navy-50 px-8 py-6 text-lg">
-              <Link to="/about">
-                Learn More
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+     
+     <RecipientHero />
+
+     <RecipientHero2 />
 
       {/* Stats Section */}
       <section className="px-4 sm:px-6 lg:px-12 py-16 bg-sage-50">

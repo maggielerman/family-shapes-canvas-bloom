@@ -35,7 +35,7 @@ const features = [
   }
 ];
 
-const Features = () => {
+const RecipientFeatures = () => {
   return (
     <section id="features" className="w-full px-4 sm:px-6 lg:px-12 py-16 sm:py-20 lg:py-24 xl:py-32 bg-gradient-to-br from-warm-50 to-coral-50">
       <div className="max-w-6xl mx-auto">
@@ -81,4 +81,4 @@ const Features = () => {
   );
 };
 
-export default Features;
+export default RecipientFeatures;

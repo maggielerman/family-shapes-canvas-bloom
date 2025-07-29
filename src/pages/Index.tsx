@@ -1,7 +1,6 @@
-
-import Hero from "@/components/marketing/Hero";
-import FeatureBullets from "@/components/marketing/FeatureBullets";
-import Features from "@/components/marketing/Features";
+import Hero from "@/components/marketing/index/OrganizationHero";
+import FeatureBullets from "@/components/marketing/index/FeatureBullets";
+import Features from "@/components/marketing/index/OrganizationFeatures";
 
 const Index = () => {
   return (
