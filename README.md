@@ -1,97 +1,173 @@
-# Welcome to your Lovable project
+# Family Shapes - Family Tree & Donor Connection Platform
 
-## Project info
+A comprehensive web application for building interactive family trees, managing donor connections, and facilitating biological family relationships. Built for fertility clinics, sperm banks, donor communities, and families seeking to connect with biological relatives.
 
-**URL**: https://lovable.dev/projects/6e4109b6-b165-4556-baab-bd21469c6dee
+## 🌟 Key Features
 
-## How can I edit this code?
+### 🏗️ Interactive Family Tree Builder
+- **Multiple Layout Algorithms**: Choose from Dagre, ELK, Radial, Force-directed, and Cluster layouts
+- **Drag & Drop Interface**: Reposition family members with real-time visual feedback
+- **Visual Connections**: Color-coded relationship lines with customizable attributes
+- **Real-time Updates**: Add new family members and connections with immediate visual feedback
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
-There are several ways of editing your application.
+### 👥 Organization Management
+- **Multi-tenant Architecture**: Support for fertility clinics, sperm banks, donor communities, and family groups
+- **Role-based Access Control**: Owner, Admin, Editor, and Viewer permissions
+- **Custom Subdomains**: Each organization gets `organization.familyshapes.com`
+- **Professional Onboarding**: 3-step guided setup for new organizations
 
-**Use Lovable**
+### 🧬 Donor Database Management
+- **Comprehensive Donor Profiles**: Physical characteristics, medical history, and contact information
+- **Verification System**: Multi-level verification (Unverified, Pending, Verified, Rejected)
+- **Privacy Controls**: Public, Members-only, or Admin-only visibility settings
+- **Search & Filtering**: Advanced search capabilities with custom fields
+- **Import/Export**: Bulk data management for large donor databases
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6e4109b6-b165-4556-baab-bd21469c6dee) and start prompting.
+### 🔗 Connection Management
+- **Biological Relationships**: Parent-child, sibling, partner, and donor relationships
+- **Sibling Groups**: Automatic creation and management of donor sibling groups
+- **Privacy Levels**: Control sharing of contact info, photos, and medical history
+- **Communication Tools**: Built-in messaging and notification systems
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🔄 Context Switching
+- **Seamless Navigation**: Switch between personal account and organization views
+- **Multi-organization Support**: Manage multiple organizations from one interface
+- **Role Indicators**: Clear visual representation of user roles across organizations
+- **Smart Routing**: Automatic redirection based on account type and setup status
 
-**Use your preferred IDE**
+## 🛠️ Technology Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Framework**: shadcn/ui components with Tailwind CSS
+- **Visualization**: XYFlow (React Flow) with multiple layout engines
+- **Database**: Supabase (PostgreSQL) with Row Level Security
+- **Authentication**: Supabase Auth with organization account support
+- **Deployment**: Netlify with custom domain support
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🚀 Getting Started
 
-Follow these steps:
+### Prerequisites
+- Node.js 18+ and npm
+- Supabase account for database and authentication
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+# Clone the repository
+git clone <repository-url>
+cd family-shapes-canvas-bloom
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Set up environment variables
+cp .env.example .env.local
+# Add your Supabase URL and anon key to .env.local
+
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env.local` file with:
 
-**Use GitHub Codespaces**
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📁 Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── components/
+│   ├── family-trees/     # Family tree visualization components
+│   ├── organizations/    # Organization management
+│   ├── people/          # Person management
+│   ├── connections/     # Connection management
+│   └── ui/             # Reusable UI components
+├── pages/               # Route components
+├── services/            # API and business logic
+├── types/              # TypeScript type definitions
+├── utils/              # Utility functions
+└── hooks/              # Custom React hooks
+```
 
-This project is built with:
+## 🔧 Development
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-- XYFlow (for interactive family tree visualization)
-- Supabase (for database and authentication)
+### Available Scripts
 
-## Features
+```bash
+# Development
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run preview          # Preview production build
 
-### Interactive Family Tree Builder
-The application now includes an interactive family tree builder powered by XYFlow that allows users to:
+# Testing
+npm run test             # Run tests
+npm run test:ui          # Run tests with UI
+npm run test:coverage    # Generate coverage report
 
-- **Drag and Drop**: Reposition family members by dragging nodes around the canvas
-- **Visual Connections**: See relationships between family members with color-coded connection lines
-- **Real-time Updates**: Add new family members and connections with immediate visual feedback
-- **Multiple Layouts**: Choose from different visualization layouts including:
-  - Interactive XYFlow builder (default)
-  - Traditional tree layout
-  - Radial layout
-  - Force-directed layout
-  - D3 tree layout
-  - Cluster layout
+# Database
+npm run db:reset         # Reset database
+npm run db:seed          # Seed with demo data
+```
 
-### Database Integration
-- Uses Supabase for data persistence
-- Supports complex family relationships (parent, child, sibling, partner, donor, etc.)
-- Handles family tree memberships and connections
-- Secure authentication and authorization
+### Database Migrations
 
-## How can I deploy this project?
+```bash
+# Apply migrations
+npx supabase db push
 
-Simply open [Lovable](https://lovable.dev/projects/6e4109b6-b165-4556-baab-bd21469c6dee) and click on Share -> Publish.
+# Generate new migration
+npx supabase db diff --schema public > supabase/migrations/new_migration.sql
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 📚 Documentation
 
-Yes, you can!
+Comprehensive documentation is available in the [`documentation/`](./documentation/) folder:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- **Implementation Summaries**: Detailed breakdowns of major features
+- **Feature Documentation**: In-depth guides for organization features, layouts, and more
+- **Deployment Guides**: Step-by-step deployment instructions
+- **Performance Optimizations**: Performance improvements and fixes
+- **Testing Documentation**: Comprehensive test coverage and strategies
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🌐 Deployment
+
+### Netlify Deployment
+
+1. Connect your GitHub repository to Netlify
+2. Set environment variables in Netlify dashboard
+3. Deploy automatically on push to main branch
+
+### Custom Domain
+
+1. Add your domain in Netlify dashboard
+2. Configure DNS records as instructed
+3. SSL certificate is automatically provisioned
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Check the [documentation](./documentation/) folder
+- Review existing issues on GitHub
+- Create a new issue for bugs or feature requests
+
+---
+
+**Built with ❤️ for families, fertility clinics, and donor communities**
