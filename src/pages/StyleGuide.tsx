@@ -67,7 +67,7 @@ export default function StyleGuide() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="space-y-2">
                       <div className="h-16 bg-coral-50 rounded-lg border"></div>
                       <div className="text-sm">
@@ -83,6 +83,34 @@ export default function StyleGuide() {
                       </div>
                     </div>
                     <div className="space-y-2">
+                      <div className="h-16 bg-coral-200 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Coral 200</div>
+                        <div className="text-muted-foreground">#fad9cd</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-coral-300 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Coral 300</div>
+                        <div className="text-muted-foreground">#f5bba8</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-coral-400 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Coral 400</div>
+                        <div className="text-muted-foreground">#ee9176</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-coral-500 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Coral 500</div>
+                        <div className="text-muted-foreground">#e36749</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
                       <div className="h-16 bg-coral-600 rounded-lg border"></div>
                       <div className="text-sm">
                         <div className="font-medium">Coral 600</div>
@@ -94,6 +122,20 @@ export default function StyleGuide() {
                       <div className="text-sm">
                         <div className="font-medium">Coral 700</div>
                         <div className="text-muted-foreground">#b0391f</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-coral-800 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Coral 800</div>
+                        <div className="text-muted-foreground">#91321e</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-coral-900 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Coral 900</div>
+                        <div className="text-muted-foreground">#772e1f</div>
                       </div>
                     </div>
                   </div>
@@ -112,7 +154,7 @@ export default function StyleGuide() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="space-y-2">
                       <div className="h-16 bg-navy-50 rounded-lg border"></div>
                       <div className="text-sm">
@@ -125,6 +167,34 @@ export default function StyleGuide() {
                       <div className="text-sm">
                         <div className="font-medium">Navy 100</div>
                         <div className="text-muted-foreground">#eef1f5</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-navy-200 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Navy 200</div>
+                        <div className="text-muted-foreground">#d9e0e8</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-navy-300 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Navy 300</div>
+                        <div className="text-muted-foreground">#b8c7d4</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-navy-400 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Navy 400</div>
+                        <div className="text-muted-foreground">#91a7bc</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-navy-500 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Navy 500</div>
+                        <div className="text-muted-foreground">#718ba6</div>
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -141,100 +211,200 @@ export default function StyleGuide() {
                         <div className="text-muted-foreground">#495e78</div>
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-navy-800 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Navy 800</div>
+                        <div className="text-muted-foreground">#3e4f64</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-navy-900 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Navy 900</div>
+                        <div className="text-muted-foreground">#364354</div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-                    {/* Sage Colors */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-sage-600" />
-              Sage Colors
-            </CardTitle>
-            <CardDescription>
-              Sage green represents growth, harmony, and natural balance.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <div className="h-16 bg-sage-50 rounded-lg border"></div>
-                <div className="text-sm">
-                  <div className="font-medium">Sage 50</div>
-                  <div className="text-muted-foreground">#f8faf8</div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-16 bg-sage-100 rounded-lg border"></div>
-                <div className="text-sm">
-                  <div className="font-medium">Sage 100</div>
-                  <div className="text-muted-foreground">#f0f4f0</div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-16 bg-sage-500 rounded-lg border"></div>
-                <div className="text-sm">
-                  <div className="font-medium">Sage 500</div>
-                  <div className="text-muted-foreground">#82a182</div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-16 bg-sage-600 rounded-lg border"></div>
-                <div className="text-sm">
-                  <div className="font-medium">Sage 600</div>
-                  <div className="text-muted-foreground">#5f8260</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Sage Colors */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-sage-600" />
+                    Sage Colors
+                  </CardTitle>
+                  <CardDescription>
+                    Sage green represents growth, harmony, and natural balance.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-50 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 50</div>
+                        <div className="text-muted-foreground">#f8faf8</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-100 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 100</div>
+                        <div className="text-muted-foreground">#f0f4f0</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-200 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 200</div>
+                        <div className="text-muted-foreground">#e2ebe2</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-300 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 300</div>
+                        <div className="text-muted-foreground">#c9d8c9</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-400 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 400</div>
+                        <div className="text-muted-foreground">#a8c0a8</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-500 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 500</div>
+                        <div className="text-muted-foreground">#82a182</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-600 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 600</div>
+                        <div className="text-muted-foreground">#5f8260</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-700 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 700</div>
+                        <div className="text-muted-foreground">#4a6b4b</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-800 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 800</div>
+                        <div className="text-muted-foreground">#3a543b</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-sage-900 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Sage 900</div>
+                        <div className="text-muted-foreground">#2d412e</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-        {/* Terracotta Colors */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="w-5 h-5 text-terracotta-600" />
-              Terracotta Colors
-            </CardTitle>
-            <CardDescription>
-              Terracotta represents warmth, earthiness, and organic connection.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <div className="h-16 bg-terracotta-50 rounded-lg border"></div>
-                <div className="text-sm">
-                  <div className="font-medium">Terracotta 50</div>
-                  <div className="text-muted-foreground">#fdf8f6</div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-16 bg-terracotta-100 rounded-lg border"></div>
-                <div className="text-sm">
-                  <div className="font-medium">Terracotta 100</div>
-                  <div className="text-muted-foreground">#f9f0ed</div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-16 bg-terracotta-500 rounded-lg border"></div>
-                <div className="text-sm">
-                  <div className="font-medium">Terracotta 500</div>
-                  <div className="text-muted-foreground">#c88a6c</div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-16 bg-terracotta-600 rounded-lg border"></div>
-                <div className="text-sm">
-                  <div className="font-medium">Terracotta 600</div>
-                  <div className="text-muted-foreground">#b06d4e</div>
-                </div>
-              </div>
+              {/* Terracotta Colors */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="w-5 h-5 text-terracotta-600" />
+                    Terracotta Colors
+                  </CardTitle>
+                  <CardDescription>
+                    Terracotta represents warmth, earthiness, and organic connection.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-50 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 50</div>
+                        <div className="text-muted-foreground">#fdf8f6</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-100 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 100</div>
+                        <div className="text-muted-foreground">#f9f0ed</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-200 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 200</div>
+                        <div className="text-muted-foreground">#f2e0d9</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-300 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 300</div>
+                        <div className="text-muted-foreground">#e8c8bc</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-400 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 400</div>
+                        <div className="text-muted-foreground">#d9a894</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-500 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 500</div>
+                        <div className="text-muted-foreground">#c88a6c</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-600 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 600</div>
+                        <div className="text-muted-foreground">#b06d4e</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-700 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 700</div>
+                        <div className="text-muted-foreground">#95573d</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-800 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 800</div>
+                        <div className="text-muted-foreground">#7a4632</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-terracotta-900 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Terracotta 900</div>
+                        <div className="text-muted-foreground">#633a2a</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
 
             {/* Semantic Colors */}
             <Card>

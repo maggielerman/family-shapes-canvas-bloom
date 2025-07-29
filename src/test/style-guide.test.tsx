@@ -35,29 +35,53 @@ describe('StyleGuide', () => {
   it('displays color palette information', () => {
     renderWithRouter(<StyleGuide />);
 
-    // Check coral colors
+    // Check coral colors (full scale)
     expect(screen.getByText('Coral 50')).toBeInTheDocument();
     expect(screen.getByText('Coral 100')).toBeInTheDocument();
+    expect(screen.getByText('Coral 200')).toBeInTheDocument();
+    expect(screen.getByText('Coral 300')).toBeInTheDocument();
+    expect(screen.getByText('Coral 400')).toBeInTheDocument();
+    expect(screen.getByText('Coral 500')).toBeInTheDocument();
     expect(screen.getByText('Coral 600')).toBeInTheDocument();
     expect(screen.getByText('Coral 700')).toBeInTheDocument();
+    expect(screen.getByText('Coral 800')).toBeInTheDocument();
+    expect(screen.getByText('Coral 900')).toBeInTheDocument();
 
-    // Check navy colors
+    // Check navy colors (full scale)
     expect(screen.getByText('Navy 50')).toBeInTheDocument();
     expect(screen.getByText('Navy 100')).toBeInTheDocument();
+    expect(screen.getByText('Navy 200')).toBeInTheDocument();
+    expect(screen.getByText('Navy 300')).toBeInTheDocument();
+    expect(screen.getByText('Navy 400')).toBeInTheDocument();
+    expect(screen.getByText('Navy 500')).toBeInTheDocument();
     expect(screen.getByText('Navy 600')).toBeInTheDocument();
     expect(screen.getByText('Navy 700')).toBeInTheDocument();
+    expect(screen.getByText('Navy 800')).toBeInTheDocument();
+    expect(screen.getByText('Navy 900')).toBeInTheDocument();
 
-    // Check sage colors
+    // Check sage colors (full scale)
     expect(screen.getByText('Sage 50')).toBeInTheDocument();
     expect(screen.getByText('Sage 100')).toBeInTheDocument();
+    expect(screen.getByText('Sage 200')).toBeInTheDocument();
+    expect(screen.getByText('Sage 300')).toBeInTheDocument();
+    expect(screen.getByText('Sage 400')).toBeInTheDocument();
     expect(screen.getByText('Sage 500')).toBeInTheDocument();
     expect(screen.getByText('Sage 600')).toBeInTheDocument();
+    expect(screen.getByText('Sage 700')).toBeInTheDocument();
+    expect(screen.getByText('Sage 800')).toBeInTheDocument();
+    expect(screen.getByText('Sage 900')).toBeInTheDocument();
 
-    // Check terracotta colors
+    // Check terracotta colors (full scale)
     expect(screen.getByText('Terracotta 50')).toBeInTheDocument();
     expect(screen.getByText('Terracotta 100')).toBeInTheDocument();
+    expect(screen.getByText('Terracotta 200')).toBeInTheDocument();
+    expect(screen.getByText('Terracotta 300')).toBeInTheDocument();
+    expect(screen.getByText('Terracotta 400')).toBeInTheDocument();
     expect(screen.getByText('Terracotta 500')).toBeInTheDocument();
     expect(screen.getByText('Terracotta 600')).toBeInTheDocument();
+    expect(screen.getByText('Terracotta 700')).toBeInTheDocument();
+    expect(screen.getByText('Terracotta 800')).toBeInTheDocument();
+    expect(screen.getByText('Terracotta 900')).toBeInTheDocument();
   });
 
   it('shows semantic colors', () => {
