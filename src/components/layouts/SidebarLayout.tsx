@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import {
   Sidebar,
-  SidebarContent,
+  SidebarContent as SidebarContentComponent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
@@ -72,12 +72,25 @@ const OrganizationNav = [
 ];
 
 const SidebarLayout = ({ children }: SidebarLayoutProps) => {
+  return (
+    <SidebarProvider>
+      <SidebarInner>{children}</SidebarInner>
+    </SidebarProvider>
+  );
+};
+
+// Inner component that can use the useSidebar hook
+const SidebarInner = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
+  const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const [currentContext, setCurrentContext] = useState<string>("personal");
   const [sidebarItems, setSidebarItems] = useState(IndividualUserNav);
+
+  // Debug log to verify isMobile state
+  console.log('Sidebar isMobile state:', isMobile);
 
   // Detect current context and update sidebar items accordingly
   useEffect(() => {
@@ -145,7 +158,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
-    <SidebarProvider>
+    <>
       <Sidebar variant="inset">
         <SidebarHeader className="border-b px-2 py-4">
           {/* App Logo */}
@@ -164,7 +177,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
             <ContextSwitcher />
           </div>
         </SidebarHeader>
-        <SidebarContent className="px-2 py-2">
+        <SidebarContentComponent className="px-2 py-2">
           <SidebarGroup>
             <SidebarGroupLabel>
               {currentContext === "personal" ? "Navigation" : "Organization"}
@@ -180,7 +193,16 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
                         isActive={isActive}
                         tooltip={item.label}
                       >
-                        <Link to={item.path}>
+                        <Link 
+                          to={item.path} 
+                          onClick={() => {
+                            console.log('Navigation link clicked, isMobile:', isMobile);
+                            if (isMobile) {
+                              console.log('Closing mobile sidebar');
+                              setOpenMobile(false);
+                            }
+                          }}
+                        >
                           <item.icon />
                           <span>{item.label}</span>
                         </Link>
@@ -191,14 +213,20 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        </SidebarContent>
+        </SidebarContentComponent>
         <SidebarFooter className="border-t px-2 py-2">
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => navigate("/settings")}
+                    onClick={() => {
+                      navigate("/settings");
+                      if (isMobile) {
+                        console.log('Closing mobile sidebar for settings');
+                        setOpenMobile(false);
+                      }
+                    }}
                     tooltip="Settings"
                   >
                     <Settings />
@@ -229,7 +257,7 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
           </div>
         </div>
       </SidebarInset>
-    </SidebarProvider>
+    </>
   );
 };
 
