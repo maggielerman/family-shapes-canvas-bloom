@@ -34,6 +34,7 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
 const DonorLanding = lazy(() => import("./pages/DonorLanding"));
 const RecipientLanding = lazy(() => import("./pages/RecipientLanding"));
+const GetStarted = lazy(() => import("./pages/GetStarted"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/" element={<MainLayout><Index /></MainLayout>} />
               <Route path="/about" element={<MainLayout><About /></MainLayout>} />
               <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
+              <Route path="/get-started" element={<MainLayout><GetStarted /></MainLayout>} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/for-donors" element={<MainLayout><DonorLanding /></MainLayout>} />
               <Route path="/for-recipient-families" element={<MainLayout><RecipientLanding /></MainLayout>} />
