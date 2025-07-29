@@ -23,7 +23,9 @@ import {
   Shield,
   Database,
   UserPlus,
-  GitBranch
+  GitBranch,
+  Moon,
+  Sun
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +44,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -70,6 +73,27 @@ const OrganizationNav = [
   { icon: BarChart3, label: "Analytics", path: "/organizations/:orgId/analytics" },
   { icon: Shield, label: "Settings", path: "/organizations/:orgId/settings" },
 ];
+
+// Theme toggle component for sidebar
+const ThemeToggleButton = () => {
+  const { theme, setTheme } = useTheme();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  return (
+    <SidebarMenuButton onClick={toggleTheme} tooltip="Toggle theme">
+      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+    </SidebarMenuButton>
+  );
+};
 
 const SidebarLayout = ({ children }: SidebarLayoutProps) => {
   return (
@@ -213,6 +237,9 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
+                <SidebarMenuItem>
+                  <ThemeToggleButton />
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     onClick={() => {
