@@ -2,8 +2,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Settings, Eye, MessageSquare, Users, Lock, ArrowRight, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useProductContext } from "@/lib/productContext";
+import { useEffect } from "react";
 
 const DonorLanding = () => {
+  const { setProductGroup } = useProductContext();
+
+  // Set donor theme for this landing page
+  useEffect(() => {
+    setProductGroup('donor');
+  }, [setProductGroup]);
   const features = [
     {
       icon: Shield,
@@ -51,22 +59,22 @@ const DonorLanding = () => {
       {/* Hero Section */}
       <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20 lg:py-28">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-navy-800 mb-6 lg:mb-8 leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-foreground mb-6 lg:mb-8 leading-tight">
             Empower Your
-            <span className="block text-coral-600 font-normal">Donor Journey</span>
+            <span className="block text-primary font-normal">Donor Journey</span>
           </h1>
-          <p className="text-lg sm:text-xl lg:text-2xl text-navy-600 mb-8 lg:mb-12 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground mb-8 lg:mb-12 max-w-4xl mx-auto leading-relaxed">
             Take control of your donation experience with tools designed for transparency, 
             privacy management, and healthy boundary setting with recipient families.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button asChild size="lg" className="bg-coral-600 hover:bg-coral-700 text-white px-8 py-6 text-lg">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg">
               <Link to="/auth">
                 Access Your Portal
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="lg" className="text-coral-600 hover:bg-navy-50 px-8 py-6 text-lg">
+            <Button asChild variant="ghost" size="lg" className="text-primary hover:bg-accent px-8 py-6 text-lg">
               <Link to="/about">
                 Learn More
               </Link>
@@ -76,20 +84,20 @@ const DonorLanding = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="px-4 sm:px-6 lg:px-12 py-16 bg-sage-50">
+      <section className="px-4 sm:px-6 lg:px-12 py-16 bg-accent/20">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold text-coral-600 mb-2">5,000+</div>
-              <div className="text-navy-600">Active Donors</div>
+              <div className="text-4xl font-bold text-primary mb-2">5,000+</div>
+              <div className="text-muted-foreground">Active Donors</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-coral-600 mb-2">200+</div>
-              <div className="text-navy-600">Partner Clinics</div>
+              <div className="text-4xl font-bold text-primary mb-2">200+</div>
+              <div className="text-muted-foreground">Partner Clinics</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-coral-600 mb-2">98%</div>
-              <div className="text-navy-600">Privacy Satisfaction</div>
+              <div className="text-4xl font-bold text-primary mb-2">98%</div>
+              <div className="text-muted-foreground">Privacy Satisfaction</div>
             </div>
           </div>
         </div>
@@ -99,25 +107,25 @@ const DonorLanding = () => {
       <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-light text-navy-800 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-light text-foreground mb-4">
               Your Donation, Your Control
             </h2>
-            <p className="text-lg text-navy-600 max-w-3xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
               Comprehensive tools designed specifically for donors to maintain transparency and set healthy boundaries.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-sage-200 hover:shadow-lg transition-shadow duration-300">
+              <Card key={index} className="border-accent/30 hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
-                  <div className="w-12 h-12 rounded-lg bg-coral-100 flex items-center justify-center mb-4">
-                    <feature.icon className="w-6 h-6 text-coral-600" />
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <feature.icon className="w-6 h-6 text-primary" />
                   </div>
-                  <CardTitle className="text-xl text-navy-800">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl text-foreground">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-navy-600 leading-relaxed">
+                  <CardDescription className="text-muted-foreground leading-relaxed">
                     {feature.description}
                   </CardDescription>
                 </CardContent>
