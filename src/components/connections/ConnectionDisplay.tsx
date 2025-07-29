@@ -58,20 +58,20 @@ export function ConnectionDisplay({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Users className="h-4 w-4 sm:h-5 sm:w-5" />
           {title}
         </CardTitle>
         {subtitle && (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{subtitle}</p>
         )}
       </CardHeader>
       <CardContent>
         {deduplicatedConnections.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>No family connections</p>
-            <p className="text-xs">Connections are created in the tree view</p>
+            <Users className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm sm:text-base">No family connections</p>
+            <p className="text-xs sm:text-sm">Connections are created in the tree view</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -81,19 +81,20 @@ export function ConnectionDisplay({
               const attributeInfo = getAttributeInfo(attributes);
               
               return (
-                <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={connection.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-2 sm:gap-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                       <Badge 
                         variant="secondary" 
-                        className="flex items-center gap-1 w-fit"
+                        className="flex items-center gap-1 w-fit text-xs"
                         style={{ 
                           backgroundColor: `${getRelationshipColor(connection.relationship_type)}20`,
                           color: getRelationshipColor(connection.relationship_type)
                         }}
                       >
                         <Icon className="w-3 h-3" />
-                        {getRelationshipLabel(connection.relationship_type)}
+                        <span className="hidden sm:inline">{getRelationshipLabel(connection.relationship_type)}</span>
+                        <span className="sm:hidden">{getRelationshipLabel(connection.relationship_type).split(' ')[0]}</span>
                       </Badge>
                       {attributes.length > 0 && (
                         <Badge 
@@ -104,12 +105,14 @@ export function ConnectionDisplay({
                         </Badge>
                       )}
                     </div>
-                    <h4 className="font-medium text-sm">
-                      {getConnectionDisplayText(connection)}
+                    <h4 className="font-medium text-sm sm:text-base">
+                      <div className="max-w-[250px] sm:max-w-none">
+                        {getConnectionDisplayText(connection)}
+                      </div>
                     </h4>
                     {attributeInfo.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {attributeInfo.map((attr, index) => (
+                        {attributeInfo.slice(0, 3).map((attr, index) => (
                           <Badge 
                             key={index} 
                             variant="outline" 
@@ -118,6 +121,11 @@ export function ConnectionDisplay({
                             {attr.label}
                           </Badge>
                         ))}
+                        {attributeInfo.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{attributeInfo.length - 3} more
+                          </Badge>
+                        )}
                       </div>
                     )}
                   </div>

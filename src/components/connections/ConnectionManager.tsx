@@ -338,27 +338,27 @@ export function ConnectionManager({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Link2 className="w-4 h-4" />
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Link2 className="w-4 h-4 sm:w-5 sm:h-5" />
               {title}
             </CardTitle>
             {subtitle && (
-              <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitle}</p>
             )}
           </div>
           <Dialog open={isAddingConnection} onOpenChange={setIsAddingConnection}>
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Connection
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Create New Connection</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-base sm:text-lg">Create New Connection</DialogTitle>
+                <DialogDescription className="text-sm">
                   Define a relationship between two family members.
                 </DialogDescription>
               </DialogHeader>
@@ -437,9 +437,9 @@ export function ConnectionManager({
                   />
                 )}
                 
-                <div className="flex gap-2">
-                  <Button onClick={handleCreateConnection}>Create Connection</Button>
-                  <Button variant="outline" onClick={() => setIsAddingConnection(false)}>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={handleCreateConnection} className="w-full sm:w-auto">Create Connection</Button>
+                  <Button variant="outline" onClick={() => setIsAddingConnection(false)} className="w-full sm:w-auto">
                     Cancel
                   </Button>
                 </div>
@@ -451,172 +451,220 @@ export function ConnectionManager({
       <CardContent>
         {displayConnections.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No connections yet. Add people to start creating relationships.</p>
+            <Link2 className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
+            <p className="text-sm sm:text-base">No connections yet. Add people to start creating relationships.</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Relationship</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Attributes</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayConnections.map(connection => {
-                const Icon = getRelationshipIcon(connection.relationship_type);
-                return (
-                  <TableRow key={connection.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant="secondary" 
-                          className="flex items-center gap-1 w-fit"
-                          style={{ 
-                            backgroundColor: `${getRelationshipColor(connection.relationship_type)}20`,
-                            color: getRelationshipColor(connection.relationship_type)
-                          }}
-                        >
-                          <Icon className="w-3 h-3" />
-                          {getRelationshipLabel(connection.relationship_type)}
-                        </Badge>
-                        {(() => {
-                          const attributes = (connection.metadata as any)?.attributes || [];
-                          if (attributes.length > 0) {
-                            return (
-                              <Badge 
-                                variant="outline" 
-                                className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
-                              >
-                                {attributes.length} attr{attributes.length !== 1 ? 's' : ''}
-                              </Badge>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {getConnectionDisplayText(connection)}
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        const attributes = (connection.metadata as any)?.attributes || [];
-                        const attributeInfo = getAttributeInfo(attributes);
-                        
-                        if (attributeInfo.length === 0) {
-                          return (
-                            <span className="text-sm text-muted-foreground">No attributes</span>
-                          );
-                        }
-                        
-                        return (
-                          <div className="flex flex-wrap gap-1">
-                            {attributeInfo.map((attr, index) => (
-                              <TooltipProvider key={index}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs sm:text-sm">Relationship</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Description</TableHead>
+                  <TableHead className="hidden sm:table-cell text-xs sm:text-sm">Attributes</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {displayConnections.map(connection => {
+                  const Icon = getRelationshipIcon(connection.relationship_type);
+                  return (
+                    <TableRow key={connection.id}>
+                      <TableCell className="text-xs sm:text-sm">
+                        <div className="flex flex-col gap-1">
+                          <Badge 
+                            variant="secondary" 
+                            className="flex items-center gap-1 w-fit text-xs"
+                            style={{ 
+                              backgroundColor: `${getRelationshipColor(connection.relationship_type)}20`,
+                              color: getRelationshipColor(connection.relationship_type)
+                            }}
+                          >
+                            <Icon className="w-3 h-3" />
+                            <span className="hidden sm:inline">{getRelationshipLabel(connection.relationship_type)}</span>
+                            <span className="sm:hidden">{getRelationshipLabel(connection.relationship_type).split(' ')[0]}</span>
+                          </Badge>
+                          {(() => {
+                            const attributes = (connection.metadata as any)?.attributes || [];
+                            if (attributes.length > 0) {
+                              return (
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200 w-fit"
+                                >
+                                  {attributes.length} attr{attributes.length !== 1 ? 's' : ''}
+                                </Badge>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm font-medium">
+                        <div className="max-w-[150px] sm:max-w-[200px] lg:max-w-none">
+                          <div className="break-words">
+                            {getConnectionDisplayText(connection)}
+                          </div>
+                          {/* Show attributes on mobile in description column */}
+                          <div className="sm:hidden mt-1">
+                            {(() => {
+                              const attributes = (connection.metadata as any)?.attributes || [];
+                              const attributeInfo = getAttributeInfo(attributes);
+                              
+                              if (attributeInfo.length === 0) {
+                                return (
+                                  <span className="text-xs text-muted-foreground">No attributes</span>
+                                );
+                              }
+                              
+                              return (
+                                <div className="flex flex-wrap gap-1">
+                                  {attributeInfo.slice(0, 2).map((attr, index) => (
                                     <Badge 
+                                      key={index} 
                                       variant="outline" 
-                                      className="text-xs cursor-help"
+                                      className="text-xs"
                                     >
                                       {attr.label}
                                     </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{attr.description}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Dialog 
-                          open={editingConnection?.id === connection.id} 
-                          onOpenChange={(open) => !open && setEditingConnection(null)}
-                        >
-                          <DialogTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditConnection(connection)}
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Edit Connection</DialogTitle>
-                              <DialogDescription>
-                                Change the relationship type between {getPersonName(connection.from_person_id)} and {getPersonName(connection.to_person_id)}.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <label className="text-sm font-medium">Relationship Type</label>
-                                <Select
-                                  value={editingConnection?.relationship_type || ''}
-                                  onValueChange={(value) => setEditingConnection(prev => 
-                                    prev ? { ...prev, relationship_type: value } : null
+                                  ))}
+                                  {attributeInfo.length > 2 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{attributeInfo.length - 2} more
+                                    </Badge>
                                   )}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select relationship" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {relationshipTypes.map(type => {
-                                      const Icon = type.icon;
-                                      return (
-                                        <SelectItem key={type.value} value={type.value}>
-                                          <div className="flex items-center gap-2">
-                                            <Icon className="w-4 h-4" />
-                                            {type.label}
-                                          </div>
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {/* Relationship Attributes */}
-                              {editingConnection?.relationship_type && (
-                                <RelationshipAttributeSelector
-                                  relationshipType={editingConnection.relationship_type}
-                                  selectedAttributes={editingConnectionAttributes}
-                                  onAttributesChange={setEditingConnectionAttributes}
-                                />
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                        {(() => {
+                          const attributes = (connection.metadata as any)?.attributes || [];
+                          const attributeInfo = getAttributeInfo(attributes);
+                          
+                          if (attributeInfo.length === 0) {
+                            return (
+                              <span className="text-xs sm:text-sm text-muted-foreground">No attributes</span>
+                            );
+                          }
+                          
+                          return (
+                            <div className="flex flex-wrap gap-1">
+                              {attributeInfo.slice(0, 2).map((attr, index) => (
+                                <TooltipProvider key={index}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge 
+                                        variant="outline" 
+                                        className="text-xs cursor-help"
+                                      >
+                                        {attr.label}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="text-xs">{attr.description}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ))}
+                              {attributeInfo.length > 2 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{attributeInfo.length - 2} more
+                                </Badge>
                               )}
-                              
-                              <div className="flex gap-2">
-                                <Button onClick={handleUpdateConnection}>Update</Button>
-                                <Button variant="outline" onClick={() => setEditingConnection(null)}>
-                                  Cancel
-                                </Button>
-                              </div>
                             </div>
-                          </DialogContent>
-                        </Dialog>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleDeleteConnection(connection.id)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                          );
+                        })()}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        <div className="flex gap-1 sm:gap-2">
+                          <Dialog 
+                            open={editingConnection?.id === connection.id} 
+                            onOpenChange={(open) => !open && setEditingConnection(null)}
+                          >
+                            <DialogTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleEditConnection(connection)}
+                                className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3"
+                              >
+                                <Edit className="w-3 h-3 sm:mr-1" />
+                                <span className="hidden sm:inline">Edit</span>
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md">
+                              <DialogHeader>
+                                <DialogTitle className="text-base sm:text-lg">Edit Connection</DialogTitle>
+                                <DialogDescription className="text-sm">
+                                  Change the relationship type between {getPersonName(connection.from_person_id)} and {getPersonName(connection.to_person_id)}.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-sm font-medium">Relationship Type</label>
+                                  <Select
+                                    value={editingConnection?.relationship_type || ''}
+                                    onValueChange={(value) => setEditingConnection(prev => 
+                                      prev ? { ...prev, relationship_type: value } : null
+                                    )}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select relationship" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {relationshipTypes.map(type => {
+                                        const Icon = type.icon;
+                                        return (
+                                          <SelectItem key={type.value} value={type.value}>
+                                            <div className="flex items-center gap-2">
+                                              <Icon className="w-4 h-4" />
+                                              {type.label}
+                                            </div>
+                                          </SelectItem>
+                                        );
+                                      })}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                {/* Relationship Attributes */}
+                                {editingConnection?.relationship_type && (
+                                  <RelationshipAttributeSelector
+                                    relationshipType={editingConnection.relationship_type}
+                                    selectedAttributes={editingConnectionAttributes}
+                                    onAttributesChange={setEditingConnectionAttributes}
+                                  />
+                                )}
+                                
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <Button onClick={handleUpdateConnection} className="w-full sm:w-auto">Update</Button>
+                                  <Button variant="outline" onClick={() => setEditingConnection(null)} className="w-full sm:w-auto">
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteConnection(connection.id)}
+                            className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3"
+                          >
+                            <Trash2 className="w-3 h-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Delete</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>

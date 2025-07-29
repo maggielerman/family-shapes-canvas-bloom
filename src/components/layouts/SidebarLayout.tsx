@@ -89,9 +89,6 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
   const [currentContext, setCurrentContext] = useState<string>("personal");
   const [sidebarItems, setSidebarItems] = useState(IndividualUserNav);
 
-  // Debug log to verify isMobile state
-  console.log('Sidebar isMobile state:', isMobile);
-
   // Detect current context and update sidebar items accordingly
   useEffect(() => {
     const path = location.pathname;
@@ -196,9 +193,7 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
                         <Link 
                           to={item.path} 
                           onClick={() => {
-                            console.log('Navigation link clicked, isMobile:', isMobile);
                             if (isMobile) {
-                              console.log('Closing mobile sidebar');
                               setOpenMobile(false);
                             }
                           }}
@@ -223,7 +218,6 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
                     onClick={() => {
                       navigate("/settings");
                       if (isMobile) {
-                        console.log('Closing mobile sidebar for settings');
                         setOpenMobile(false);
                       }
                     }}

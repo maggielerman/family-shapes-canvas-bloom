@@ -147,7 +147,7 @@ export default function Connections() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -157,74 +157,78 @@ export default function Connections() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Family Connections</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Family Connections</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage relationships and connections across all your family trees
           </p>
         </div>
       </div>
 
-            {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <TreePine className="w-5 h-5 text-coral-600" />
-              Family Trees
+            <CardTitle className="text-sm sm:text-base lg:text-lg flex items-center gap-2">
+              <TreePine className="w-4 h-4 sm:w-5 sm:h-5 text-coral-600" />
+              <span className="hidden sm:inline">Family Trees</span>
+              <span className="sm:hidden">Trees</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-coral-600">{familyTrees.length}</div>
-            <p className="text-sm text-muted-foreground">Total trees</p>
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-coral-600">{familyTrees.length}</div>
+            <p className="text-xs sm:text-sm text-muted-foreground">Total trees</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Users className="w-5 h-5 text-sage-600" />
+            <CardTitle className="text-sm sm:text-base lg:text-lg flex items-center gap-2">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-sage-600" />
               People
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-sage-600">{persons.length}</div>
-            <p className="text-sm text-muted-foreground">Total people</p>
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-sage-600">{persons.length}</div>
+            <p className="text-xs sm:text-sm text-muted-foreground">Total people</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Heart className="w-5 h-5 text-dusty-600" />
-              Connections
+            <CardTitle className="text-sm sm:text-base lg:text-lg flex items-center gap-2">
+              <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-dusty-600" />
+              <span className="hidden sm:inline">Connections</span>
+              <span className="sm:hidden">Links</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-dusty-600">{connections.length}</div>
-            <p className="text-sm text-muted-foreground">Total relationships</p>
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-dusty-600">{connections.length}</div>
+            <p className="text-xs sm:text-sm text-muted-foreground">Total relationships</p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="all" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="all">All Connections</TabsTrigger>
-          <TabsTrigger value="by-tree">By Family Tree</TabsTrigger>
-          <TabsTrigger value="by-person">By Person</TabsTrigger>
+      <Tabs defaultValue="all" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger value="all" className="text-xs sm:text-sm py-2">All</TabsTrigger>
+          <TabsTrigger value="by-tree" className="text-xs sm:text-sm py-2">By Tree</TabsTrigger>
+          <TabsTrigger value="by-person" className="text-xs sm:text-sm py-2">By Person</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-6">
+        <TabsContent value="all" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="w-5 h-5" />
-                All Family Connections
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base lg:text-lg">
+                <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">All Family Connections</span>
+                <span className="sm:hidden">All Connections</span>
               </CardTitle>
-              <CardDescription>
-                View and manage all connections between people in your family trees
+              <CardDescription className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">View and manage all connections between people in your family trees</span>
+                <span className="sm:hidden">Manage all family connections</span>
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -238,8 +242,8 @@ export default function Connections() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="by-tree" className="space-y-6">
-          <div className="space-y-6">
+        <TabsContent value="by-tree" className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {familyTrees.map((tree) => {
               // Get people in this family tree for count display
               const treePersonIds = new Set();
@@ -266,20 +270,20 @@ export default function Connections() {
               return (
                 <Card key={tree.id}>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                       <div className="flex items-center gap-2">
-                        <TreePine className="w-5 h-5" />
-                        <CardTitle className="text-lg">{tree.name}</CardTitle>
-                        <Badge className={getVisibilityColor(tree.visibility)}>
+                        <TreePine className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <CardTitle className="text-base sm:text-lg">{tree.name}</CardTitle>
+                        <Badge className={`text-xs ${getVisibilityColor(tree.visibility)}`}>
                           {tree.visibility}
                         </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
                         {treeConnections.length} connections • {treePersonIds.size} people
                       </div>
                     </div>
                     {tree.description && (
-                      <CardDescription>{tree.description}</CardDescription>
+                      <CardDescription className="text-sm">{tree.description}</CardDescription>
                     )}
                   </CardHeader>
                   <CardContent>
@@ -313,16 +317,16 @@ export default function Connections() {
               return (
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                       <div className="flex items-center gap-2">
-                        <Users className="w-5 h-5" />
-                        <CardTitle className="text-lg">Other Connections</CardTitle>
+                        <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <CardTitle className="text-base sm:text-lg">Other Connections</CardTitle>
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
                         {orphanedConnections.length} connections
                       </div>
                     </div>
-                    <CardDescription>
+                    <CardDescription className="text-sm">
                       Connections between people not currently in any family tree
                     </CardDescription>
                   </CardHeader>
@@ -338,10 +342,10 @@ export default function Connections() {
               );
             })()}
           </div>
-                </TabsContent>
+        </TabsContent>
 
-        <TabsContent value="by-person" className="space-y-6">
-          <div className="space-y-6">
+        <TabsContent value="by-person" className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {persons.map((person) => {
               // Get connections where this person is either the from or to person
               const personConnections = connections.filter(conn => 
@@ -408,21 +412,21 @@ export default function Connections() {
               return (
                 <Card key={person.id}>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-sage-100 rounded-full flex items-center justify-center">
-                          <span className="text-sage-700 font-semibold">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-sage-100 rounded-full flex items-center justify-center">
+                          <span className="text-sage-700 font-semibold text-sm sm:text-base">
                             {person.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                           </span>
                         </div>
                         <div>
-                          <CardTitle className="text-lg">{person.name}</CardTitle>
-                          <CardDescription>
+                          <CardTitle className="text-base sm:text-lg">{person.name}</CardTitle>
+                          <CardDescription className="text-sm">
                             {deduplicatedPersonConnections.length} connection{deduplicatedPersonConnections.length !== 1 ? 's' : ''}
                           </CardDescription>
                         </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
                         {person.email && <div>{person.email}</div>}
                         {person.date_of_birth && (
                           <div>Born: {new Date(person.date_of_birth).getFullYear()}</div>
@@ -433,8 +437,8 @@ export default function Connections() {
                   <CardContent>
                     {deduplicatedPersonConnections.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
-                        <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>No connections found for this person</p>
+                        <Users className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-sm sm:text-base">No connections found for this person</p>
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -445,15 +449,15 @@ export default function Connections() {
                           
                           return (
                             <div key={treeId} className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground">
                                 {tree ? (
                                   <>
-                                    <TreePine className="w-4 h-4" />
+                                    <TreePine className="w-3 h-3 sm:w-4 sm:h-4" />
                                     {tree.name}
                                   </>
                                 ) : (
                                   <>
-                                    <Users className="w-4 h-4" />
+                                    <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                                     Other Connections
                                   </>
                                 )}
@@ -464,16 +468,16 @@ export default function Connections() {
                               
                               <div className="grid gap-2">
                                 {treeConnections.map(({ connection, otherPerson, isFromPerson }) => (
-                                  <div key={connection.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                  <div key={connection.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg gap-2 sm:gap-3">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 bg-dusty-100 rounded-full flex items-center justify-center">
-                                        <span className="text-dusty-700 text-sm font-medium">
+                                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-dusty-100 rounded-full flex items-center justify-center">
+                                        <span className="text-dusty-700 text-xs sm:text-sm font-medium">
                                           {otherPerson?.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                                         </span>
                                       </div>
                                       <div>
-                                        <div className="font-medium">{otherPerson?.name}</div>
-                                        <div className="text-sm text-muted-foreground">
+                                        <div className="font-medium text-sm sm:text-base">{otherPerson?.name}</div>
+                                        <div className="text-xs sm:text-sm text-muted-foreground">
                                           {(() => {
                                             const relationshipLabel = RelationshipTypeHelpers.getLabel(connection.relationship_type as any);
                                             if (ConnectionUtils.isBidirectional(connection.relationship_type as any)) {
@@ -484,7 +488,7 @@ export default function Connections() {
                                         </div>
                                       </div>
                                     </div>
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge variant="outline" className="text-xs w-fit">
                                       {RelationshipTypeHelpers.getLabel(connection.relationship_type as any)}
                                     </Badge>
                                   </div>
