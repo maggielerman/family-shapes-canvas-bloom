@@ -70,20 +70,7 @@ export default {
 					'4': 'hsl(var(--chart-4))',
 					'5': 'hsl(var(--chart-5))'
 				},
-				// Enhanced warm neutral palette with more contrast
-				warm: {
-					50: '#fefefe',
-					100: '#fdfbf8',
-					200: '#f8f4f0',
-					300: '#f0e8e0',
-					400: '#e5d5c8',
-					500: '#d4c0a8',
-					600: '#b8a082',
-					700: '#9a7f5f',
-					800: '#7a5f42',
-					900: '#5d4631'
-				},
-				// More vibrant sage palette
+				// Refined sage palette - growth, harmony, natural balance
 				sage: {
 					50: '#f8faf8',
 					100: '#f0f4f0',
@@ -96,20 +83,7 @@ export default {
 					800: '#3a543b',
 					900: '#2d412e'
 				},
-				// Enhanced dusty rose palette
-				dusty: {
-					50: '#fdf9f7',
-					100: '#f9f0ed',
-					200: '#f1ddd6',
-					300: '#e6c4b8',
-					400: '#d6a393',
-					500: '#c08269',
-					600: '#a6654a',
-					700: '#8b4f37',
-					800: '#6f3f2c',
-					900: '#553124'
-				},
-				// New accent colors for more vibrancy
+				// Primary coral palette - warmth, care, human connection
 				coral: {
 					50: '#fef7f4',
 					100: '#fdeee8',
@@ -122,6 +96,7 @@ export default {
 					800: '#91321e',
 					900: '#772e1f'
 				},
+				// Secondary navy palette - trust, professionalism, stability
 				navy: {
 					50: '#f7f8fa',
 					100: '#eef1f5',
@@ -134,7 +109,7 @@ export default {
 					800: '#3e4f64',
 					900: '#364354'
 				},
-				// Terracotta accent colors
+				// Terracotta palette - warmth, earthiness, organic connection
 				terracotta: {
 					50: '#fdf8f6',
 					100: '#f9f0ed',

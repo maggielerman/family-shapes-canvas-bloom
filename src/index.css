@@ -7,44 +7,48 @@
 
 @layer base {
   :root {
-    --background: 32 25% 97%;
-    --foreground: 32 15% 15%;
+    --background: 15 30% 98%;
+    --foreground: 15 20% 15%;
 
-    --card: 32 25% 99%;
-    --card-foreground: 32 15% 15%;
+    --card: 15 30% 99%;
+    --card-foreground: 15 20% 15%;
 
-    --popover: 32 25% 99%;
-    --popover-foreground: 32 15% 15%;
+    --popover: 15 30% 99%;
+    --popover-foreground: 15 20% 15%;
 
-    
+    --muted: 15 15% 94%;
+    --muted-foreground: 15 10% 45%;
 
-    --muted: 32 15% 94%;
-    --muted-foreground: 32 10% 45%;
-
-    --accent: 32 20% 88%;
-    --accent-foreground: 32 15% 25%;
+    --accent: 15 20% 88%;
+    --accent-foreground: 15 15% 25%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 32 25% 97%;
+    --destructive-foreground: 15 30% 97%;
 
-    --border: 32 15% 88%;
-    --input: 32 15% 88%;
+    --border: 15 15% 88%;
+    --input: 15 15% 88%;
     --ring: 16 67% 49%; /* coral-600 */
 
     --radius: 0.75rem;
 
-    /* Terracotta accent colors */
+    /* Refined sage colors - growth, harmony, natural balance */
+    --sage-50: 120 33% 97%;
+    --sage-100: 120 25% 94%;
+    --sage-500: 120 20% 51%;
+    --sage-600: 120 25% 44%;
+
+    /* Terracotta colors - warmth, earthiness, organic connection */
     --terracotta-50: 15 30% 96%;
     --terracotta-100: 15 30% 92%;
-    --terracotta-500: 15 50% 55%;
-    --terracotta-600: 15 50% 45%;
+    --terracotta-500: 15 40% 60%;
+    --terracotta-600: 15 45% 50%;
 
-    /* Chart colors for data visualization */
-    --chart-1: 220 70% 50%;
-    --chart-2: 340 75% 55%;
-    --chart-3: 45 93% 47%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 160 60% 45%;
+    /* Chart colors for data visualization using refined palette */
+    --chart-1: 16 67% 49%; /* coral-600 */
+    --chart-2: 220 25% 44%; /* navy-600 */
+    --chart-3: 120 25% 44%; /* sage-600 */
+    --chart-4: 15 45% 50%; /* terracotta-600 */
+    --chart-5: 16 60% 40%; /* coral-700 */
 
     --sidebar-background: 32 25% 98%;
     --sidebar-foreground: 32 15% 20%;
@@ -57,50 +61,54 @@
   }
 
   .dark {
-    --background: 32 25% 8%;
-    --foreground: 32 25% 95%;
+    --background: 15 20% 8%;
+    --foreground: 15 20% 95%;
 
-    --card: 32 25% 10%;
-    --card-foreground: 32 25% 95%;
+    --card: 15 20% 10%;
+    --card-foreground: 15 20% 95%;
 
-    --popover: 32 25% 10%;
-    --popover-foreground: 32 25% 95%;
+    --popover: 15 20% 10%;
+    --popover-foreground: 15 20% 95%;
 
+    --muted: 15 15% 15%;
+    --muted-foreground: 15 10% 60%;
 
-
-    --muted: 32 15% 15%;
-    --muted-foreground: 32 10% 60%;
-
-    --accent: 32 20% 20%;
-    --accent-foreground: 32 25% 85%;
+    --accent: 15 20% 20%;
+    --accent-foreground: 15 20% 85%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 32 25% 95%;
+    --destructive-foreground: 15 20% 95%;
 
-    --border: 32 15% 20%;
-    --input: 32 15% 20%;
+    --border: 15 15% 20%;
+    --input: 15 15% 20%;
     --ring: 16 60% 50%; /* coral-600 dark mode */
 
-    /* Dark mode terracotta */
-    --terracotta-50: 15 30% 10%;
-    --terracotta-100: 15 30% 15%;
-    --terracotta-500: 15 50% 65%;
+    /* Dark mode sage colors */
+    --sage-50: 120 20% 10%;
+    --sage-100: 120 20% 15%;
+    --sage-500: 120 25% 65%;
+    --sage-600: 120 30% 55%;
+
+    /* Dark mode terracotta colors */
+    --terracotta-50: 15 25% 10%;
+    --terracotta-100: 15 25% 15%;
+    --terracotta-500: 15 45% 65%;
     --terracotta-600: 15 50% 55%;
 
-    /* Chart colors for data visualization (dark mode) */
-    --chart-1: 220 70% 60%;
-    --chart-2: 340 75% 65%;
-    --chart-3: 45 93% 57%;
-    --chart-4: 280 65% 70%;
-    --chart-5: 160 60% 55%;
+    /* Chart colors for data visualization (dark mode) using refined palette */
+    --chart-1: 16 60% 50%; /* coral-600 dark */
+    --chart-2: 220 30% 55%; /* navy-600 dark */
+    --chart-3: 120 30% 55%; /* sage-600 dark */
+    --chart-4: 15 50% 55%; /* terracotta-600 dark */
+    --chart-5: 16 55% 45%; /* coral-700 dark */
     
-    --sidebar-background: 32 25% 8%;
-    --sidebar-foreground: 32 25% 90%;
+    --sidebar-background: 15 20% 8%;
+    --sidebar-foreground: 15 20% 90%;
     --sidebar-primary: 16 60% 50%; /* coral-600 dark mode */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 25% 45%; /* navy-600 dark mode */
+    --sidebar-accent: 220 30% 45%; /* navy-600 dark mode */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 32 15% 20%;
+    --sidebar-border: 15 15% 20%;
     --sidebar-ring: 16 60% 50%; /* coral-600 dark mode */
   }
 }
