@@ -260,20 +260,26 @@ export default function Media() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Media Gallery</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">Loading media files...</p>
+          </div>
+        </div>
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Loading media files...</div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Media Gallery</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Media Gallery</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage your family photos and documents
           </p>
         </div>
@@ -300,7 +306,7 @@ export default function Media() {
           />
           {selectedFiles.length > 0 && (
             <div className="flex justify-end">
-              <Button onClick={handleUpload} disabled={isUploading}>
+              <Button onClick={handleUpload} disabled={isUploading} className="w-full sm:w-auto">
                 {isUploading ? 'Uploading...' : `Upload ${selectedFiles.length} file(s)`}
               </Button>
             </div>
@@ -329,7 +335,7 @@ export default function Media() {
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
-        <TabsContent value={activeTab} className="mt-6">
+        <TabsContent value={activeTab}>
           {filteredFiles.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-muted-foreground">
@@ -344,7 +350,7 @@ export default function Media() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {filteredFiles.map((file) => (
                 <Card key={file.id} className="overflow-hidden">
                   <div className="aspect-square bg-muted relative">
@@ -492,6 +498,6 @@ export default function Media() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

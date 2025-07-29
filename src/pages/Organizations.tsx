@@ -148,12 +148,12 @@ const Organizations = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-light mb-2">Organizations</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Organizations</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage your family groups, clinics, and other organizations
           </p>
         </div>
@@ -172,7 +172,7 @@ const Organizations = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {organizations.map((org) => (
             <Card key={org.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-4">
@@ -248,35 +248,28 @@ const Organizations = () => {
                         {org.role}
                       </Badge>
                       <Badge 
-                        variant={org.visibility === 'public' ? 'outline' : 'secondary'}
+                        variant={org.visibility === 'public' ? 'default' : 'outline'}
                         className="text-xs"
                       >
                         {org.visibility}
                       </Badge>
                     </div>
                   </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => navigate(`/organizations/${org.id}`)}
-                    >
-                      Open
-                    </Button>
-                    {org.role === 'owner' && (
-                      <Button size="sm" variant="outline">
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
+                  
+                  <Button 
+                    onClick={() => navigate(`/organizations/${org.id}`)}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    View Organization
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 };
 

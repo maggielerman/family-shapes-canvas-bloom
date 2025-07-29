@@ -8,15 +8,17 @@ const Share = () => {
   const { user } = useAuth();
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Share & Collaborate</h1>
-        <p className="text-muted-foreground">
-          Share your family trees and collaborate with others to build your family story together.
-        </p>
+    <>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Share & Collaborate</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Share your family trees and collaborate with others to build your family story together.
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Share Family Trees */}
         <Card>
           <CardHeader>
@@ -76,7 +78,7 @@ const Share = () => {
       </div>
 
       {/* Recent Sharing Activity */}
-      <div className="mt-12">
+      <div>
         <h2 className="text-2xl font-semibold mb-6 flex items-center">
           <Heart className="w-6 h-6 mr-2 text-coral-600" />
           Recent Sharing Activity
@@ -92,7 +94,7 @@ const Share = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </>
   );
 };
 
