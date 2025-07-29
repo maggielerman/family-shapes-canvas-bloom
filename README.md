@@ -142,6 +142,8 @@ Comprehensive documentation is available in the [`documentation/`](./documentati
 - **Deployment Guides**: Step-by-step deployment instructions
 - **Performance Optimizations**: Performance improvements and fixes
 - **Testing Documentation**: Comprehensive test coverage and strategies
+- [Contact Form Implementation](./documentation/CONTACT_FORM_IMPLEMENTATION.md) - Details on the Resend email integration
+- [Responsive Utilities Guide](./documentation/RESPONSIVE_UTILITIES.md) - Standardized responsive patterns and utilities
 
 ## 🌐 Deployment
 
