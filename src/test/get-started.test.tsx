@@ -45,15 +45,9 @@ describe('GetStarted Page', () => {
     expect(screen.getByText(/Join the waitlist for our comprehensive platform/)).toBeInTheDocument();
   });
 
-  it('displays the organization badge', () => {
-    renderWithRouter(<GetStarted />);
-    
-    expect(screen.getByText('For Organizations')).toBeInTheDocument();
-  });
-
   it('shows key benefits for organizations', () => {
     renderWithRouter(<GetStarted />);
-    
+
     expect(screen.getByText('Key Benefits:')).toBeInTheDocument();
     expect(screen.getByText('Comprehensive donor database management')).toBeInTheDocument();
     expect(screen.getByText('Family connection tracking and privacy controls')).toBeInTheDocument();

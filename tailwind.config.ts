@@ -25,12 +25,12 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: '#b0391f', // coral-700
+					foreground: '#ffffff'
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					DEFAULT: '#597393', // navy-600
+					foreground: '#ffffff'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -133,6 +133,19 @@ export default {
 					700: '#495e78',
 					800: '#3e4f64',
 					900: '#364354'
+				},
+				// Terracotta accent colors
+				terracotta: {
+					50: '#fdf8f6',
+					100: '#f9f0ed',
+					200: '#f2e0d9',
+					300: '#e8c8bc',
+					400: '#d9a894',
+					500: '#c88a6c',
+					600: '#b06d4e',
+					700: '#95573d',
+					800: '#7a4632',
+					900: '#633a2a'
 				}
 			},
 			borderRadius: {

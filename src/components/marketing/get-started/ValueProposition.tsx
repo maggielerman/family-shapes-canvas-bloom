@@ -3,7 +3,6 @@ import OrganizationBadge from "./OrganizationBadge";
 export default function ValueProposition() {
   return (
     <div className="space-y-4">
-      {/* <OrganizationBadge /> */}
       <h1 className="responsive-title">
         Streamline Your <span className="text-coral-600">Donor Management</span>
       </h1>
