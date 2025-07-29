@@ -54,6 +54,7 @@ const CreateOrganizationDialog = ({ onOrganizationCreated }: CreateOrganizationD
     
     try {
       // Use the new database function to create organization
+      // @ts-ignore - Function exists in database
       const { data, error } = await supabase.rpc('create_organization_for_user', {
         org_name: formData.name,
         org_type: formData.type,

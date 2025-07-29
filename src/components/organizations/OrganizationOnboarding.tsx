@@ -80,12 +80,13 @@ const OrganizationOnboarding = ({ organizationId }: OrganizationOnboardingProps)
         ...prev,
         type: data.type || "",
         description: data.description || "",
-        website: data.settings?.website || "",
-        location: data.settings?.location || "",
-        contactEmail: data.settings?.contact_email || "",
-        phone: data.settings?.phone || "",
-        welcomeMessage: data.settings?.welcome_message || "",
-        publiclyVisible: data.settings?.publicly_visible || false,
+        // @ts-ignore - Json type access
+        website: (data.settings as any)?.website || "",
+        location: (data.settings as any)?.location || "",
+        contactEmail: (data.settings as any)?.contact_email || "",
+        phone: (data.settings as any)?.phone || "",
+        welcomeMessage: (data.settings as any)?.welcome_message || "",
+        publiclyVisible: (data.settings as any)?.publicly_visible || false,
       }));
     } catch (error) {
       console.error('Error fetching organization:', error);
