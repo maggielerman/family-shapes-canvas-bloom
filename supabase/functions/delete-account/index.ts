@@ -1,7 +1,7 @@
 // @ts-nocheck
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.204.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.21.0";
 
 serve(async (req) => {
   try {
