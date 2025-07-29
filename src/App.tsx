@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/components/auth/AuthContext";
+import { ProductProvider } from "@/components/ProductProvider";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
 import MainLayout from "@/components/layouts/MainLayout";
@@ -41,7 +42,7 @@ const StyleGuide = lazy(() => import("./pages/StyleGuide"));
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-coral-600"></div>
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
   </div>
 );
 
@@ -60,11 +61,12 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AuthProvider>
-        <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <BrowserRouter>
+        <ProductProvider>
+          <AuthProvider>
+            <TooltipProvider>
+            <Toaster />
+            <Sonner />
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               {/* Public routes */}
@@ -111,11 +113,12 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </ThemeProvider>
-</QueryClientProvider>
+            </TooltipProvider>
+          </AuthProvider>
+        </ProductProvider>
+      </BrowserRouter>
+    </ThemeProvider>
+  </QueryClientProvider>
 );
 
 export default App;

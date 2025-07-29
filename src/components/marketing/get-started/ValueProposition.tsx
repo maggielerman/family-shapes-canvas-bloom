@@ -4,7 +4,7 @@ export default function ValueProposition() {
   return (
     <div className="space-y-4">
       <h1 className="responsive-title">
-        Streamline Your <span className="text-coral-600">Donor Management</span>
+        Streamline Your <span className="text-primary">Donor Management</span>
       </h1>
       <p className="responsive-description">
         Join the waitlist for our comprehensive platform designed specifically for fertility clinics, 

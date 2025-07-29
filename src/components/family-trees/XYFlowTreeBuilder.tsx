@@ -108,7 +108,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     // Filter connections to only show generational connections (parent-child)
     // Sibling connections are hidden from the visual tree but remain in connection manager
     const generationalConnections = getGenerationalConnections(connections);
-    const deduplicatedConnections = ConnectionUtils.deduplicate(generationalConnections);
+    const deduplicatedConnections = ConnectionUtils.deduplicate(generationalConnections as any);
     
     const connectionEdges: Edge[] = deduplicatedConnections.map((connection) => {
       const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
@@ -332,7 +332,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
       ) : (
         <div className="h-[600px] border rounded-lg">
           <ReactFlow
-            ref={reactFlowRef}
+            ref={reactFlowRef as any}
             nodes={nodes}
             edges={edges}
             onNodesChange={handleNodesChange}

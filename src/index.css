@@ -31,6 +31,12 @@
 
     --radius: 0.75rem;
 
+    /* Dynamic product colors - updated by ProductProvider */
+    --primary-dynamic: var(--coral-600);
+    --primary-foreground-dynamic: 255 255 255;
+    --accent-dynamic: var(--terracotta-600);
+    --accent-foreground-dynamic: 255 255 255;
+
     /* Refined sage colors - growth, harmony, natural balance */
     --sage-50: 120 33% 97%;
     --sage-100: 120 25% 94%;
@@ -58,6 +64,12 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 32 15% 88%;
     --sidebar-ring: 16 67% 49%; /* coral-600 */
+
+    /* Dynamic product colors (dark mode) */
+    --primary-dynamic: var(--coral-600);
+    --primary-foreground-dynamic: 255 255 255;
+    --accent-dynamic: var(--terracotta-600);
+    --accent-foreground-dynamic: 255 255 255;
   }
 
   .dark {
@@ -110,6 +122,12 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 15 15% 20%;
     --sidebar-ring: 16 60% 50%; /* coral-600 dark mode */
+
+    /* Dynamic product colors (dark mode) */
+    --primary-dynamic: var(--coral-600);
+    --primary-foreground-dynamic: 255 255 255;
+    --accent-dynamic: var(--terracotta-600);
+    --accent-foreground-dynamic: 255 255 255;
   }
 }
 
