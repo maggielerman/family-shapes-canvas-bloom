@@ -58,20 +58,20 @@ export function ConnectionDisplay({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+          <Users className="h-4 w-4 md:h-5 md:w-5" />
           {title}
         </CardTitle>
         {subtitle && (
-          <p className="text-xs sm:text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-xs md:text-sm text-muted-foreground">{subtitle}</p>
         )}
       </CardHeader>
       <CardContent>
         {deduplicatedConnections.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <Users className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm sm:text-base">No family connections</p>
-            <p className="text-xs sm:text-sm">Connections are created in the tree view</p>
+            <Users className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm md:text-base">No family connections</p>
+            <p className="text-xs md:text-sm">Connections are created in the tree view</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -81,9 +81,9 @@ export function ConnectionDisplay({
               const attributeInfo = getAttributeInfo(attributes);
               
               return (
-                <div key={connection.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-2 sm:gap-3">
+                <div key={connection.id} className="flex flex-col md:flex-row md:items-center md:justify-between p-3 border rounded-lg gap-2 md:gap-3">
                   <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
                       <Badge 
                         variant="secondary" 
                         className="flex items-center gap-1 w-fit text-xs"
@@ -93,8 +93,8 @@ export function ConnectionDisplay({
                         }}
                       >
                         <Icon className="w-3 h-3" />
-                        <span className="hidden sm:inline">{getRelationshipLabel(connection.relationship_type)}</span>
-                        <span className="sm:hidden">{getRelationshipLabel(connection.relationship_type).split(' ')[0]}</span>
+                        <span className="hidden md:inline">{getRelationshipLabel(connection.relationship_type)}</span>
+                        <span className="md:hidden">{getRelationshipLabel(connection.relationship_type).split(' ')[0]}</span>
                       </Badge>
                       {attributes.length > 0 && (
                         <Badge 
@@ -105,8 +105,8 @@ export function ConnectionDisplay({
                         </Badge>
                       )}
                     </div>
-                    <h4 className="font-medium text-sm sm:text-base">
-                      <div className="max-w-[250px] sm:max-w-none">
+                    <h4 className="font-medium text-sm md:text-base">
+                      <div className="max-w-[250px] md:max-w-none">
                         {getConnectionDisplayText(connection)}
                       </div>
                     </h4>

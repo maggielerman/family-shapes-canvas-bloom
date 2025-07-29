@@ -338,26 +338,26 @@ export function ConnectionManager({
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
           <div>
-            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-              <Link2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            <CardTitle className="text-base md:text-lg flex items-center gap-2">
+              <Link2 className="w-4 h-4 md:w-5 md:h-5" />
               {title}
             </CardTitle>
             {subtitle && (
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitle}</p>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">{subtitle}</p>
             )}
           </div>
           <Dialog open={isAddingConnection} onOpenChange={setIsAddingConnection}>
             <DialogTrigger asChild>
-              <Button size="sm" className="w-full sm:w-auto">
+              <Button size="sm" className="w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Connection
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="md:max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-base sm:text-lg">Create New Connection</DialogTitle>
+                <DialogTitle className="text-base md:text-lg">Create New Connection</DialogTitle>
                 <DialogDescription className="text-sm">
                   Define a relationship between two family members.
                 </DialogDescription>
@@ -437,9 +437,9 @@ export function ConnectionManager({
                   />
                 )}
                 
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button onClick={handleCreateConnection} className="w-full sm:w-auto">Create Connection</Button>
-                  <Button variant="outline" onClick={() => setIsAddingConnection(false)} className="w-full sm:w-auto">
+                <div className="flex flex-col md:flex-row gap-2">
+                  <Button onClick={handleCreateConnection} className="w-full md:w-auto">Create Connection</Button>
+                  <Button variant="outline" onClick={() => setIsAddingConnection(false)} className="w-full md:w-auto">
                     Cancel
                   </Button>
                 </div>
@@ -459,10 +459,10 @@ export function ConnectionManager({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs sm:text-sm">Relationship</TableHead>
-                  <TableHead className="text-xs sm:text-sm">Description</TableHead>
-                  <TableHead className="hidden sm:table-cell text-xs sm:text-sm">Attributes</TableHead>
-                  <TableHead className="text-xs sm:text-sm">Actions</TableHead>
+                  <TableHead className="text-xs md:text-sm">Relationship</TableHead>
+                  <TableHead className="text-xs md:text-sm">Description</TableHead>
+                  <TableHead className="hidden md:table-cell text-xs md:text-sm">Attributes</TableHead>
+                  <TableHead className="text-xs md:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -470,7 +470,7 @@ export function ConnectionManager({
                   const Icon = getRelationshipIcon(connection.relationship_type);
                   return (
                     <TableRow key={connection.id}>
-                      <TableCell className="text-xs sm:text-sm">
+                      <TableCell className="text-xs md:text-sm">
                         <div className="flex flex-col gap-1">
                           <Badge 
                             variant="secondary" 
@@ -481,8 +481,8 @@ export function ConnectionManager({
                             }}
                           >
                             <Icon className="w-3 h-3" />
-                            <span className="hidden sm:inline">{getRelationshipLabel(connection.relationship_type)}</span>
-                            <span className="sm:hidden">{getRelationshipLabel(connection.relationship_type).split(' ')[0]}</span>
+                            <span className="hidden md:inline">{getRelationshipLabel(connection.relationship_type)}</span>
+                            <span className="md:hidden">{getRelationshipLabel(connection.relationship_type).split(' ')[0]}</span>
                           </Badge>
                           {(() => {
                             const attributes = (connection.metadata as any)?.attributes || [];
@@ -500,13 +500,13 @@ export function ConnectionManager({
                           })()}
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs sm:text-sm font-medium">
-                        <div className="max-w-[150px] sm:max-w-[200px] lg:max-w-none">
+                      <TableCell className="text-xs md:text-sm font-medium">
+                        <div className="max-w-[150px] md:max-w-[200px] lg:max-w-none">
                           <div className="break-words">
                             {getConnectionDisplayText(connection)}
                           </div>
                           {/* Show attributes on mobile in description column */}
-                          <div className="sm:hidden mt-1">
+                          <div className="md:hidden mt-1">
                             {(() => {
                               const attributes = (connection.metadata as any)?.attributes || [];
                               const attributeInfo = getAttributeInfo(attributes);
@@ -539,14 +539,14 @@ export function ConnectionManager({
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                      <TableCell className="hidden md:table-cell text-xs md:text-sm">
                         {(() => {
                           const attributes = (connection.metadata as any)?.attributes || [];
                           const attributeInfo = getAttributeInfo(attributes);
                           
                           if (attributeInfo.length === 0) {
                             return (
-                              <span className="text-xs sm:text-sm text-muted-foreground">No attributes</span>
+                              <span className="text-xs md:text-sm text-muted-foreground">No attributes</span>
                             );
                           }
                           
@@ -578,8 +578,8 @@ export function ConnectionManager({
                           );
                         })()}
                       </TableCell>
-                      <TableCell className="text-xs sm:text-sm">
-                        <div className="flex gap-1 sm:gap-2">
+                      <TableCell className="text-xs md:text-sm">
+                        <div className="flex gap-1 md:gap-2">
                           <Dialog 
                             open={editingConnection?.id === connection.id} 
                             onOpenChange={(open) => !open && setEditingConnection(null)}
@@ -589,15 +589,15 @@ export function ConnectionManager({
                                 size="sm" 
                                 variant="outline"
                                 onClick={() => handleEditConnection(connection)}
-                                className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3"
+                                className="h-7 w-7 md:h-8 md:w-auto p-0 md:px-3"
                               >
-                                <Edit className="w-3 h-3 sm:mr-1" />
-                                <span className="hidden sm:inline">Edit</span>
+                                <Edit className="w-3 h-3 md:mr-1" />
+                                <span className="hidden md:inline">Edit</span>
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
+                            <DialogContent className="md:max-w-md">
                               <DialogHeader>
-                                <DialogTitle className="text-base sm:text-lg">Edit Connection</DialogTitle>
+                                <DialogTitle className="text-base md:text-lg">Edit Connection</DialogTitle>
                                 <DialogDescription className="text-sm">
                                   Change the relationship type between {getPersonName(connection.from_person_id)} and {getPersonName(connection.to_person_id)}.
                                 </DialogDescription>
@@ -639,9 +639,9 @@ export function ConnectionManager({
                                   />
                                 )}
                                 
-                                <div className="flex flex-col sm:flex-row gap-2">
-                                  <Button onClick={handleUpdateConnection} className="w-full sm:w-auto">Update</Button>
-                                  <Button variant="outline" onClick={() => setEditingConnection(null)} className="w-full sm:w-auto">
+                                <div className="flex flex-col md:flex-row gap-2">
+                                  <Button onClick={handleUpdateConnection} className="w-full md:w-auto">Update</Button>
+                                  <Button variant="outline" onClick={() => setEditingConnection(null)} className="w-full md:w-auto">
                                     Cancel
                                   </Button>
                                 </div>
@@ -652,10 +652,10 @@ export function ConnectionManager({
                             size="sm" 
                             variant="outline"
                             onClick={() => handleDeleteConnection(connection.id)}
-                            className="h-7 w-7 sm:h-8 sm:w-auto p-0 sm:px-3"
+                            className="h-7 w-7 md:h-8 md:w-auto p-0 md:px-3"
                           >
-                            <Trash2 className="w-3 h-3 sm:mr-1" />
-                            <span className="hidden sm:inline">Delete</span>
+                            <Trash2 className="w-3 h-3 md:mr-1" />
+                            <span className="hidden md:inline">Delete</span>
                           </Button>
                         </div>
                       </TableCell>
