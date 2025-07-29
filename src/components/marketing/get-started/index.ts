@@ -5,4 +5,5 @@ export { default as WaitlistForm } from './WaitlistForm';
 export { default as DonorDialog } from './DonorDialog';
 export { default as SecondaryCTAs } from './SecondaryCTAs';
 export { default as FeatureChecklist } from './FeatureChecklist';
+export { default as OrganizationBadge } from './OrganizationBadge';
 export { organizationFeatures, type OrganizationFeature } from './OrganizationFeatures'; 

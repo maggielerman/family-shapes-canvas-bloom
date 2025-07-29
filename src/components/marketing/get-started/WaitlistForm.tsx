@@ -12,6 +12,8 @@ import { organizationFeatures } from "./OrganizationFeatures";
 import SecondaryCTAs from "./SecondaryCTAs";
 
 interface WaitlistFormData {
+  fullName: string;
+  title: string;
   organizationName: string;
   contactName: string;
   email: string;
@@ -27,6 +29,7 @@ interface WaitlistFormProps {
 
 const organizationTypes = [
   "Traditional Cryobank",
+  "Fertility Clinic",
   "Cryostorage Startup", 
   "Donor-Matching Startup",
   "Other"
@@ -36,6 +39,8 @@ export default function WaitlistForm({
   onSuccess
 }: WaitlistFormProps) {
   const [formData, setFormData] = useState<WaitlistFormData>({
+    fullName: "",
+    title: "",
     organizationName: "",
     contactName: "",
     email: "",
@@ -63,10 +68,10 @@ export default function WaitlistForm({
 
       const { error } = await supabase.functions.invoke('send-contact-form', {
         body: {
-          name: formData.contactName,
+          name: formData.fullName,
           email: formData.email,
           subject: "Cryobank/Clinic Waitlist Request",
-          message: `Organization: ${formData.organizationName}\nOrganization Type: ${organizationTypeDisplay}\nContact: ${formData.contactName}\nEmail: ${formData.email}\n\nFeatures of Interest: ${selectedFeatures || 'None specified'}\n\nAdditional Needs: ${formData.needs || "Not specified"}`
+          message: `Organization: ${formData.organizationName}\nOrganization Type: ${organizationTypeDisplay}\nContact: ${formData.fullName}\nTitle: ${formData.title}\nEmail: ${formData.email}\n\nFeatures of Interest: ${selectedFeatures || 'None specified'}\n\nAdditional Needs: ${formData.needs || "Not specified"}`
         }
       });
 
@@ -81,6 +86,8 @@ export default function WaitlistForm({
 
       // Reset form
       setFormData({
+        fullName: "",
+        title: "",
         organizationName: "",
         contactName: "",
         email: "",
@@ -119,7 +126,32 @@ export default function WaitlistForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
+          {/* Line 1: Full Name and Title */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="fullName">Full Name *</Label>
+              <Input
+                id="fullName"
+                value={formData.fullName}
+                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                required
+                placeholder="Enter your full name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                required
+                placeholder="Enter your title"
+              />
+            </div>
+          </div>
+
+          {/* Line 2: Organization Name and Organization Type */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="organizationName">Organization Name *</Label>
               <Input
@@ -149,41 +181,36 @@ export default function WaitlistForm({
                 </SelectContent>
               </Select>
             </div>
-            {formData.organizationType === "Other" && (
-              <div>
-                <Label htmlFor="otherOrganizationType">Please specify your organization type *</Label>
-                <Input
-                  id="otherOrganizationType"
-                  value={formData.otherOrganizationType}
-                  onChange={(e) => setFormData(prev => ({ ...prev, otherOrganizationType: e.target.value }))}
-                  required
-                  placeholder="Enter your organization type"
-                />
-              </div>
-            )}
-            <div>
-              <Label htmlFor="contactName">Contact Name *</Label>
-              <Input
-                id="contactName"
-                value={formData.contactName}
-                onChange={(e) => setFormData(prev => ({ ...prev, contactName: e.target.value }))}
-                required
-                placeholder="Enter your name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                required
-                placeholder="Enter your email"
-              />
-            </div>
           </div>
 
+          {/* Conditional field for "Other" organization type */}
+          {formData.organizationType === "Other" && (
+            <div>
+              <Label htmlFor="otherOrganizationType">Please specify your organization type *</Label>
+              <Input
+                id="otherOrganizationType"
+                value={formData.otherOrganizationType}
+                onChange={(e) => setFormData(prev => ({ ...prev, otherOrganizationType: e.target.value }))}
+                required
+                placeholder="Enter your organization type"
+              />
+            </div>
+          )}
+
+          {/* Line 3: Work Email (single column) */}
+          <div>
+            <Label htmlFor="email">Work Email *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              required
+              placeholder="Enter your work email"
+            />
+          </div>
+
+          {/* Line 4: Additional needs (single column) */}
           <div>
             <Label htmlFor="needs">Additional needs or requirements (Optional)</Label>
             <Textarea
@@ -194,6 +221,7 @@ export default function WaitlistForm({
               rows={3}
             />
           </div>
+
           <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? "Submitting..." : "Join Waitlist"}
           </Button>

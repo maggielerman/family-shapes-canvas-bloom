@@ -63,12 +63,13 @@ describe('GetStarted Page', () => {
 
   it('displays the waitlist form for organizations', () => {
     renderWithRouter(<GetStarted />);
-    
+
     expect(screen.getByText('Join the Waitlist')).toBeInTheDocument();
+    expect(screen.getByText('Full Name *')).toBeInTheDocument();
+    expect(screen.getByText('Title *')).toBeInTheDocument();
     expect(screen.getByText('Organization Name *')).toBeInTheDocument();
     expect(screen.getByText('Organization Type *')).toBeInTheDocument();
-    expect(screen.getByText('Contact Name *')).toBeInTheDocument();
-    expect(screen.getByText('Email *')).toBeInTheDocument();
+    expect(screen.getByText('Work Email *')).toBeInTheDocument();
     expect(screen.getByText('Additional needs or requirements (Optional)')).toBeInTheDocument();
   });
 
