@@ -174,16 +174,16 @@ export function OrganizationDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-        <div className="flex items-center gap-4 mb-4 lg:mb-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex items-center gap-4">
           <div className="p-3 bg-primary/10 rounded-lg">
             <Building2 className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">{organization.name}</h1>
-            <div className="flex items-center gap-2 mt-1">
+            <h1 className="text-2xl lg:text-3xl font-bold">{organization.name}</h1>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant="secondary">{formatOrganizationType(organization.type)}</Badge>
               <Badge variant={organization.visibility === 'public' ? 'default' : 'outline'}>
                 {organization.visibility}
@@ -198,7 +198,7 @@ export function OrganizationDashboard() {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {canManage && (
             <>
               <Button
@@ -219,7 +219,7 @@ export function OrganizationDashboard() {
       </div>
 
       {/* Organization Info */}
-      <Card className="mb-8">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
@@ -227,7 +227,7 @@ export function OrganizationDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             <div>
               <h4 className="font-medium text-sm text-muted-foreground mb-1">Description</h4>
               <p className="text-sm">{organization.description || 'No description provided'}</p>
@@ -258,16 +258,18 @@ export function OrganizationDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="donors">Donor Database</TabsTrigger>
-          <TabsTrigger value="siblings">Sibling Groups</TabsTrigger>
-          <TabsTrigger value="groups">Groups</TabsTrigger>
-          <TabsTrigger value="trees">Family Trees</TabsTrigger>
-          {canManage && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
-          {isOwner && <TabsTrigger value="settings">Settings</TabsTrigger>}
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 h-auto">
+            <TabsTrigger value="overview" className="text-xs lg:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="members" className="text-xs lg:text-sm">Members</TabsTrigger>
+            <TabsTrigger value="donors" className="text-xs lg:text-sm">Donor Database</TabsTrigger>
+            <TabsTrigger value="siblings" className="text-xs lg:text-sm">Sibling Groups</TabsTrigger>
+            <TabsTrigger value="groups" className="text-xs lg:text-sm">Groups</TabsTrigger>
+            <TabsTrigger value="trees" className="text-xs lg:text-sm">Family Trees</TabsTrigger>
+            {canManage && <TabsTrigger value="analytics" className="text-xs lg:text-sm">Analytics</TabsTrigger>}
+            {isOwner && <TabsTrigger value="settings" className="text-xs lg:text-sm">Settings</TabsTrigger>}
+          </TabsList>
+        </div>
 
         <TabsContent value="overview">
           <OrganizationStats organizationId={organization.id} />

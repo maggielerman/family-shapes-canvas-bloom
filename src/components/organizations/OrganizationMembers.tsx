@@ -285,170 +285,99 @@ export function OrganizationMembers({ organizationId, canManage, currentUserId }
 
   return (
     <div className="space-y-6">
-      {/* Current Members */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Members ({members.length})
-          </CardTitle>
-          <CardDescription>
-            Current members of this organization
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {members.length === 0 ? (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No members yet</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
-                  {canManage && <TableHead>Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {members.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={member.user_profiles?.avatar_url} />
-                          <AvatarFallback>
-                            {getInitials(member.user_profiles?.full_name || 'Unknown')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">
-                            {member.user_profiles?.full_name || 'Unknown User'}
-                          </p>
-                          {member.user_id === currentUserId && (
-                            <Badge variant="outline" className="text-xs">You</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(member.role)} className="flex items-center gap-1 w-fit">
-                        {getRoleIcon(member.role)}
-                        {member.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {formatDate(member.joined_at)}
-                      </div>
-                    </TableCell>
-                    {canManage && (
-                      <TableCell>
-                        {member.user_id !== currentUserId && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => updateMemberRole(member.id, 'viewer')}>
-                                Change to Viewer
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => updateMemberRole(member.id, 'editor')}>
-                                Change to Editor
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => updateMemberRole(member.id, 'admin')}>
-                                Change to Admin
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => removeMember(member.id)}
-                                className="text-destructive"
-                              >
-                                <UserMinus className="h-4 w-4 mr-2" />
-                                Remove Member
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Pending Invitations */}
-      {canManage && (
+      {/* Desktop: 2-column layout, Mobile: stacked */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Current Members */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Pending Invitations ({pendingInvitations.length})
+              <Users className="h-5 w-5" />
+              Members ({members.length})
             </CardTitle>
             <CardDescription>
-              Invitations that haven't been accepted yet
+              Current members of this organization
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {pendingInvitations.length === 0 ? (
+            {members.length === 0 ? (
               <div className="text-center py-8">
-                <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No pending invitations</p>
+                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No members yet</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Member</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Sent</TableHead>
-                    <TableHead>Expires</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>Joined</TableHead>
+                    {canManage && <TableHead>Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pendingInvitations.map((invitation) => (
-                    <TableRow key={invitation.id}>
+                  {members.map((member) => (
+                    <TableRow key={member.id}>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          {invitation.invitee_email}
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={member.user_profiles?.avatar_url} />
+                            <AvatarFallback>
+                              {getInitials(member.user_profiles?.full_name || 'Unknown')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">
+                              {member.user_profiles?.full_name || 'Unknown User'}
+                            </p>
+                            {member.user_id === currentUserId && (
+                              <Badge variant="outline" className="text-xs">You</Badge>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getRoleBadgeVariant(invitation.role)} className="flex items-center gap-1 w-fit">
-                          {getRoleIcon(invitation.role)}
-                          {invitation.role}
+                        <Badge variant={getRoleBadgeVariant(member.role)} className="flex items-center gap-1 w-fit">
+                          {getRoleIcon(member.role)}
+                          {member.role}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <Calendar className="h-3 w-3" />
-                          {formatDate(invitation.created_at)}
+                          {formatDate(member.joined_at)}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(invitation.expires_at)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => cancelInvitation(invitation.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          Cancel
-                        </Button>
-                      </TableCell>
+                      {canManage && (
+                        <TableCell>
+                          {member.user_id !== currentUserId && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => updateMemberRole(member.id, 'viewer')}>
+                                  Change to Viewer
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateMemberRole(member.id, 'editor')}>
+                                  Change to Editor
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateMemberRole(member.id, 'admin')}>
+                                  Change to Admin
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => removeMember(member.id)}
+                                  className="text-destructive"
+                                >
+                                  <UserMinus className="h-4 w-4 mr-2" />
+                                  Remove Member
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -456,7 +385,81 @@ export function OrganizationMembers({ organizationId, canManage, currentUserId }
             )}
           </CardContent>
         </Card>
-      )}
+
+        {/* Pending Invitations */}
+        {canManage && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Pending Invitations ({pendingInvitations.length})
+              </CardTitle>
+              <CardDescription>
+                Invitations that haven't been accepted yet
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {pendingInvitations.length === 0 ? (
+                <div className="text-center py-8">
+                  <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No pending invitations</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Sent</TableHead>
+                      <TableHead>Expires</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingInvitations.map((invitation) => (
+                      <TableRow key={invitation.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            {invitation.invitee_email}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getRoleBadgeVariant(invitation.role)} className="flex items-center gap-1 w-fit">
+                            {getRoleIcon(invitation.role)}
+                            {invitation.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(invitation.created_at)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-muted-foreground">
+                            {formatDate(invitation.expires_at)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => cancelInvitation(invitation.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            Cancel
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
