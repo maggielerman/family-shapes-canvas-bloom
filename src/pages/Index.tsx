@@ -1,18 +1,14 @@
 
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import Features from "@/components/Features";
-import CTA from "@/components/CTA";
-import Footer from "@/components/Footer";
+import Hero from "@/components/marketing/Hero";
+import FeatureBullets from "@/components/marketing/FeatureBullets";
+import Features from "@/components/marketing/Features";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       <Hero />
+      <FeatureBullets />
       <Features />
-      <CTA />
-      <Footer />
     </div>
   );
 };

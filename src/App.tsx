@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
+import MainLayout from "@/components/layouts/MainLayout";
 
 // Lazy load heavy components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -31,6 +32,8 @@ const Share = lazy(() => import("./pages/Share"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
+const DonorLanding = lazy(() => import("./pages/DonorLanding"));
+const RecipientLanding = lazy(() => import("./pages/RecipientLanding"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -61,10 +64,12 @@ const App = () => (
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
+              <Route path="/" element={<MainLayout><Index /></MainLayout>} />
+              <Route path="/about" element={<MainLayout><About /></MainLayout>} />
+              <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/for-donors" element={<MainLayout><DonorLanding /></MainLayout>} />
+              <Route path="/for-recipient-families" element={<MainLayout><RecipientLanding /></MainLayout>} />
               <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
               <Route path="/shared/tree/:id" element={<PublicFamilyTree />} />
               <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />

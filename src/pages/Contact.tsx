@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import MainLayout from "@/components/layouts/MainLayout";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 const Contact = () => {
@@ -34,8 +33,7 @@ const Contact = () => {
   };
 
   return (
-    <MainLayout>
-
+    <div>
       {/* Hero Section */}
       <section className="px-6 lg:px-12 py-20 text-center">
         <h1 className="text-5xl lg:text-6xl font-light text-navy-800 mb-6">
@@ -152,7 +150,7 @@ const Contact = () => {
           </div>
         </div>
       </section>
-    </MainLayout>
+    </div>
   );
 };
 
