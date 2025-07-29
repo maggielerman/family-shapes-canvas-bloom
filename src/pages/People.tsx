@@ -250,23 +250,23 @@ export default function People() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">People</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">People</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage all people in your family trees and connections
           </p>
         </div>
-        <Button onClick={() => setShowAddPersonDialog(true)}>
+        <Button onClick={() => setShowAddPersonDialog(true)} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Add Person
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total People</CardTitle>
@@ -312,7 +312,7 @@ export default function People() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -352,7 +352,6 @@ export default function People() {
                 <SelectItem value="all">All Genders</SelectItem>
                 <SelectItem value="male">Male</SelectItem>
                 <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="non-binary">Non-Binary</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
@@ -361,63 +360,60 @@ export default function People() {
       </Card>
 
       {/* People Grid */}
-      {filteredPersons.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
-              {searchTerm || statusFilter !== "all" || genderFilter !== "all" 
-                ? "No people match your filters" 
-                : "No people yet"}
-            </h3>
-            <p className="text-muted-foreground mb-4 text-center">
-              {searchTerm || statusFilter !== "all" || genderFilter !== "all"
-                ? "Try adjusting your search criteria or filters"
-                : "Add your first family member to get started"}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-16 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : filteredPersons.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No people found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm || statusFilter !== 'all' || genderFilter !== 'all' 
+                ? 'Try adjusting your filters or search terms.'
+                : 'Add your first person to get started.'
+              }
             </p>
-            {!searchTerm && statusFilter === "all" && genderFilter === "all" && (
+            {!searchTerm && statusFilter === 'all' && genderFilter === 'all' && (
               <Button onClick={() => setShowAddPersonDialog(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add First Person
+                Add Your First Person
               </Button>
             )}
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredPersons.map((person) => (
-            <div key={person.id} className="relative">
-              <PersonCard
-                person={person}
-                onEdit={(p) => setEditingPerson(p)}
-                onDelete={(p) => setDeletingPerson(p)}
-                onClick={() => setViewingPerson(person)}
-                showActions={true}
-                onPersonUpdated={fetchPersons}
-                variant="card"
-              />
-              <div className="mt-2 text-xs text-muted-foreground text-center">
-                {getStatsForPerson(person)}
-              </div>
-            </div>
+            <PersonCard
+              key={person.id}
+              person={person}
+              onEdit={() => setEditingPerson(person)}
+              onDelete={() => setDeletingPerson(person)}
+              onView={() => setViewingPerson(person)}
+            />
           ))}
         </div>
       )}
 
       {/* Dialogs */}
-      <AddPersonDialog
-        open={showAddPersonDialog}
-        onOpenChange={setShowAddPersonDialog}
-        onSubmit={handleAddPerson}
-        onDonorSubmit={handleAddDonor}
-      />
-
       {editingPerson && (
         <EditPersonDialog
           person={editingPerson}
           open={!!editingPerson}
-          onOpenChange={(open) => !open && setEditingPerson(null)}
-          onPersonUpdated={fetchPersons}
+          onOpenChange={() => setEditingPerson(null)}
+          onSave={handleEditPerson}
         />
       )}
 
@@ -425,23 +421,25 @@ export default function People() {
         <DeletePersonDialog
           person={deletingPerson}
           open={!!deletingPerson}
-          onOpenChange={(open) => !open && setDeletingPerson(null)}
-          onConfirmDelete={() => {
-            handleDeletePerson(deletingPerson.id);
-            setDeletingPerson(null);
-          }}
+          onOpenChange={() => setDeletingPerson(null)}
+          onConfirm={handleDeletePerson}
         />
       )}
 
-      <PersonCardDialog
-        person={viewingPerson}
-        open={!!viewingPerson}
-        onOpenChange={(open) => !open && setViewingPerson(null)}
-        onEdit={() => {
-          setEditingPerson(viewingPerson);
-          setViewingPerson(null);
-        }}
+      {viewingPerson && (
+        <PersonCardDialog
+          person={viewingPerson}
+          open={!!viewingPerson}
+          onOpenChange={() => setViewingPerson(null)}
+        />
+      )}
+
+      <AddPersonDialog
+        open={showAddPersonDialog}
+        onOpenChange={setShowAddPersonDialog}
+        onAddPerson={handleAddPerson}
+        onAddDonor={handleAddDonor}
       />
-    </div>
+    </>
   );
 }

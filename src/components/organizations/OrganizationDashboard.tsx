@@ -174,15 +174,15 @@ export function OrganizationDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-primary/10 rounded-lg">
             <Building2 className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">{organization.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">{organization.name}</h1>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <Badge variant="secondary">{formatOrganizationType(organization.type)}</Badge>
               <Badge variant={organization.visibility === 'public' ? 'default' : 'outline'}>
@@ -204,12 +204,12 @@ export function OrganizationDashboard() {
               <Button
                 variant="outline"
                 onClick={() => setShowInviteDialog(true)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-full sm:w-auto"
               >
                 <UserPlus className="h-4 w-4" />
                 Invite Members
               </Button>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
                 <Settings className="h-4 w-4" />
                 Settings
               </Button>
@@ -227,7 +227,7 @@ export function OrganizationDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div>
               <h4 className="font-medium text-sm text-muted-foreground mb-1">Description</h4>
               <p className="text-sm">{organization.description || 'No description provided'}</p>
@@ -257,7 +257,7 @@ export function OrganizationDashboard() {
       </Card>
 
       {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="overflow-x-auto">
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 h-auto">
             <TabsTrigger value="overview" className="text-xs lg:text-sm">Overview</TabsTrigger>
@@ -365,7 +365,7 @@ export function OrganizationDashboard() {
         organizationId={organization.id}
         organizationName={organization.name}
       />
-    </div>
+    </>
   );
 }
 
