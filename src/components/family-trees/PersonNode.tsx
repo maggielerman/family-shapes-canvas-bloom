@@ -5,17 +5,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { formatDateShort, calculateAge } from '@/utils/dateUtils';
 import { Person, PersonUtils } from '@/types/person';
+import { PersonNodeData } from '@/types/reactFlowTypes';
 
-interface PersonNodeData {
-  person: Person;
-  generationColor?: string;
-  generation?: number;
-}
-
-export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
-  const person = data.person as Person;
-  const generationColor = data.generationColor;
-  const generation = data.generation;
+export const PersonNode = memo(({ data }: NodeProps) => {
+  const person = data?.person as Person;
+  const generationColor = data?.generationColor as string;
+  const generation = data?.generation as number;
+  
+  if (!person) {
+    return null;
+  }
+  
   const age = person.date_of_birth ? calculateAge(person.date_of_birth) : null;
   const initials = PersonUtils.getInitials(person);
 
@@ -34,8 +34,8 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
           <Avatar 
             className="w-16 h-16 ring-2 shadow-md"
             style={{ 
-              ringColor: generationColor || 'hsl(var(--border))'
-            }}
+              '--tw-ring-color': generationColor || 'hsl(var(--border))'
+            } as React.CSSProperties}
           >
             <AvatarImage src={person.profile_photo_url || undefined} />
             <AvatarFallback 
@@ -61,7 +61,7 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
                 </span>
               )}
               {generation !== undefined && (
-                <div className="text-xs font-medium mt-1" style={{ color: generationColor }}>
+                <div className="text-xs font-medium mt-1" style={{ color: generationColor || 'hsl(var(--muted-foreground))' }}>
                   Gen {generation}
                 </div>
               )}

@@ -28,7 +28,7 @@ export function XYFlowLegend() {
                 className="flex items-center gap-1 justify-start p-2 h-auto"
                 style={{ borderColor: type.color }}
               >
-                <IconComponent className="w-3 h-3" style={{ color: type.color }} />
+                <IconComponent className="w-3 h-3" />
                 <span className="text-xs">{type.label}</span>
               </Badge>
             );
