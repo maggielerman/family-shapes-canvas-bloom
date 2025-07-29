@@ -11,11 +11,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Create Supabase client
-const createClient = async () => {
-  return createClient(supabaseUrl as string, supabaseServiceKey as string);
-};
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -34,7 +29,7 @@ serve(async (req) => {
     const decodedToken = decodeURIComponent(token);
 
     // Create Supabase client
-    const supabase = await createClient();
+    const supabase = createClient(supabaseUrl as string, supabaseServiceKey as string);
 
     // Get the invitation details
     const { data: invitation, error: invitationError } = await supabase
