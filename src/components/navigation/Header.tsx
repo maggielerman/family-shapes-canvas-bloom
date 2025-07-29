@@ -64,7 +64,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 flex items-center justify-between bg-white relative z-50">
+      <header className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 flex items-center justify-between relative z-50">
         <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
             <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
@@ -154,17 +154,20 @@ const Header = () => {
               <Button asChild
                 variant="ghost" 
                 size="sm" 
-                className="hidden sm:block text-xxs uppercase tracking-wider text-navy-700 hover:text-coral-600 hover:bg-coral-50 px-3 lg:px-4"
+                className="hidden sm:inline-flex text-sm font-small tracking-wider text-navy-700 hover:text-coral-600 hover:bg-coral-50 px-3 lg:px-4"
               >
                 <Link to="/auth">Sign In</Link>
               </Button>
+           
+
               <Button asChild
                 size="sm" 
-                className="bg-coral-600 hover:bg-coral-700 text-white text-xxs uppercase tracking-wider px-3 sm:px-4 lg:px-6"
+                className="bg-coral-600 hover:bg-coral-700 text-white text-sm font-small tracking-wider px-3 sm:px-4 lg:px-6"
               >
-                <Link to="/auth">Get Started</Link>
+               <Link to="/auth">Get Started</Link>
               </Button>
             </>
+            
           )}
           
           {/* Mobile Menu Button */}

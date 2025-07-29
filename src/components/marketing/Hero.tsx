@@ -4,7 +4,7 @@ import { ArrowRight, Play } from "lucide-react";
 
 const Hero = () => {
   return (
-    <section className="rounded-lg w-full px-4 sm:px-6 lg:px-12 py-12 sm:py-16 lg:py-24 xl:py-32 bg-white">
+    <section className=" w-full px-4 sm:px-6 lg:px-12 py-16 bg-background">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8 sm:mb-12 lg:mb-16 animate-gentle-fade">
           <div className="mb-4 sm:mb-6 lg:mb-8">
