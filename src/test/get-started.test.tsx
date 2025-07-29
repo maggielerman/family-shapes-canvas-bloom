@@ -66,21 +66,30 @@ describe('GetStarted Page', () => {
     
     expect(screen.getByText('Join the Waitlist')).toBeInTheDocument();
     expect(screen.getByText('Organization Name *')).toBeInTheDocument();
+    expect(screen.getByText('Organization Type *')).toBeInTheDocument();
     expect(screen.getByText('Contact Name *')).toBeInTheDocument();
     expect(screen.getByText('Email *')).toBeInTheDocument();
     expect(screen.getByText('Additional needs or requirements (Optional)')).toBeInTheDocument();
   });
 
-  it('shows the image placeholder', () => {
+  it('shows organization type dropdown options', () => {
     renderWithRouter(<GetStarted />);
     
-    expect(screen.getByText('Visual Placeholder')).toBeInTheDocument();
-    expect(screen.getByText(/Organization dashboard preview/)).toBeInTheDocument();
+    // Click on the organization type dropdown to open it
+    const organizationTypeDropdown = screen.getByText('Select your organization type');
+    fireEvent.click(organizationTypeDropdown);
+    
+    // Check that all options are displayed (use getAllByText since there are multiple elements)
+    expect(screen.getAllByText('Traditional Cryobank')).toHaveLength(2); // option and span
+    expect(screen.getAllByText('Cryostorage Startup')).toHaveLength(2);
+    expect(screen.getAllByText('Donor-Matching Startup')).toHaveLength(2);
+    expect(screen.getAllByText('Other')).toHaveLength(2);
   });
 
   it('displays minimal CTAs for other audiences', () => {
     renderWithRouter(<GetStarted />);
     
+    // The CTAs should now be inside the form, so we need to look for them there
     expect(screen.getByText('Looking for something else?')).toBeInTheDocument();
     expect(screen.getByText("I'm a Family")).toBeInTheDocument();
     expect(screen.getByText("I'm a Donor")).toBeInTheDocument();

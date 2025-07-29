@@ -4,15 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { organizationFeatures } from "./OrganizationFeatures";
+import SecondaryCTAs from "./SecondaryCTAs";
 
 interface WaitlistFormData {
   organizationName: string;
   contactName: string;
   email: string;
+  organizationType: string;
+  otherOrganizationType: string;
   needs: string;
   features: string[];
 }
@@ -21,6 +25,13 @@ interface WaitlistFormProps {
   onSuccess?: () => void;
 }
 
+const organizationTypes = [
+  "Traditional Cryobank",
+  "Cryostorage Startup", 
+  "Donor-Matching Startup",
+  "Other"
+];
+
 export default function WaitlistForm({ 
   onSuccess
 }: WaitlistFormProps) {
@@ -28,6 +39,8 @@ export default function WaitlistForm({
     organizationName: "",
     contactName: "",
     email: "",
+    organizationType: "",
+    otherOrganizationType: "",
     needs: "",
     features: []
   });
@@ -44,12 +57,16 @@ export default function WaitlistForm({
         .map(feature => feature.label)
         .join(', ');
 
+      const organizationTypeDisplay = formData.organizationType === "Other" 
+        ? formData.otherOrganizationType 
+        : formData.organizationType;
+
       const { error } = await supabase.functions.invoke('send-contact-form', {
         body: {
           name: formData.contactName,
           email: formData.email,
           subject: "Cryobank/Clinic Waitlist Request",
-          message: `Organization: ${formData.organizationName}\nContact: ${formData.contactName}\nEmail: ${formData.email}\n\nFeatures of Interest: ${selectedFeatures || 'None specified'}\n\nAdditional Needs: ${formData.needs || "Not specified"}`
+          message: `Organization: ${formData.organizationName}\nOrganization Type: ${organizationTypeDisplay}\nContact: ${formData.contactName}\nEmail: ${formData.email}\n\nFeatures of Interest: ${selectedFeatures || 'None specified'}\n\nAdditional Needs: ${formData.needs || "Not specified"}`
         }
       });
 
@@ -67,6 +84,8 @@ export default function WaitlistForm({
         organizationName: "",
         contactName: "",
         email: "",
+        organizationType: "",
+        otherOrganizationType: "",
         needs: "",
         features: []
       });
@@ -112,6 +131,37 @@ export default function WaitlistForm({
               />
             </div>
             <div>
+              <Label htmlFor="organizationType">Organization Type *</Label>
+              <Select 
+                value={formData.organizationType} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, organizationType: value }))}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your organization type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {organizationTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.organizationType === "Other" && (
+              <div>
+                <Label htmlFor="otherOrganizationType">Please specify your organization type *</Label>
+                <Input
+                  id="otherOrganizationType"
+                  value={formData.otherOrganizationType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, otherOrganizationType: e.target.value }))}
+                  required
+                  placeholder="Enter your organization type"
+                />
+              </div>
+            )}
+            <div>
               <Label htmlFor="contactName">Contact Name *</Label>
               <Input
                 id="contactName"
@@ -148,6 +198,8 @@ export default function WaitlistForm({
             {isSubmitting ? "Submitting..." : "Join Waitlist"}
           </Button>
         </form>
+        
+        <SecondaryCTAs />
       </CardContent>
     </Card>
   );

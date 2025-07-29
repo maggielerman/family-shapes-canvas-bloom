@@ -2,8 +2,7 @@ import {
   ImagePlaceholder,
   ValueProposition,
   KeyBenefits,
-  WaitlistForm,
-  SecondaryCTAs
+  WaitlistForm
 } from "@/components/marketing/get-started";
 
 export default function GetStarted() {
@@ -11,10 +10,9 @@ export default function GetStarted() {
     <div className="responsive-page-container">
       <div className="responsive-page">
         {/* Main Two-Column Section */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Column - Image Placeholder & Value Prop */}
           <div className="space-y-6">
-            <ImagePlaceholder />
             <ValueProposition />
             <KeyBenefits />
           </div>
@@ -24,9 +22,6 @@ export default function GetStarted() {
             <WaitlistForm />
           </div>
         </div>
-
-        {/* Bottom Section - Minimal CTAs for Other Audiences */}
-        <SecondaryCTAs />
       </div>
     </div>
   );
