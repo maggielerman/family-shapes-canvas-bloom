@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getPersonIdFromUserId } from "@/utils/donorUtils";
 
 interface Message {
   id: string;
@@ -88,10 +90,17 @@ const DonorCommunication = () => {
     if (!user) return;
     
     try {
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        console.error('Person record not found');
+        return;
+      }
+      
       const { data: donorData } = await supabase
         .from('donors')
         .select('metadata')
-        .eq('person_id', user.id)
+        .eq('person_id', personId)
         .single();
 
       if (donorData?.metadata?.privacy_settings) {
@@ -107,6 +116,12 @@ const DonorCommunication = () => {
     
     try {
       setLoading(true);
+      
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
       
       // Load threads (grouped conversations with families)
       const { data: threadData, error: threadError } = await supabase
@@ -124,7 +139,7 @@ const DonorCommunication = () => {
             is_read
           )
         `)
-        .eq('donor_id', user.id)
+        .eq('donor_id', personId)
         .order('last_message_at', { ascending: false });
 
       if (threadError) throw threadError;

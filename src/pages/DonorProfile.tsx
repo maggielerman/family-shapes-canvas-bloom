@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getPersonIdFromUserId } from "@/utils/donorUtils";
 import { 
   Save, 
   User, 
@@ -105,6 +107,12 @@ const DonorProfile = () => {
     try {
       setLoading(true);
       
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
+      
       // Load donor data
       const { data: donorData, error } = await supabase
         .from('donors')
@@ -119,7 +127,7 @@ const DonorProfile = () => {
             phone
           )
         `)
-        .eq('person_id', user.id)
+        .eq('person_id', personId)
         .single();
 
       if (error) throw error;
@@ -168,6 +176,12 @@ const DonorProfile = () => {
     setSaving(true);
     
     try {
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
+      
       // Update person data
       const { error: personError } = await supabase
         .from('persons')
@@ -206,7 +220,7 @@ const DonorProfile = () => {
             show_medical_history: profileData.showMedicalHistory
           }
         })
-        .eq('person_id', user.id);
+        .eq('person_id', personId);
 
       if (donorError) throw donorError;
 

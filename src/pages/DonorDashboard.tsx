@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, differenceInDays, differenceInMonths } from "date-fns";
+import { getPersonIdFromUserId } from "@/utils/donorUtils";
 
 interface DonorStats {
   connectedFamilies: number;
@@ -63,6 +64,12 @@ const DonorDashboard = () => {
     try {
       setLoading(true);
       
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
+      
       // Load donor profile
       const { data: donorData } = await supabase
         .from('donors')
@@ -75,7 +82,7 @@ const DonorDashboard = () => {
             date_of_birth
           )
         `)
-        .eq('person_id', user.id)
+        .eq('person_id', personId)
         .single();
 
       // Calculate profile completeness

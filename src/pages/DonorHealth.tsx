@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,7 @@ import {
   Activity,
   Pill
 } from "lucide-react";
+import { getPersonIdFromUserId } from "@/utils/donorUtils";
 
 interface HealthCondition {
   id: string;
@@ -99,10 +101,16 @@ const DonorHealth = () => {
     try {
       setLoading(true);
       
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
+      
       const { data: donorData, error } = await supabase
         .from('donors')
         .select('medical_history')
-        .eq('person_id', user.id)
+        .eq('person_id', personId)
         .single();
 
       if (error) throw error;
@@ -142,6 +150,12 @@ const DonorHealth = () => {
     setSaving(true);
     
     try {
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
+      
       const medicalHistory = {
         general_health: healthData.generalHealth,
         conditions: healthData.conditions,
@@ -159,7 +173,7 @@ const DonorHealth = () => {
           medical_history: medicalHistory,
           updated_at: new Date().toISOString()
         })
-        .eq('person_id', user.id);
+        .eq('person_id', personId);
 
       if (error) throw error;
 

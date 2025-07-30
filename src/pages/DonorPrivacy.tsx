@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getPersonIdFromUserId } from "@/utils/donorUtils";
 import { 
   Lock, 
   Eye, 
@@ -126,10 +128,16 @@ const DonorPrivacy = () => {
     try {
       setLoading(true);
       
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
+      
       const { data: donorData, error } = await supabase
         .from('donors')
         .select('is_anonymous, metadata')
-        .eq('person_id', user.id)
+        .eq('person_id', personId)
         .single();
 
       if (error) throw error;
@@ -178,6 +186,12 @@ const DonorPrivacy = () => {
     if (!user) return;
     
     try {
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
+      
       const { data: donorData } = await supabase
         .from('donors')
         .select(`
@@ -188,7 +202,7 @@ const DonorPrivacy = () => {
             email
           )
         `)
-        .eq('person_id', user.id)
+        .eq('person_id', personId)
         .single();
 
       if (donorData) {
@@ -205,6 +219,12 @@ const DonorPrivacy = () => {
     setSaving(true);
     
     try {
+      // First get the person ID from the user ID
+      const personId = await getPersonIdFromUserId(user.id);
+      if (!personId) {
+        throw new Error('Person record not found');
+      }
+      
       const privacyMetadata = {
         privacy_settings: {
           privacy_level: privacySettings.privacyLevel,
@@ -235,7 +255,7 @@ const DonorPrivacy = () => {
           metadata: privacyMetadata,
           updated_at: new Date().toISOString()
         })
-        .eq('person_id', user.id);
+        .eq('person_id', personId);
 
       if (error) throw error;
 
