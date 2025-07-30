@@ -455,7 +455,7 @@ const DonorProfile = () => {
                   <Label htmlFor="height">Height</Label>
                   <Input
                     id="height"
-                    placeholder="e.g., 5'10\" or 178cm"
+                    placeholder="e.g., 5'10 or 178cm"
                     value={profileData.height}
                     onChange={handleInputChange('height')}
                     disabled={!isEditing}
