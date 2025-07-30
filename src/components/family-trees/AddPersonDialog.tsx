@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreatePersonData } from "@/types/person";
 import { AddDonorDialog } from "./AddDonorDialog";
 import { CreateDonorData } from "@/types/donor";
+import { parsePartialDate, getDatePlaceholder } from "@/utils/dateUtils";
 
 interface AddPersonDialogProps {
   open: boolean;
@@ -42,6 +43,7 @@ export function AddPersonDialog({
   const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("living");
   const [uploadedPhoto, setUploadedPhoto] = useState<any>(null);
@@ -78,10 +80,11 @@ export function AddPersonDialog({
 
     const personData: CreatePersonData = {
       name: name.trim(),
-      date_of_birth: dateOfBirth || undefined,
+      date_of_birth: dateOfBirth ? parsePartialDate(dateOfBirth) || undefined : undefined,
       gender: gender || undefined,
       email: email.trim() || undefined,
       phone: phone.trim() || undefined,
+      address: address.trim() || undefined,
       notes: notes.trim() || undefined,
       status,
       profile_photo_url: photoUrl,
@@ -112,6 +115,7 @@ export function AddPersonDialog({
     setGender("");
     setEmail("");
     setPhone("");
+    setAddress("");
     setNotes("");
     setStatus("living");
     setUploadedPhoto(null);
@@ -168,9 +172,10 @@ export function AddPersonDialog({
                 <Label htmlFor="date_of_birth">Date of Birth</Label>
                 <Input
                   id="date_of_birth"
-                  type="date"
+                  type="text"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
+                  placeholder={getDatePlaceholder()}
                 />
               </div>
               
@@ -226,6 +231,16 @@ export function AddPersonDialog({
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="e.g., New York, NY or 123 Main St, New York, NY 10001 or USA"
+              />
             </div>
             
             <div className="grid gap-2">

@@ -44,7 +44,7 @@ import { PersonTreesManager } from './PersonTreesManager';
 import { MarkAsSelfDialog } from './MarkAsSelfDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { formatDate, calculateAge, formatDateShort } from '@/utils/dateUtils';
+import { formatDate, calculateAge, formatDateShort, formatPartialDate } from '@/utils/dateUtils';
 import { Donor } from '@/types/donor';
 import { DonorUtils } from '@/types/donor';
 import { Person } from '@/types/person';
@@ -390,7 +390,7 @@ export function PersonCard({
           {person.date_of_birth && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              Born {formatDateShort(person.date_of_birth)}
+              Born {formatPartialDate(person.date_of_birth)}
             </div>
           )}
           
@@ -405,6 +405,13 @@ export function PersonCard({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Phone className="w-4 h-4" />
               {person.phone}
+            </div>
+          )}
+          
+          {person.address && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin className="w-4 h-4" />
+              {person.address}
             </div>
           )}
           
@@ -525,7 +532,7 @@ export function PersonCard({
                 <div className="flex items-center text-sm">
                   <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span className="text-muted-foreground">Born:</span>
-                  <span className="ml-2">{formatDateLocal(person.date_of_birth)}</span>
+                  <span className="ml-2">{formatPartialDate(person.date_of_birth)}</span>
                   {person.date_of_birth && getAge(person.date_of_birth) && (
                     <span className="ml-2 text-muted-foreground">
                       (Age {getAge(person.date_of_birth)})

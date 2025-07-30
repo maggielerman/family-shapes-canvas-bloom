@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { parsePartialDate, getDatePlaceholder } from "@/utils/dateUtils";
 import { 
   Calendar, 
   MapPin, 
@@ -145,7 +146,7 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
 
       const updateData = {
         name: formData.name,
-        date_of_birth: formData.date_of_birth || null,
+        date_of_birth: formData.date_of_birth ? parsePartialDate(formData.date_of_birth) || null : null,
         birth_place: formData.birth_place || null,
         gender: formData.gender || null,
         status: formData.status,
@@ -305,9 +306,10 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
                   <Label htmlFor="date_of_birth">Date of Birth</Label>
                   <Input
                     id="date_of_birth"
-                    type="date"
+                    type="text"
                     value={formData.date_of_birth}
                     onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                    placeholder={getDatePlaceholder()}
                   />
                 </div>
 

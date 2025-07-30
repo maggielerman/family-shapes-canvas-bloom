@@ -25,6 +25,7 @@ import { RadialLayout } from "./layouts/RadialLayout";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatPartialDate } from "@/utils/dateUtils";
 
 interface PublicFamilyTree {
   id: string;
@@ -45,6 +46,7 @@ interface PublicPerson {
   status: string;
   email?: string | null;
   phone?: string | null;
+  address?: string | null;
   notes?: string | null;
 }
 
@@ -178,6 +180,9 @@ export function PublicFamilyTreeViewer({
             gender,
             profile_photo_url,
             status,
+            email,
+            phone,
+            address,
             notes
           )
         `)
@@ -373,13 +378,19 @@ export function PublicFamilyTreeViewer({
                           {person.date_of_birth && (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              <span>{formatDate(person.date_of_birth)}</span>
+                              <span>{formatPartialDate(person.date_of_birth)}</span>
                             </div>
                           )}
                           {person.birth_place && (
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
                               <span className="truncate">{person.birth_place}</span>
+                            </div>
+                          )}
+                          {person.address && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              <span className="truncate">{person.address}</span>
                             </div>
                           )}
                           <Badge variant="secondary" className="text-xs">

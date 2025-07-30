@@ -1,5 +1,6 @@
 import React from 'react';
 import { Person } from '@/types/person';
+import { formatPartialDate } from '@/utils/dateUtils';
 
 interface FamilyTreePersonCardProps {
   person: Person;
@@ -73,11 +74,11 @@ export function FamilyTreePersonCard({
         </h3>
       </div>
 
-      {/* Age */}
-      {getAge() && (
+      {/* Date of Birth */}
+      {person.date_of_birth && (
         <div className="text-center mb-2">
           <p className="text-xs text-gray-600">
-            Age {getAge()}
+            {formatPartialDate(person.date_of_birth)}
           </p>
         </div>
       )}
@@ -92,6 +93,11 @@ export function FamilyTreePersonCard({
         {person.phone && !person.email && (
           <p className="text-xs text-gray-500 mb-1">
             {person.phone}
+          </p>
+        )}
+        {person.address && !person.email && !person.phone && (
+          <p className="text-xs text-gray-500 mb-1">
+            {person.address.length > 25 ? person.address.substring(0, 25) + '...' : person.address}
           </p>
         )}
         {person.notes && (

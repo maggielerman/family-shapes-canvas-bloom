@@ -343,7 +343,7 @@ export function DagreLayout({
         }
       }
 
-      // Contact info (email or phone)
+      // Contact info (email, phone, or address)
       if (person.email) {
         cardGroup.append('text')
           .attr('x', 96)
@@ -361,6 +361,15 @@ export function DagreLayout({
           .attr('fill', '#9ca3af')
           .attr('font-size', '10px')
           .text(person.phone);
+        yOffset += 20;
+      } else if (person.address) {
+        cardGroup.append('text')
+          .attr('x', 96)
+          .attr('y', yOffset)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#9ca3af')
+          .attr('font-size', '10px')
+          .text(person.address.length > 20 ? person.address.substring(0, 20) + '...' : person.address);
         yOffset += 20;
       }
 
