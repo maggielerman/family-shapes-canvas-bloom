@@ -131,7 +131,7 @@ export function TestResults({ results }: TestResultsProps) {
                   <Collapsible key={index}>
                     <CollapsibleTrigger
                       onClick={() => toggleTest(index)}
-                      className="w-full p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors"
+                      className="w-full p-3 bg-red-50 rounded-lg border border-red-200 hover:bg-red-100 transition-colors"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 text-left">
@@ -141,10 +141,10 @@ export function TestResults({ results }: TestResultsProps) {
                             <ChevronRight className="w-4 h-4 text-red-600" />
                           )}
                           <div>
-                            <div className="font-medium text-red-800 dark:text-red-200">
+                            <div className="font-medium text-red-800">
                               {test.name}
                             </div>
-                            <div className="text-xs text-red-600 dark:text-red-300">
+                            <div className="text-xs text-red-600">
                               {test.file}
                             </div>
                           </div>
@@ -155,21 +155,21 @@ export function TestResults({ results }: TestResultsProps) {
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-2">
-                      <div className="p-4 bg-red-50 dark:bg-red-950/10 rounded-lg border border-red-200 dark:border-red-800">
+                      <div className="p-4 bg-red-50 rounded-lg border border-red-200">
                         <div className="mb-3">
-                          <h5 className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+                          <h5 className="text-sm font-medium text-red-800 mb-2">
                             Error Message:
                           </h5>
-                          <div className="text-sm text-red-700 dark:text-red-300 font-mono bg-red-100 dark:bg-red-950/40 p-2 rounded border">
+                          <div className="text-sm text-red-700 font-mono bg-red-100 p-2 rounded border">
                             {test.error}
                           </div>
                         </div>
                         {test.stack && (
                           <div>
-                            <h5 className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+                            <h5 className="text-sm font-medium text-red-800 mb-2">
                               Stack Trace:
                             </h5>
-                            <div className="text-xs text-red-600 dark:text-red-400 font-mono bg-red-100 dark:bg-red-950/40 p-2 rounded border max-h-40 overflow-y-auto">
+                            <div className="text-xs text-red-600 font-mono bg-red-100 p-2 rounded border max-h-40 overflow-y-auto">
                               <pre className="whitespace-pre-wrap">{test.stack}</pre>
                             </div>
                           </div>

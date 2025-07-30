@@ -173,9 +173,9 @@ export function MarkAsSelfDialog({
 
             {/* Show warning if another person is already marked as self */}
             {!person.is_self && currentSelfPerson && currentSelfPerson.id !== person.id && (
-              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+              <Alert className="border-amber-200 bg-amber-50">
                 <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <AlertDescription className="text-amber-800">
                   <div className="space-y-3">
                     <p className="text-sm">
                       <strong>{currentSelfPerson.name}</strong> is currently marked as self. 
@@ -186,7 +186,7 @@ export function MarkAsSelfDialog({
                       size="sm"
                       onClick={handleUnmarkCurrentSelf}
                       disabled={isUpdating}
-                      className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900"
+                      className="border-amber-300 text-amber-800 hover:bg-amber-100"
                     >
                       {isUpdating ? 'Updating...' : `Unmark ${currentSelfPerson.name} and mark ${person.name} as self`}
                     </Button>
@@ -196,14 +196,14 @@ export function MarkAsSelfDialog({
             )}
 
             {!person.is_self && !currentSelfPerson && (
-              <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
+              <div className="bg-blue-50 p-3 rounded-lg">
                 <div className="flex items-start gap-2">
                   <Crown className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    <p className="text-sm font-medium text-blue-800">
                       What does "Self" mean?
                     </p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                    <p className="text-xs text-blue-700 mt-1">
                       Marking a person as "Self" links them to your user account and identifies 
                       them as representing you in family trees. Only one person per user can be marked as self.
                     </p>

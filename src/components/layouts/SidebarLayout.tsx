@@ -88,9 +88,9 @@ const ThemeToggleButton = () => {
 
   return (
     <SidebarMenuButton onClick={toggleTheme} tooltip="Toggle theme">
-      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all" />
+      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all" />
+      <span>Light mode</span>
     </SidebarMenuButton>
   );
 };
