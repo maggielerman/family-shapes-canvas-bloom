@@ -101,19 +101,13 @@ const DonorDashboard = () => {
       const completedFields = profileFields.filter(field => field !== null && field !== '').length;
       const profileCompleteness = Math.round((completedFields / profileFields.length) * 100);
 
-      // Get connected families count
-      const { count: familiesCount } = await supabase
-        .from('donor_family_connections')
-        .select('*', { count: 'exact' })
-        .eq('donor_id', donorData?.id)
-        .eq('status', 'active');
+      // Get connected families count - placeholder for now
+      // TODO: Implement when donor_family_connections table is created
+      const familiesCount = 0;
 
-      // Get unread messages
-      const { count: unreadCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact' })
-        .eq('recipient_id', user.id)
-        .eq('is_read', false);
+      // Get unread messages - placeholder for now
+      // TODO: Implement when messaging system is set up
+      const unreadCount = 0;
 
       // Calculate health update reminder
       const lastUpdate = donorData?.medical_history?.last_updated 
