@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import DonorProtectedRoute from "@/components/auth/DonorProtectedRoute";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
 import MainLayout from "@/components/layouts/MainLayout";
 
@@ -112,11 +113,11 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><SidebarLayout><Settings /></SidebarLayout></ProtectedRoute>} />
 
               {/* Donor portal routes */}
-              <Route path="/donor/dashboard" element={<ProtectedRoute><SidebarLayout><DonorDashboard /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/donor/profile" element={<ProtectedRoute><SidebarLayout><DonorProfile /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/donor/health" element={<ProtectedRoute><SidebarLayout><DonorHealth /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/donor/communication" element={<ProtectedRoute><SidebarLayout><DonorCommunication /></SidebarLayout></ProtectedRoute>} />
-              <Route path="/donor/privacy" element={<ProtectedRoute><SidebarLayout><DonorPrivacy /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/donor/dashboard" element={<DonorProtectedRoute><SidebarLayout><DonorDashboard /></SidebarLayout></DonorProtectedRoute>} />
+              <Route path="/donor/profile" element={<DonorProtectedRoute><SidebarLayout><DonorProfile /></SidebarLayout></DonorProtectedRoute>} />
+              <Route path="/donor/health" element={<DonorProtectedRoute><SidebarLayout><DonorHealth /></SidebarLayout></DonorProtectedRoute>} />
+              <Route path="/donor/communication" element={<DonorProtectedRoute><SidebarLayout><DonorCommunication /></SidebarLayout></DonorProtectedRoute>} />
+              <Route path="/donor/privacy" element={<DonorProtectedRoute><SidebarLayout><DonorPrivacy /></SidebarLayout></DonorProtectedRoute>} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

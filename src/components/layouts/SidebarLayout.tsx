@@ -61,6 +61,7 @@ const IndividualUserNav = [
   { icon: Image, label: "Media", path: "/media" },
   { icon: Share2, label: "Share", path: "/share" },
   { icon: Building2, label: "Organizations", path: "/organizations" },
+  { icon: Dna, label: "Donor Portal", path: "/donor/auth" },
 ];
 
 // Donor navigation items
@@ -134,7 +135,8 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
     const orgMatch = path.match(/\/organizations\/([^\/]+)/);
     const donorMatch = path.startsWith('/donor/');
     
-    if (donorMatch && isDonor) {
+    if (donorMatch) {
+      // Show donor navigation on any donor route
       setCurrentContext("donor");
       setSidebarItems(DonorNav);
     } else if (orgMatch) {
@@ -150,7 +152,7 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
       setCurrentContext("personal");
       setSidebarItems(IndividualUserNav);
     }
-  }, [location.pathname, isDonor]);
+  }, [location.pathname]);
 
   const handleSignOut = async () => {
     console.log('Sidebar sign out clicked');
@@ -220,7 +222,8 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
         <SidebarContentComponent className="px-2 py-2">
           <SidebarGroup>
             <SidebarGroupLabel>
-              {currentContext === "personal" ? "Navigation" : "Organization"}
+              {currentContext === "personal" ? "Navigation" : 
+               currentContext === "donor" ? "Donor Portal" : "Organization"}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
