@@ -94,7 +94,7 @@ const OrganizationFeatures = () => {
             we have a dedicated platform designed specifically for your journey.
           </p>
           <Button asChild size="lg" className="bg-coral-600 hover:bg-coral-700 text-white px-6 sm:px-8 py-4 sm:py-6 text-sm font-medium tracking-wide group">
-            <Link to="/family-community">
+            <Link to="/for-recipient-families">
               Explore Family Platform
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>

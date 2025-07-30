@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import ContextSwitcher from "@/components/navigation/ContextSwitcher";
+import { Logo } from "@/components/logo";
 import { 
-  Heart, 
   User, 
   Settings, 
   LogOut, 
@@ -159,18 +159,12 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
       <Sidebar variant="inset">
         <SidebarHeader className="border-b px-2 py-4">
           {/* App Logo */}
-          <Link to="/" className="flex items-center gap-2 px-4 py-2 mb-3 hover:bg-sidebar-accent rounded-md transition-colors">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-              <Heart className="w-4 h-4 text-white" />
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">Family Shapes</span>
-              <span className="truncate text-xs">Family Tree Management</span>
-            </div>
-          </Link>
+          <div className="px-4 py-2 mb-3">
+            <Logo size="md" showText={true} linkTo="/" showIcon={false} />
+          </div>
           
           {/* Context Switcher */}
-          <div className="px-4">
+          <div>
             <ContextSwitcher />
           </div>
         </SidebarHeader>

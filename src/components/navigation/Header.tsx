@@ -1,10 +1,12 @@
 
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, Heart, User, Settings, LogOut, X } from "lucide-react";
+import { Menu, User, Settings, LogOut, X, TreePine } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Logo } from "@/components/logo";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +17,57 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  // Fetch user profile when user changes
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    } else {
+      setProfile(null);
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, avatar_url, bio')
+        .eq('id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+      } else if (data && data.length > 0) {
+        setProfile(data[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  // Refresh profile data when location changes to catch avatar updates
+  useEffect(() => {
+    if (user && location.pathname !== '/profile') {
+      // Refresh profile data when user navigates away from profile page
+      fetchUserProfile();
+    }
+  }, [location.pathname, user]);
 
   const handleSignOut = async () => {
     console.log('Header sign out clicked');
@@ -65,12 +113,7 @@ const Header = () => {
   return (
     <>
       <header className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 flex items-center justify-between relative z-50">
-        <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-          </div>
-          <span className="text-lg sm:text-xl lg:text-2xl font-light tracking-wide text-navy-800">Family Shapes</span>
-        </Link>
+        <Logo size="xl" className="text-navy-800" linkTo="/" showIcon={false} />
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8 lg:space-x-12">
@@ -101,7 +144,7 @@ const Header = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                    <AvatarImage src={profile?.avatar_url || undefined} alt={user.email} />
                     <AvatarFallback className="bg-coral-600 text-white">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -132,7 +175,7 @@ const Header = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/family-trees" className="cursor-pointer">
-                    <Heart className="mr-2 h-4 w-4" />
+                    <TreePine className="mr-2 h-4 w-4" />
                     <span>Family Trees</span>
                   </Link>
                 </DropdownMenuItem>
@@ -200,12 +243,7 @@ const Header = () => {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b">
-                <Link to="/" className="flex items-center space-x-3" onClick={() => setMobileMenuOpen(false)}>
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-                    <Heart className="w-3 h-3 text-white" />
-                  </div>
-                  <span className="text-lg font-light tracking-wide text-navy-800">Family Shapes</span>
-                </Link>
+                <Logo size="lg" className="text-navy-800" linkTo="/" showIcon={false} />
                 <Button
                   variant="ghost"
                   size="sm"

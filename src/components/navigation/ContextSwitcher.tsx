@@ -54,6 +54,14 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
     }
   }, [user, location.pathname]);
 
+  // Refresh profile data when location changes to catch avatar updates
+  useEffect(() => {
+    if (user && location.pathname === '/profile') {
+      // Refresh profile data when user visits profile page
+      fetchUserProfile();
+    }
+  }, [location.pathname, user]);
+
   const fetchOrganizations = async () => {
     if (!user) {
       setLoading(false);
@@ -217,9 +225,10 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
   return (
     <div className={`relative ${className}`}>
       <Select value={currentContext} onValueChange={handleContextSwitch}>
-        <SelectTrigger className="w-full min-w-[180px] h-9 px-3 py-1.5 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80 transition-colors">
+        <SelectTrigger className="w-full min-w-[180px] h-9 px-3 py-1.5 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80 transition-colors shadow-sm">
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             <Avatar className="h-6 w-6 flex-shrink-0">
+              <AvatarImage src={profile?.avatar_url || undefined} alt={contextDisplay.name} />
               <AvatarFallback className="text-xs bg-primary/10 text-primary">
                 {contextDisplay.initials}
               </AvatarFallback>
@@ -239,11 +248,12 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
         </SelectTrigger>
         <SelectContent className="w-[280px]">
           {/* Personal Account Option */}
-          <SelectItem value="personal" className="py-2">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-7 w-7 flex-shrink-0">
+          <SelectItem value="personal" className="py-2 px-2">
+            <div className="flex items-center space-x-2">
+              <Avatar className="h-6 w-6 flex-shrink-0">
+                <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "User"} />
                 <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                  <User className="w-3.5 h-3.5" />
+                  <User className="w-3 h-3" />
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0 overflow-hidden">
@@ -262,9 +272,9 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
                 Organizations
               </div>
               {organizations.map((org) => (
-                <SelectItem key={org.id} value={org.id} className="py-2">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-7 w-7 flex-shrink-0">
+                <SelectItem key={org.id} value={org.id} className="py-2 px-2">
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-6 w-6 flex-shrink-0">
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {org.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                       </AvatarFallback>

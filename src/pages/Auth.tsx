@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { Heart, Eye, EyeOff, Building2, User } from "lucide-react";
+import { Eye, EyeOff, Building2, User } from "lucide-react";
+import { Logo } from "@/components/logo";
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -168,14 +169,9 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center justify-center space-x-3 hover:opacity-80 transition-opacity">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-            <Heart className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-3xl font-light tracking-wide text-foreground">
-            Family Shapes
-          </span>
-        </Link>
+        <div className="flex items-center justify-center">
+          <Logo size="xl" linkTo="/" showIcon={false} />
+        </div>
 
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">

@@ -46,7 +46,7 @@ const OrganizationHero = () => {
               size="lg" 
               className="text-navy-700 hover:text-coral-600 hover:bg-coral-50 px-6 sm:px-8 py-4 sm:py-6 text-sm font-medium tracking-wide group w-full sm:w-auto min-h-[44px]"
             >
-              <Link to="/family-community">
+              <Link to="/for-recipient-families">
                 For Families
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -54,7 +54,7 @@ const OrganizationHero = () => {
           </div>
         </div>
 
-        <div className="relative mt-12 sm:mt-16 lg:mt-24">
+        {/* <div className="relative mt-12 sm:mt-16 lg:mt-24">
           <div className="aspect-video bg-gradient-to-br from-coral-100 via-dusty-100 to-sage-100 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-warm-200">
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
@@ -67,7 +67,7 @@ const OrganizationHero = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

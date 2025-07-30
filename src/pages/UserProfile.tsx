@@ -9,13 +9,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Camera, Mail, Phone, MapPin, Calendar, UserPlus } from "lucide-react";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 
 const UserProfile = () => {
   const { user } = useAuth();
+  const { uploadFile } = useFileUpload();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
@@ -68,6 +72,7 @@ const UserProfile = () => {
           bio: profile.bio || '',
           memberSince: new Date(user.created_at).toLocaleDateString()
         });
+        setAvatarUrl(profile.avatar_url);
       } else {
         // No profile exists, create default from auth user
         console.log('No profile found, using auth user data');
@@ -158,6 +163,86 @@ const UserProfile = () => {
     }));
   };
 
+  const handleAvatarFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      toast({
+        title: "Error",
+        description: "File size must be less than 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Upload the file using the existing upload functionality
+      const uploadedFile = await uploadFile(file, 'family-photos');
+      
+      if (uploadedFile) {
+        await handleAvatarUploaded(uploadedFile);
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload profile picture",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAvatarUploaded = async (uploadedFile: any) => {
+    try {
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from(uploadedFile.bucket_name)
+        .getPublicUrl(uploadedFile.file_path);
+
+      setAvatarUrl(publicUrl);
+
+      // Update the profile with the new avatar URL
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: user.id,
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error updating avatar URL:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update profile picture",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Profile picture updated successfully",
+        });
+      }
+    } catch (error) {
+      console.error('Error handling avatar upload:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile picture",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="px-6 lg:px-12 py-12">
@@ -209,14 +294,26 @@ const UserProfile = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <div className="relative">
               <Avatar className="w-24 h-24">
-                <AvatarImage src="/placeholder.svg" alt="Profile picture" />
+                <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile picture" />
                 <AvatarFallback className="bg-coral-100 text-coral-600 text-2xl">
                   {profileData.firstName?.charAt(0) || "U"}{profileData.lastName?.charAt(0) || ""}
                 </AvatarFallback>
               </Avatar>
-              <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-coral-600 rounded-full flex items-center justify-center text-white hover:bg-coral-700 transition-colors">
-                <Camera className="w-4 h-4" />
-              </button>
+              {isEditing && (
+                <button 
+                  onClick={() => document.getElementById('avatar-upload')?.click()}
+                  className="absolute -bottom-2 -right-2 w-8 h-8 bg-coral-600 rounded-full flex items-center justify-center text-white hover:bg-coral-700 transition-colors"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+              )}
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarFileSelect}
+                className="hidden"
+              />
             </div>
             
             <div className="flex-1">

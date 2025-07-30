@@ -1,6 +1,7 @@
 
-import { Heart, Mail, Twitter, Instagram } from "lucide-react";
+import { Mail, Twitter, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Logo } from "@/components/logo";
 
 const Footer = () => {
   return (
@@ -9,12 +10,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-8 sm:mb-10 lg:mb-12">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-2">
-            <Link to="/" className="flex items-center space-x-3 mb-4 sm:mb-6 hover:opacity-80 transition-opacity">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-coral-500 to-dusty-600 flex items-center justify-center">
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-              </div>
-              <span className="text-xl sm:text-2xl font-light tracking-wide text-white">Family Shapes</span>
-            </Link>
+            <div className="mb-4 sm:mb-6">
+              <Logo size="lg" className="text-white" linkTo="/" showIcon={false} />
+            </div>
             <p className="text-sm text-warm-300 leading-relaxed font-light max-w-md">
               Thoughtfully designed to nurture family connections and celebrate 
               the unique shapes that love creates within every family.

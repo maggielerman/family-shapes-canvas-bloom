@@ -64,7 +64,6 @@ const RecipientLanding = () => {
      
      <RecipientHero />
 
-     <RecipientHero2 />
 
       {/* Stats Section */}
       <section className="px-4 sm:px-6 lg:px-12 py-16 bg-sage-50">
