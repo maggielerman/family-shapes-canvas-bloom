@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Settings, Eye, MessageSquare, Users, Lock, ArrowRight, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { DonorHero } from "@/components/marketing/donor-landing";
 
 const DonorLanding = () => {
   const features = [
@@ -48,32 +49,7 @@ const DonorLanding = () => {
   return (
     <div className="min-h-screen bg-background">
       
-      {/* Hero Section */}
-      <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20 lg:py-28">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-navy-800 mb-6 lg:mb-8 leading-tight">
-            Empower Your
-            <span className="block text-coral-600 font-normal">Donor Journey</span>
-          </h1>
-          <p className="text-lg sm:text-xl lg:text-2xl text-navy-600 mb-8 lg:mb-12 max-w-4xl mx-auto leading-relaxed">
-            Take control of your donation experience with tools designed for transparency, 
-            privacy management, and healthy boundary setting with recipient families.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button asChild size="lg" className="bg-coral-600 hover:bg-coral-700 text-white px-8 py-6 text-lg">
-              <Link to="/auth">
-                Access Your Portal
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="lg" className="text-coral-600 hover:bg-navy-50 px-8 py-6 text-lg">
-              <Link to="/about">
-                Learn More
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <DonorHero />
 
       {/* Stats Section */}
       <section className="px-4 sm:px-6 lg:px-12 py-16 bg-sage-50">
@@ -227,8 +203,8 @@ const DonorLanding = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="bg-white text-coral-600 hover:bg-sage-50 px-8 py-6 text-lg">
-              <Link to="/auth">
-                Get Started Today
+              <Link to="/donor-waitlist">
+                Join the Waitlist
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>

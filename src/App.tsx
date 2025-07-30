@@ -15,7 +15,7 @@ const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Auth = lazy(() => import("./pages/Auth"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+const RecipientDashboard = lazy(() => import("./pages/RecipientDashboard"));
 const Organizations = lazy(() => import("./pages/Organizations"));
 const OrganizationDashboard = lazy(() => import("./pages/OrganizationDashboard"));
 const OrganizationOnboardingPage = lazy(() => import("./pages/OrganizationOnboardingPage"));
@@ -34,6 +34,8 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
 const DonorLanding = lazy(() => import("./pages/DonorLanding"));
 const RecipientLanding = lazy(() => import("./pages/RecipientLanding"));
+const RecipientPrivateBeta = lazy(() => import("./pages/RecipientPrivateBeta"));
+const DonorWaitlist = lazy(() => import("./pages/DonorWaitlist"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide"));
 
@@ -72,6 +74,8 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/for-donors" element={<MainLayout><DonorLanding /></MainLayout>} />
               <Route path="/for-recipient-families" element={<MainLayout><RecipientLanding /></MainLayout>} />
+              <Route path="/recipient-private-beta" element={<MainLayout><RecipientPrivateBeta /></MainLayout>} />
+              <Route path="/donor-waitlist" element={<MainLayout><DonorWaitlist /></MainLayout>} />
               <Route path="/get-started" element={<MainLayout><GetStarted /></MainLayout>} />
               <Route path="/style-guide" element={<MainLayout><StyleGuide /></MainLayout>} />
               <Route path="/public/tree/:id" element={<PublicFamilyTree />} />
@@ -84,7 +88,7 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               
               {/* Protected routes with sidebar layout */}
-              <Route path="/dashboard" element={<ProtectedRoute><SidebarLayout><Dashboard /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><SidebarLayout><RecipientDashboard /></SidebarLayout></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><SidebarLayout><UserProfile /></SidebarLayout></ProtectedRoute>} />
               <Route path="/people" element={<ProtectedRoute><SidebarLayout><People /></SidebarLayout></ProtectedRoute>} />
               <Route path="/family-trees" element={<ProtectedRoute><SidebarLayout><FamilyTrees /></SidebarLayout></ProtectedRoute>} />

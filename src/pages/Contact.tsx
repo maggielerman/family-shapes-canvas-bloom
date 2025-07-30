@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ContactHero } from "@/components/marketing/contact";
 import { Mail, Loader2 } from "lucide-react";
 import { submitContactForm } from "@/services/contactService";
 
@@ -58,15 +59,7 @@ const Contact = () => {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="px-6 lg:px-12 py-20 text-center">
-        <h1 className="text-5xl lg:text-6xl font-light text-navy-800 mb-6">
-          Get in <span className="text-coral-600">Touch</span>
-        </h1>
-        <p className="text-lg text-navy-600 max-w-2xl mx-auto leading-relaxed">
-          We'd love to hear from you. Send us a message and we'll respond as soon as possible.
-        </p>
-      </section>
+      <ContactHero />
 
       {/* Contact Section */}
       <section className="px-6 lg:px-12 py-16">

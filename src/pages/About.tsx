@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MainLayout from "@/components/layouts/MainLayout";
+import { AboutHero } from "@/components/marketing/about";
 import { 
   Heart, 
   ArrowRight, 
@@ -62,28 +63,7 @@ const About = () => {
   return (
 <div>
 
-      {/* Hero */}
-      <section className="w-full px-6 lg:px-12 py-24 lg:py-32 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <span className="text-xxs uppercase tracking-widest text-coral-600 font-medium mb-8 block">
-            Our Story
-          </span>
-          
-          <h1 className="text-6xl lg:text-8xl font-extralight text-navy-900 mb-8 leading-none tracking-tighter">
-            Building
-            <br />
-            <span className="text-coral-600">Together</span>
-          </h1>
-          
-          <div className="max-w-2xl mx-auto">
-            <p className="text-lg text-navy-700 leading-relaxed font-light">
-              Family Shapes was born from a simple belief: that technology should bring 
-              families closer together, not drive them apart. We're here to create spaces 
-              where love can flourish in all its beautiful forms.
-            </p>
-          </div>
-        </div>
-      </section>
+      <AboutHero />
 
       {/* Mission */}
       <section className="w-full px-6 lg:px-12 py-24 bg-gradient-to-br from-warm-50 to-sage-50">
