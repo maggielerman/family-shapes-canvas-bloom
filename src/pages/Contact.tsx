@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Phone, MapPin, Loader2 } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
 import { submitContactForm } from "@/services/contactService";
 
 const Contact = () => {
@@ -83,26 +83,6 @@ const Contact = () => {
                   <div>
                     <p className="font-medium text-navy-800">Email</p>
                     <p className="text-navy-600">hello@familyshapes.com</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-full bg-coral-100 flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-coral-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-navy-800">Phone</p>
-                    <p className="text-navy-600">+1 (555) 123-4567</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-full bg-coral-100 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-coral-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-navy-800">Address</p>
-                    <p className="text-navy-600">123 Family Street<br />San Francisco, CA 94102</p>
                   </div>
                 </div>
               </div>
