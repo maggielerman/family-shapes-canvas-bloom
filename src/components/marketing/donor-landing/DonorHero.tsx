@@ -36,18 +36,9 @@ const DonorHero = () => {
               className="bg-coral-600 hover:bg-coral-700 text-white px-6 sm:px-8 py-4 sm:py-6 text-sm font-medium tracking-wide group w-full sm:w-auto min-h-[44px]"
             >
               <Link to="/donor-waitlist">
-                Join the Waitlist
+                Get Notified
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="lg" 
-              className="text-navy-700 hover:text-coral-600 hover:bg-coral-50 px-6 sm:px-8 py-4 sm:py-6 text-sm font-medium tracking-wide group w-full sm:w-auto min-h-[44px]"
-            >
-              <Play className="mr-2 w-4 h-4 group-hover:scale-110 transition-transform" />
-              Learn More
             </Button>
           </div>
         </div>

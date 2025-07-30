@@ -22,10 +22,6 @@ interface DonorWaitlistFormData {
   facilityLocation: string;
   donorType: string;
   otherDonorType: string;
-  previousDonation: string;
-  clinicExperience: string;
-  motivations: string;
-  healthInfo: string;
   availability: string;
   questions: string;
 }
@@ -76,10 +72,6 @@ export default function DonorWaitlistForm({
     facilityLocation: "",
     donorType: "",
     otherDonorType: "",
-    previousDonation: "",
-    clinicExperience: "",
-    motivations: "",
-    healthInfo: "",
     availability: "",
     questions: ""
   });
@@ -100,7 +92,7 @@ export default function DonorWaitlistForm({
           name: formData.fullName,
           email: formData.email,
           subject: "Donor Waitlist Request",
-          message: `Name: ${formData.fullName}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAge: ${formData.age}\nLocation: ${formData.location}\nEducation: ${formData.education}\nOccupation: ${formData.occupation}\n\nDonor Number: ${formData.donorNumber}\nFacility Name: ${formData.facilityName}\nFacility Location: ${formData.facilityLocation}\n\nDonor Type: ${donorTypeDisplay}\nPrevious Donation: ${formData.previousDonation}\n\nClinic Experience: ${formData.clinicExperience || 'Not specified'}\n\nMotivations: ${formData.motivations || 'Not specified'}\n\nHealth Information: ${formData.healthInfo || 'Not provided'}\n\nAvailability: ${formData.availability || 'Not specified'}\n\nQuestions: ${formData.questions || 'None'}`
+          message: `Name: ${formData.fullName}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAge: ${formData.age}\nLocation: ${formData.location}\nEducation: ${formData.education}\nOccupation: ${formData.occupation}\n\nDonor Number: ${formData.donorNumber}\nFacility Name: ${formData.facilityName}\nFacility Location: ${formData.facilityLocation}\n\nDonor Type: ${donorTypeDisplay}\n\nAvailability: ${formData.availability || 'Not specified'}\n\nQuestions: ${formData.questions || 'None'}`
         }
       });
 
@@ -127,10 +119,6 @@ export default function DonorWaitlistForm({
         facilityLocation: "",
         donorType: "",
         otherDonorType: "",
-        previousDonation: "",
-        clinicExperience: "",
-        motivations: "",
-        healthInfo: "",
         availability: "",
         questions: ""
       });
@@ -164,9 +152,9 @@ export default function DonorWaitlistForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Personal Information */}
+          {/* Required Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-navy-800">Personal Information</h3>
+            <h3 className="text-lg font-medium text-navy-800">Required Information</h3>
             
             {/* Line 1: Full Name and Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -193,7 +181,83 @@ export default function DonorWaitlistForm({
               </div>
             </div>
 
-            {/* Line 2: Phone and Age */}
+            {/* Line 2: Donor Number and Facility Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="donorNumber">Donor Number *</Label>
+                <Input
+                  id="donorNumber"
+                  value={formData.donorNumber}
+                  onChange={(e) => setFormData(prev => ({ ...prev, donorNumber: e.target.value }))}
+                  required
+                  placeholder="12345"
+                />
+              </div>
+              <div>
+                <Label htmlFor="facilityName">Facility Name *</Label>
+                <Input
+                  id="facilityName"
+                  value={formData.facilityName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, facilityName: e.target.value }))}
+                  required
+                  placeholder="United Cryobank"
+                />
+              </div>
+            </div>
+
+            {/* Line 3: Facility Location */}
+            <div>
+              <Label htmlFor="facilityLocation">Facility Location *</Label>
+              <Input
+                id="facilityLocation"
+                value={formData.facilityLocation}
+                onChange={(e) => setFormData(prev => ({ ...prev, facilityLocation: e.target.value }))}
+                required
+                placeholder="City, State/Province, Country"
+              />
+            </div>
+
+            {/* Line 4: Donor Type */}
+            <div>
+              <Label htmlFor="donorType">Donor Type *</Label>
+              <Select 
+                value={formData.donorType} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, donorType: value }))}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your donor type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {donorTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Conditional field for "Other" donor type */}
+            {formData.donorType === "Other" && (
+              <div>
+                <Label htmlFor="otherDonorType">Please specify your donor type *</Label>
+                <Input
+                  id="otherDonorType"
+                  value={formData.otherDonorType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, otherDonorType: e.target.value }))}
+                  required
+                  placeholder="Enter your donor type"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Additional Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-navy-800">Additional Information</h3>
+            
+            {/* Line 1: Phone and Age */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
@@ -211,14 +275,14 @@ export default function DonorWaitlistForm({
                   type="number"
                   value={formData.age}
                   onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
-                  placeholder="Enter your age"
+                  placeholder="36"
                   min="18"
                   max="100"
                 />
               </div>
             </div>
 
-            {/* Line 3: Location and Education */}
+            {/* Line 2: Location and Education */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="location">Location</Label>
@@ -249,7 +313,7 @@ export default function DonorWaitlistForm({
               </div>
             </div>
 
-            {/* Line 4: Occupation */}
+            {/* Line 3: Occupation */}
             <div>
               <Label htmlFor="occupation">Occupation</Label>
               <Input
@@ -259,155 +323,8 @@ export default function DonorWaitlistForm({
                 placeholder="Enter your occupation"
               />
             </div>
-          </div>
 
-          {/* Donor Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-navy-800">Donor Information</h3>
-            
-            {/* Line 1: Donor Number and Facility Name */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="donorNumber">Donor Number *</Label>
-                <Input
-                  id="donorNumber"
-                  value={formData.donorNumber}
-                  onChange={(e) => setFormData(prev => ({ ...prev, donorNumber: e.target.value }))}
-                  required
-                  placeholder="Enter your donor number"
-                />
-              </div>
-              <div>
-                <Label htmlFor="facilityName">Facility Name *</Label>
-                <Input
-                  id="facilityName"
-                  value={formData.facilityName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, facilityName: e.target.value }))}
-                  required
-                  placeholder="Enter facility name"
-                />
-              </div>
-            </div>
-
-            {/* Line 2: Facility Location */}
-            <div>
-              <Label htmlFor="facilityLocation">Facility Location *</Label>
-              <Input
-                id="facilityLocation"
-                value={formData.facilityLocation}
-                onChange={(e) => setFormData(prev => ({ ...prev, facilityLocation: e.target.value }))}
-                required
-                placeholder="City, State/Province, Country"
-              />
-            </div>
-          </div>
-
-          {/* Donation Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-navy-800">Donation Details</h3>
-            
-            {/* Line 1: Donor Type and Previous Donation */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="donorType">Donor Type *</Label>
-                <Select 
-                  value={formData.donorType} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, donorType: value }))}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your donor type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {donorTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="previousDonation">Previous Donation Experience</Label>
-                <Select 
-                  value={formData.previousDonation} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, previousDonation: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your experience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {previousDonationOptions.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Conditional field for "Other" donor type */}
-            {formData.donorType === "Other" && (
-              <div>
-                <Label htmlFor="otherDonorType">Please specify your donor type *</Label>
-                <Input
-                  id="otherDonorType"
-                  value={formData.otherDonorType}
-                  onChange={(e) => setFormData(prev => ({ ...prev, otherDonorType: e.target.value }))}
-                  required
-                  placeholder="Enter your donor type"
-                />
-              </div>
-            )}
-
-            {/* Line 2: Clinic Experience */}
-            <div>
-              <Label htmlFor="clinicExperience">Experience with Fertility Clinics</Label>
-              <Textarea
-                id="clinicExperience"
-                value={formData.clinicExperience}
-                onChange={(e) => setFormData(prev => ({ ...prev, clinicExperience: e.target.value }))}
-                placeholder="Describe any experience you have with fertility clinics, medical procedures, or reproductive health..."
-                rows={3}
-              />
-            </div>
-          </div>
-
-          {/* Motivations and Health */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-navy-800">Motivations & Health</h3>
-            
-            {/* Line 1: Motivations */}
-            <div>
-              <Label htmlFor="motivations">What motivates you to become a donor?</Label>
-              <Textarea
-                id="motivations"
-                value={formData.motivations}
-                onChange={(e) => setFormData(prev => ({ ...prev, motivations: e.target.value }))}
-                placeholder="Tell us about your motivations for becoming a donor..."
-                rows={3}
-              />
-            </div>
-
-            {/* Line 2: Health Information */}
-            <div>
-              <Label htmlFor="healthInfo">Health Information (Optional)</Label>
-              <Textarea
-                id="healthInfo"
-                value={formData.healthInfo}
-                onChange={(e) => setFormData(prev => ({ ...prev, healthInfo: e.target.value }))}
-                placeholder="Any relevant health information you're comfortable sharing..."
-                rows={3}
-              />
-            </div>
-          </div>
-
-          {/* Availability and Questions */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-navy-800">Availability & Questions</h3>
-            
-            {/* Line 1: Availability */}
+            {/* Line 4: Availability */}
             <div>
               <Label htmlFor="availability">Availability and Timeline</Label>
               <Textarea
@@ -419,7 +336,7 @@ export default function DonorWaitlistForm({
               />
             </div>
 
-            {/* Line 2: Questions */}
+            {/* Line 5: Questions */}
             <div>
               <Label htmlFor="questions">Questions or Concerns</Label>
               <Textarea
