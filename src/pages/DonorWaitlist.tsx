@@ -1,7 +1,8 @@
 import {
   DonorWaitlistForm,
   DonorValueProposition,
-  DonorKeyBenefits
+  DonorKeyBenefits,
+  DonorPrivacySection
 } from "@/components/donor-waitlist";
 import ImagePlaceholder from "@/components/marketing/get-started/ImagePlaceholder";
 import { Heart } from "lucide-react";
@@ -28,6 +29,9 @@ const DonorWaitlist = () => {
             <DonorWaitlistForm />
           </div>
         </div>
+
+        {/* Privacy Section */}
+        <DonorPrivacySection />
       </div>
     </div>
   );

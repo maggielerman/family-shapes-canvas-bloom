@@ -66,7 +66,7 @@ const RecipientLanding = () => {
 
 
       {/* Stats Section */}
-      <section className="px-4 sm:px-6 lg:px-12 py-16 bg-sage-50">
+      {/* <section className="px-4 sm:px-6 lg:px-12 py-16 bg-sage-50">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
@@ -83,7 +83,7 @@ const RecipientLanding = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Features Grid */}
       <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20">

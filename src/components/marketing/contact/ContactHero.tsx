@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -13,7 +14,8 @@ const ContactHero = () => {
     name: "",
     email: "",
     subject: "",
-    message: ""
+    message: "",
+    emailList: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -36,7 +38,7 @@ const ContactHero = () => {
           title: "Message sent!",
           description: "Thank you for contacting us. We'll get back to you soon.",
         });
-        setFormData({ name: "", email: "", subject: "", message: "" });
+        setFormData({ name: "", email: "", subject: "", message: "", emailList: false });
       }
     } catch (error) {
       toast({
@@ -60,8 +62,8 @@ const ContactHero = () => {
     <section className="w-full min-h-screen">
       <div className="grid lg:grid-cols-2">
         {/* Left Column - Hero Copy with Coral Background */}
-        <div className="bg-coral-600 px-6 lg:px-12 py-16 lg:py-24 flex items-center">
-          <div className="max-w-lg mx-auto lg:mx-0">
+        <div className="bg-coral-600 px-6 lg:px-12 py-16 lg:py-24 flex items-center justify-center">
+          <div className="max-w-lg text-center lg:text-left">
             <div className="mb-6">
               <span className="text-xxs uppercase tracking-widest text-white/80 font-medium">
                 Get in Touch
@@ -69,15 +71,13 @@ const ContactHero = () => {
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extralight text-white mb-6 leading-none tracking-tighter">
-              Get in
+             We'd love to 
               <br />
-              <span className="text-white/90">Touch</span>
+              <span className="text-white/90">hear from you.</span>
             </h1>
             
             <div className="mb-8">
-              <p className="text-xxs uppercase tracking-wider text-white/70 mb-3 font-medium">
-                We'd love to hear from you
-              </p>
+            
               <p className="text-lg text-white/90 leading-relaxed font-light">
                 Send us a message and we'll respond as soon as possible. We're here to help 
                 you connect with your family and answer any questions you might have.
@@ -86,7 +86,12 @@ const ContactHero = () => {
 
             <div className="flex items-center space-x-4">
               <Mail className="w-5 h-5 text-white/80" />
-              <span className="text-white/90">hello@familyshapes.com</span>
+              <a 
+                href="mailto:hello@familyshapes.com" 
+                className="text-white/90 hover:text-white transition-colors"
+              >
+                hello@familyshapes.com
+              </a>
             </div>
           </div>
         </div>
@@ -149,6 +154,24 @@ const ContactHero = () => {
                   disabled={isSubmitting}
                   className="mt-1"
                 />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="emailList"
+                  checked={formData.emailList}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, emailList: checked as boolean }))
+                  }
+                  disabled={isSubmitting}
+                  className="rounded border-coral-700 data-[state=checked]:bg-coral-600 data-[state=checked]:border-coral-600 data-[state=checked]:text-white"
+                />
+                <Label 
+                  htmlFor="emailList" 
+                  className="text-sm text-navy-700 cursor-pointer"
+                >
+                  Subscribe to our email list for updates and news
+                </Label>
               </div>
               
               <Button 
