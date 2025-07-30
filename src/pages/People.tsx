@@ -399,9 +399,11 @@ export default function People() {
             <PersonCard
               key={person.id}
               person={person}
+              variant="card"
+              onClick={() => setViewingPerson(person)}
               onEdit={() => setEditingPerson(person)}
               onDelete={() => setDeletingPerson(person)}
-              onView={() => setViewingPerson(person)}
+              showActions={true}
             />
           ))}
         </div>
@@ -431,6 +433,10 @@ export default function People() {
           person={viewingPerson}
           open={!!viewingPerson}
           onOpenChange={() => setViewingPerson(null)}
+          onEdit={() => {
+            setEditingPerson(viewingPerson);
+            setViewingPerson(null);
+          }}
         />
       )}
 

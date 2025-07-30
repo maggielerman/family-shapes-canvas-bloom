@@ -329,9 +329,11 @@ export function PersonCard({
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Badge className={getStatusColor(person.status)}>
-                {person.status}
-              </Badge>
+              {person.status === 'deceased' && (
+                <Badge className={getStatusColor(person.status)}>
+                  {person.status}
+                </Badge>
+              )}
               {person.is_self && (
                 <Badge variant="default" className="bg-[hsl(9,67%,49%)] text-white border-[hsl(9,67%,49%)]">
                   Self
