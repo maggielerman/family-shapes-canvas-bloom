@@ -25,7 +25,7 @@ export const ProductProvider = ({ children }: ProductProviderProps) => {
     // Update CSS custom properties based on product group
     switch (productGroup) {
       case 'organization':
-        root.style.setProperty('--primary-dynamic', 'var(--terracotta-700)');
+        root.style.setProperty('--primary-dynamic', 'var(--terracotta-800)');
         root.style.setProperty('--primary-foreground-dynamic', '255 255 255');
         break;
       case 'family':
