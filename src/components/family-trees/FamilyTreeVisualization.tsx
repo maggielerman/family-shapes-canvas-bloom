@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
 import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
-import ReactFlowFamilyTreeCanvas from './layouts/ReactFlowFamilyTreeCanvas';
 
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
@@ -35,7 +34,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow'>('force');
+  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow'>('force');
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -85,7 +84,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     setViewingPerson(person);
   };
 
-  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow') => {
+  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow') => {
     console.log('Layout changed to:', layout);
     setCurrentLayout(layout);
   };
@@ -148,16 +147,6 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                   persons={persons}
                   connections={connections}
                   relationshipTypes={relationshipTypes}
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  onPersonClick={handlePersonClick}
-                  currentLayout={currentLayout}
-                  onLayoutChange={handleLayoutChange}
-                />
-              ) : currentLayout === 'reactflow' ? (
-                <ReactFlowFamilyTreeCanvas
-                  persons={persons}
-                  connections={connections}
                   width={dimensions.width}
                   height={dimensions.height}
                   onPersonClick={handlePersonClick}

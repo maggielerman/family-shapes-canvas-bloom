@@ -4,7 +4,7 @@ import { Person } from '@/types/person';
 
 interface TreeToolbarProps {
   persons: Person[];
-  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow';
+  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow';
   layoutDirection?: 'TB' | 'LR' | 'BT' | 'RL';
   onCenterSelf: () => void;
   onZoomToFit: () => void;

@@ -23,8 +23,8 @@ interface RadialLayoutProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
-  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow';
-  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow') => void;
+  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow';
+  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow') => void;
 }
 
 // Radial layout configuration
