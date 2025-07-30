@@ -39,6 +39,14 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Add debugging
+  console.log('FamilyTreeVisualization render:', {
+    familyTreeId,
+    personsCount: persons.length,
+    connectionsCount: connections.length,
+    currentLayout
+  });
+
   const { handleAddPerson, handleAddDonor } = usePersonManagement({
     familyTreeId,
     onPersonAdded: () => {
@@ -78,6 +86,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   };
 
   const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow') => {
+    console.log('Layout changed to:', layout);
     setCurrentLayout(layout);
   };
 
@@ -159,7 +168,12 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                 <XYFlowTreeBuilder
                   familyTreeId={familyTreeId}
                   persons={persons}
-                  onPersonAdded={onPersonAdded}
+                  connections={connections}
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  onPersonClick={handlePersonClick}
+                  currentLayout={currentLayout}
+                  onLayoutChange={handleLayoutChange}
                 />
               )}
             </Suspense>

@@ -21,15 +21,37 @@ export class XYFlowLayoutService {
     containerWidth: number = 800,
     containerHeight: number = 600
   ): Promise<LayoutResult> {
-    switch (layoutType) {
-      case 'dagre':
-        return this.applyDagreLayout(nodes, edges, containerWidth, containerHeight);
-      
-      case 'elk':
-        return this.applyELKLayout(nodes, edges, containerWidth, containerHeight);
-      
-      default:
-        return { nodes, edges };
+    console.log('XYFlowLayoutService.applyLayout called:', {
+      layoutType,
+      nodesCount: nodes.length,
+      edgesCount: edges.length,
+      containerWidth,
+      containerHeight
+    });
+
+    try {
+      switch (layoutType) {
+        case 'dagre':
+          return this.applyDagreLayout(nodes, edges, containerWidth, containerHeight);
+        
+        case 'elk':
+          return this.applyELKLayout(nodes, edges, containerWidth, containerHeight);
+        
+        default:
+          console.warn('Unknown layout type:', layoutType, 'using default positioning');
+          return { nodes, edges };
+      }
+    } catch (error) {
+      console.error('Layout application failed:', error);
+      // Return nodes with fallback positioning
+      const fallbackNodes = nodes.map((node, index) => ({
+        ...node,
+        position: {
+          x: 100 + (index * 200),
+          y: 100 + (index * 100)
+        }
+      }));
+      return { nodes: fallbackNodes, edges };
     }
   }
 
@@ -42,6 +64,8 @@ export class XYFlowLayoutService {
     containerWidth: number,
     containerHeight: number
   ): LayoutResult {
+    console.log('Applying Dagre layout to', nodes.length, 'nodes and', edges.length, 'edges');
+    
     const g = new dagre.graphlib.Graph();
     g.setGraph({
       rankdir: 'TB', // Top to bottom
@@ -71,6 +95,17 @@ export class XYFlowLayoutService {
     // Update node positions
     const updatedNodes = nodes.map((node) => {
       const nodeWithPosition = g.node(node.id);
+      if (!nodeWithPosition) {
+        console.warn('No position found for node:', node.id, 'using fallback');
+        return {
+          ...node,
+          position: {
+            x: 100 + (Math.random() * 400),
+            y: 100 + (Math.random() * 300)
+          },
+        };
+      }
+      
       return {
         ...node,
         position: {
@@ -80,6 +115,7 @@ export class XYFlowLayoutService {
       };
     });
 
+    console.log('Dagre layout completed, positioned', updatedNodes.length, 'nodes');
     return { nodes: updatedNodes, edges };
   }
 
@@ -92,6 +128,8 @@ export class XYFlowLayoutService {
     containerWidth: number,
     containerHeight: number
   ): Promise<LayoutResult> {
+    console.log('Applying ELK layout to', nodes.length, 'nodes and', edges.length, 'edges');
+    
     const graph = {
       id: 'root',
       layoutOptions: {
@@ -118,21 +156,39 @@ export class XYFlowLayoutService {
       
       const updatedNodes = nodes.map((node) => {
         const elkNode = result.children?.find((n) => n.id === node.id);
+        if (!elkNode) {
+          console.warn('No ELK position found for node:', node.id, 'using fallback');
+          return {
+            ...node,
+            position: {
+              x: 100 + (Math.random() * 400),
+              y: 100 + (Math.random() * 300)
+            },
+          };
+        }
+        
         return {
           ...node,
           position: {
-            x: elkNode?.x || 0,
-            y: elkNode?.y || 0,
+            x: elkNode.x || 0,
+            y: elkNode.y || 0,
           },
         };
       });
 
+      console.log('ELK layout completed, positioned', updatedNodes.length, 'nodes');
       return { nodes: updatedNodes, edges };
     } catch (error) {
       console.error('ELK layout error:', error instanceof Error ? error.message : String(error));
-      return { nodes, edges };
+      // Return nodes with fallback positioning
+      const fallbackNodes = nodes.map((node, index) => ({
+        ...node,
+        position: {
+          x: 100 + (index * 200),
+          y: 100 + (index * 100)
+        }
+      }));
+      return { nodes: fallbackNodes, edges };
     }
   }
-
-
 } 

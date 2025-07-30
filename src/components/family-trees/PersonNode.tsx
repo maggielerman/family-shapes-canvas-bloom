@@ -13,11 +13,33 @@ interface PersonNodeData {
 }
 
 export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
+  // Add error handling for missing data
+  if (!data || !data.person) {
+    console.error('PersonNode: Missing person data', data);
+    return (
+      <Card className="w-56 shadow-lg border-2 border-red-500">
+        <CardContent className="p-4">
+          <div className="text-center text-red-500">
+            <p className="text-sm">Error: Missing person data</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const person = data.person as Person;
   const generationColor = data.generationColor;
   const generation = data.generation;
   const age = person.date_of_birth ? calculateAge(person.date_of_birth) : null;
   const initials = PersonUtils.getInitials(person);
+
+  // Add debugging
+  console.log('PersonNode rendering:', {
+    personId: person.id,
+    personName: person.name,
+    generationColor,
+    generation
+  });
 
   return (
     <Card 
