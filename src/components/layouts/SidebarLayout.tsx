@@ -23,7 +23,10 @@ import {
   Shield,
   Database,
   UserPlus,
-  GitBranch
+  GitBranch,
+  Dna,
+  HeartHandshake,
+  Lock
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +45,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -57,6 +61,15 @@ const IndividualUserNav = [
   { icon: Image, label: "Media", path: "/media" },
   { icon: Share2, label: "Share", path: "/share" },
   { icon: Building2, label: "Organizations", path: "/organizations" },
+];
+
+// Donor navigation items
+const DonorNav = [
+  { icon: Home, label: "Dashboard", path: "/donor/dashboard" },
+  { icon: User, label: "Profile", path: "/donor/profile" },
+  { icon: Heart, label: "Health Updates", path: "/donor/health" },
+  { icon: HeartHandshake, label: "Communication", path: "/donor/communication" },
+  { icon: Lock, label: "Privacy Settings", path: "/donor/privacy" },
 ];
 
 // Organization navigation items
@@ -88,13 +101,43 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
   const [currentContext, setCurrentContext] = useState<string>("personal");
   const [sidebarItems, setSidebarItems] = useState(IndividualUserNav);
+  const [isDonor, setIsDonor] = useState(false);
+
+  // Check if user is a donor
+  useEffect(() => {
+    const checkUserType = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: personData } = await supabase
+          .from('persons')
+          .select('person_type')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (personData?.person_type === 'donor') {
+          setIsDonor(true);
+          setSidebarItems(DonorNav);
+          setCurrentContext("donor");
+        }
+      } catch (error) {
+        console.error('Error checking user type:', error);
+      }
+    };
+    
+    checkUserType();
+  }, [user]);
 
   // Detect current context and update sidebar items accordingly
   useEffect(() => {
     const path = location.pathname;
     const orgMatch = path.match(/\/organizations\/([^\/]+)/);
+    const donorMatch = path.startsWith('/donor/');
     
-    if (orgMatch) {
+    if (donorMatch && isDonor) {
+      setCurrentContext("donor");
+      setSidebarItems(DonorNav);
+    } else if (orgMatch) {
       const orgId = orgMatch[1];
       setCurrentContext(orgId);
       // Update navigation items for organization context
@@ -107,7 +150,7 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
       setCurrentContext("personal");
       setSidebarItems(IndividualUserNav);
     }
-  }, [location.pathname]);
+  }, [location.pathname, isDonor]);
 
   const handleSignOut = async () => {
     console.log('Sidebar sign out clicked');

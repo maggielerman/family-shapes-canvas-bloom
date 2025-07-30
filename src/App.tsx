@@ -36,6 +36,12 @@ const DonorLanding = lazy(() => import("./pages/DonorLanding"));
 const RecipientLanding = lazy(() => import("./pages/RecipientLanding"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide"));
+const DonorAuth = lazy(() => import("./pages/DonorAuth"));
+const DonorDashboard = lazy(() => import("./pages/DonorDashboard"));
+const DonorProfile = lazy(() => import("./pages/DonorProfile"));
+const DonorHealth = lazy(() => import("./pages/DonorHealth"));
+const DonorCommunication = lazy(() => import("./pages/DonorCommunication"));
+const DonorPrivacy = lazy(() => import("./pages/DonorPrivacy"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -79,6 +85,7 @@ const App = () => (
               <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />
               <Route path="/invite/:action/P/:token" element={<OrganizationInvitePage />} />
               <Route path="/invitation/:action/:token" element={<InvitationPage />} />
+              <Route path="/donor/auth" element={<DonorAuth />} />
               
               {/* Admin routes */}
               <Route path="/admin" element={<Admin />} />
@@ -104,6 +111,12 @@ const App = () => (
               <Route path="/organizations/:id/settings" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SidebarLayout><Settings /></SidebarLayout></ProtectedRoute>} />
 
+              {/* Donor portal routes */}
+              <Route path="/donor/dashboard" element={<ProtectedRoute><SidebarLayout><DonorDashboard /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/donor/profile" element={<ProtectedRoute><SidebarLayout><DonorProfile /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/donor/health" element={<ProtectedRoute><SidebarLayout><DonorHealth /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/donor/communication" element={<ProtectedRoute><SidebarLayout><DonorCommunication /></SidebarLayout></ProtectedRoute>} />
+              <Route path="/donor/privacy" element={<ProtectedRoute><SidebarLayout><DonorPrivacy /></SidebarLayout></ProtectedRoute>} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

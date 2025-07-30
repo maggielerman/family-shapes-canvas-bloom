@@ -61,8 +61,8 @@ const DonorLanding = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button asChild size="lg" className="bg-coral-600 hover:bg-coral-700 text-white px-8 py-6 text-lg">
-              <Link to="/auth">
-                Access Your Portal
+              <Link to="/donor/auth">
+                Access Donor Portal
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
@@ -227,8 +227,8 @@ const DonorLanding = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="bg-white text-coral-600 hover:bg-sage-50 px-8 py-6 text-lg">
-              <Link to="/auth">
-                Get Started Today
+              <Link to="/donor/auth">
+                Access Donor Portal
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
