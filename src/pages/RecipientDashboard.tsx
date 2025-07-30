@@ -295,32 +295,29 @@ export default function RecipientDashboard() {
   };
 
   return (
-    <>
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+    <div className="bg-white min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
             Welcome back{profile?.full_name ? `, ${profile.full_name}` : ''}! Here's what's happening with your family trees.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={profile?.avatar_url || undefined} />
-            <AvatarFallback>
-              {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
-            </AvatarFallback>
-          </Avatar>
-        </div>
+       
       </div>
 
       {/* Enhanced Metrics Grid */}
-      <MetricsGrid stats={stats} loading={loading} />
+      <div className="mb-4">
+        <MetricsGrid stats={stats} loading={loading} />
+      </div>
 
       {/* Additional Insights */}
-      <InsightsGrid stats={stats} />
+      <div className="mb-4">
+        <InsightsGrid stats={stats} />
+      </div>
 
       {/* Privacy & Shared Links Widget */}
-      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2 mb-4">
         <PrivacyWidget familyTrees={familyTrees} />
         <SharedLinksWidget sharedLinks={sharedLinks} familyTrees={familyTrees} />
       </div>
@@ -333,7 +330,7 @@ export default function RecipientDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             <OrganizationsWidget 
               organizations={organizations} 
               onOrganizationCreated={fetchUserData} 
@@ -388,6 +385,6 @@ export default function RecipientDashboard() {
           }
         }}
       />
-    </>
+    </div>
   );
 }

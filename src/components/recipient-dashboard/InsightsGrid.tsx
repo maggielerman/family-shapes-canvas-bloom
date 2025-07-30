@@ -15,7 +15,7 @@ interface InsightsGridProps {
 
 export function InsightsGrid({ stats }: InsightsGridProps) {
   return (
-    <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
+    <div className="grid gap-2 sm:gap-3 md:grid-cols-3">
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium">Profile Completion</CardTitle>
