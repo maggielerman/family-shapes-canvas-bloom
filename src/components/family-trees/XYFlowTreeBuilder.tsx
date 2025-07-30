@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Node,
   Edge,
-  Controls,
   Background,
   useNodesState,
   useEdgesState,
@@ -172,7 +171,7 @@ export function XYFlowTreeBuilder({
         label: relationshipType?.label || connection.relationship_type,
         style: {
           stroke: relationshipType?.color || '#6b7280',
-          strokeWidth: 2,
+          strokeWidth: 3, // Increased stroke width for better visibility
         },
         markerEnd: isBidirectional ? undefined : {
           type: MarkerType.ArrowClosed,
@@ -208,10 +207,10 @@ export function XYFlowTreeBuilder({
         setNodes(result.nodes);
         setEdges(result.edges);
         
-        // Fit view after layout is applied
+        // Fit view after layout is applied with more padding
         setTimeout(() => {
           if (reactFlowRef.current) {
-            reactFlowRef.current.fitView({ padding: 0.1 });
+            reactFlowRef.current.fitView({ padding: 0.2, minZoom: 0.1, maxZoom: 2 });
           }
         }, 100);
         
@@ -244,7 +243,7 @@ export function XYFlowTreeBuilder({
 
   const handleZoomToFit = () => {
     if (!reactFlowRef.current) return;
-    reactFlowRef.current.fitView({ padding: 0.1 });
+    reactFlowRef.current.fitView({ padding: 0.2, minZoom: 0.1, maxZoom: 2 });
   };
 
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
@@ -332,9 +331,11 @@ export function XYFlowTreeBuilder({
         onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes as any}
         fitView
+        minZoom={0.1}
+        maxZoom={2}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
         attributionPosition="bottom-left"
       >
-        <Controls />
         <Background />
         <Panel position="top-right" className="bg-background/80 backdrop-blur-sm rounded-lg p-2">
           <div className="text-xs text-muted-foreground">

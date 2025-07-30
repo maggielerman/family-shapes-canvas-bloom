@@ -69,18 +69,18 @@ export class XYFlowLayoutService {
     const g = new dagre.graphlib.Graph();
     g.setGraph({
       rankdir: 'TB', // Top to bottom
-      nodesep: 50,
-      ranksep: 100,
-      marginx: 50,
-      marginy: 50,
+      nodesep: 150, // Increased from 50 to 150 for better horizontal spacing
+      ranksep: 200, // Increased from 100 to 200 for better vertical spacing
+      marginx: 100, // Increased from 50 to 100 for better margins
+      marginy: 100, // Increased from 50 to 100 for better margins
     });
     g.setDefaultEdgeLabel(() => ({}));
 
-    // Add nodes to the graph
+    // Add nodes to the graph with larger dimensions
     nodes.forEach((node) => {
       g.setNode(node.id, {
-        width: 150,
-        height: 80,
+        width: 200, // Increased from 150 to 200
+        height: 120, // Increased from 80 to 120
       });
     });
 
