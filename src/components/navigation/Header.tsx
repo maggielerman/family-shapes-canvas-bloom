@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, User, Settings, LogOut, X, TreePine } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/logo";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,7 @@ interface UserProfile {
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -102,8 +103,22 @@ const Header = () => {
     }
   };
 
+  const handleFeaturesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === '/') {
+      // If on home page, scroll to features section
+      const featuresSection = document.getElementById('features');
+      if (featuresSection) {
+        featuresSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // If on different page, navigate to home page with features anchor
+      navigate('/#features');
+    }
+  };
+
   const navigationItems = [
-    { href: "#features", label: "Features" },
+    { href: "#features", label: "Features", isFeatures: true },
     { href: "/for-donors", label: "For Donors" },
     { href: "/for-recipient-families", label: "For Families" },
     { href: "/about", label: "About" },
@@ -118,7 +133,15 @@ const Header = () => {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8 lg:space-x-12">
           {navigationItems.map((item) => (
-            item.href.startsWith('#') ? (
+            item.isFeatures ? (
+              <button
+                key={item.href}
+                onClick={handleFeaturesClick}
+                className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors"
+              >
+                {item.label}
+              </button>
+            ) : item.href.startsWith('#') ? (
               <a 
                 key={item.href}
                 href={item.href} 
@@ -259,7 +282,17 @@ const Header = () => {
                 <ul className="space-y-4">
                   {navigationItems.map((item) => (
                     <li key={item.href}>
-                      {item.href.startsWith('#') ? (
+                      {item.isFeatures ? (
+                        <button
+                          onClick={(e) => {
+                            handleFeaturesClick(e);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="block w-full text-left py-3 px-4 text-base text-navy-700 hover:text-coral-600 hover:bg-coral-50 rounded-lg transition-colors"
+                        >
+                          {item.label}
+                        </button>
+                      ) : item.href.startsWith('#') ? (
                         <a
                           href={item.href}
                           className="block py-3 px-4 text-base text-navy-700 hover:text-coral-600 hover:bg-coral-50 rounded-lg transition-colors"

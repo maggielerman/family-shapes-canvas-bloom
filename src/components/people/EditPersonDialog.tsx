@@ -267,9 +267,11 @@ export function EditPersonDialog({ person, open, onOpenChange, onPersonUpdated }
                     {formData.gender}
                   </Badge>
                 )}
-                <Badge variant={formData.status === 'living' ? 'default' : 'secondary'}>
-                  {formData.status}
-                </Badge>
+                {formData.status === 'deceased' && (
+                  <Badge variant="secondary">
+                    {formData.status}
+                  </Badge>
+                )}
                 {formData.donor && (
                   <Badge variant="outline" className="text-orange-600 border-orange-600">
                     <Dna className="h-3 w-3 mr-1" />

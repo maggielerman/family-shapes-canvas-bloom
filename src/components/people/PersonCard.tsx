@@ -339,21 +339,8 @@ export function PersonCard({
                   Self
                 </Badge>
               )}
-              {(showActions || onEdit || onDelete || showRemoveFromTree) && (
+              {(showRemoveFromTree || (showActions && onDelete)) && (
                 <div className="flex items-center gap-1">
-                  {onEdit && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(person);
-                      }}
-                      title="Edit person"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  )}
                   {showRemoveFromTree && onRemoveFromTree && (
                     <Button
                       size="sm"
@@ -482,9 +469,11 @@ export function PersonCard({
                     {person.gender}
                   </Badge>
                 )}
-                <Badge variant={person.status === 'living' ? 'default' : 'secondary'}>
-                  {person.status}
-                </Badge>
+                {person.status === 'deceased' && (
+                  <Badge variant="secondary">
+                    {person.status}
+                  </Badge>
+                )}
                 {person.donor && (
                   <Badge variant="outline" className="text-orange-600 border-orange-600">
                     <Dna className="h-3 w-3 mr-1" />
