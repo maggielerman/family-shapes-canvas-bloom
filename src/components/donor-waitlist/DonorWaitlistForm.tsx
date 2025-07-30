@@ -275,7 +275,7 @@ export default function DonorWaitlistForm({
                   type="number"
                   value={formData.age}
                   onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
-                  placeholder="36"
+                  placeholder="Enter your age"
                   min="18"
                   max="100"
                 />

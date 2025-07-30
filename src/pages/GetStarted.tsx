@@ -2,7 +2,7 @@ import { ImagePlaceholder, ValueProposition, KeyBenefits, WaitlistForm } from "@
 
 export default function GetStarted() {
   return (
-    <div className="responsive-page-container">
+    <div className="responsive-page-container container mx-auto">
       <div className="responsive-page">
 
         

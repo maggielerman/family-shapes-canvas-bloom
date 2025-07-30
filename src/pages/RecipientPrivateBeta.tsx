@@ -8,7 +8,7 @@ import { Network } from "lucide-react";
 
 const RecipientPrivateBeta = () => {
   return (
-    <div className="responsive-page-container">
+    <div className="responsive-page-container container mx-auto">
       <div className="responsive-page">
         {/* Main Two-Column Section */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
