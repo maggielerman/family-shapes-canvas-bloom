@@ -59,29 +59,27 @@ const ContactHero = () => {
   };
 
   return (
-    <section className="w-full min-h-screen">
+    <section className="w-full">
       <div className="grid lg:grid-cols-2">
         {/* Left Column - Hero Copy with Coral Background */}
         <div className="bg-coral-600 px-6 lg:px-12 py-16 lg:py-24 flex items-center justify-center">
           <div className="max-w-lg text-center lg:text-left">
             <div className="mb-6">
               <span className="text-xxs uppercase tracking-widest text-white/80 font-medium">
-                Get in Touch
+                Say hello
               </span>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extralight text-white mb-6 leading-none tracking-tighter">
-             We'd love to 
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extralight text-white mb-6 leading-none tracking-tighter">
+             We'd love to
               <br />
-              <span className="text-white/90">hear from you.</span>
+              <span className="text-white/90">hear from you!</span>
             </h1>
-            
+
             <div className="mb-8">
-            
+
               <p className="text-lg text-white/90 leading-relaxed font-light">
-                Send us a message and we'll respond as soon as possible. We're here to help 
-                you connect with your family and answer any questions you might have.
-              </p>
+              Want to learn more about Family Shapes? Send us a message and someone from our team will be in touch shortly.              </p>
             </div>
 
             <div className="flex items-center space-x-4">
