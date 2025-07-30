@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const RecipientHero2 = () => {
   return (
@@ -30,11 +31,14 @@ const RecipientHero2 = () => {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-4 sm:px-0">
             <Button 
+              asChild
               size="lg" 
               className="bg-coral-600 hover:bg-coral-700 text-white px-6 sm:px-8 py-4 sm:py-6 text-sm font-medium tracking-wide group w-full sm:w-auto min-h-[44px]"
             >
-              Start Your Journey
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <Link to="/recipient-private-beta">
+                Join the Private Beta
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </Button>
             
             <Button 

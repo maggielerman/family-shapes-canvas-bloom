@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CTA = () => {
   return (
@@ -35,11 +36,14 @@ const CTA = () => {
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <Button 
+                asChild
                 size="lg" 
                 className="bg-coral-600 hover:bg-coral-700 text-white px-8 sm:px-10 py-4 sm:py-6 text-sm sm:text-base font-medium tracking-wide group w-full sm:w-auto min-h-[44px]"
               >
-                Request Early Access
-                <ArrowRight className="ml-2 sm:ml-3 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                <Link to="/recipient-private-beta">
+                  Request Early Access
+                  <ArrowRight className="ml-2 sm:ml-3 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </Button>
               
               <div className="text-center">

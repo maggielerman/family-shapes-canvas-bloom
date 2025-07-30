@@ -200,8 +200,8 @@ const RecipientLanding = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="bg-white text-coral-600 hover:bg-sage-50 px-8 py-6 text-lg">
-              <Link to="/auth">
-                Get Started Free
+              <Link to="/recipient-private-beta">
+                Join the Private Beta
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
