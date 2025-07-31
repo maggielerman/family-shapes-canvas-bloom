@@ -170,7 +170,7 @@ const Auth = () => {
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="flex items-center justify-center">
-          <Logo size="xl" linkTo="/" showIcon={true} />
+          <Logo size="xl" linkTo="/" showIcon={false} />
         </div>
 
         <Card className="shadow-lg">
@@ -183,13 +183,13 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+            {/* <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-1 mb-6">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="signin">
+              <TabsContent value="signin"> */}
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
@@ -241,9 +241,9 @@ const Auth = () => {
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </form>
-              </TabsContent>
+              {/* </TabsContent> */}
 
-              <TabsContent value="signup">
+              {/* <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -324,8 +324,8 @@ const Auth = () => {
                     {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </form>
-              </TabsContent>
-            </Tabs>
+              </TabsContent> */}
+            {/* </Tabs> */}
           </CardContent>
         </Card>
       </div>
