@@ -126,7 +126,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 flex items-center justify-between relative z-50">
+      <header className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 flex items-center justify-between relative z-40">
         <Logo size="xl" className="text-navy-800" linkTo="/" showIcon={false} />
         
         {/* Desktop Navigation */}
@@ -253,10 +253,10 @@ const Header = () => {
 
       {/* Mobile Navigation Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           {/* Background overlay */}
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
           
