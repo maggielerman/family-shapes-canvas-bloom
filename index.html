@@ -8,6 +8,33 @@
     <meta name="description" content="A sophisticated family community app that brings loved ones together" />
     <meta name="author" content="Family Shapes" />
     
+    <!-- Critical inline CSS for above-the-fold content -->
+    <style>
+      /* Critical CSS for immediate render */
+      body { 
+        margin: 0; 
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      #root { min-height: 100vh; }
+      .loading-spinner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 32px;
+        height: 32px;
+        border: 3px solid #f3f4f6;
+        border-top-color: #e36749;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+    </style>
+    
     <!-- Performance optimizations -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com">
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -16,6 +43,14 @@
     
     <!-- Preload critical resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style">
+    <link rel="preload" href="/src/main.tsx" as="script" crossorigin>
+    
+    <!-- Preload key font files -->
+    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <!-- Resource hints for third-party services -->
+    <link rel="dns-prefetch" href="//supabase.co">
+    <link rel="preconnect" href="https://supabase.co">
     
     <!-- Mobile optimization -->
     <meta name="mobile-web-app-capable" content="yes" />
@@ -25,7 +60,10 @@
     <meta name="format-detection" content="telephone=no" />
     
     <!-- Google Fonts with display=swap for better performance -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    </noscript>
 
     <!-- Open Graph and Twitter meta tags -->
     <meta property="og:title" content="Family Shapes - Connect Your Family" />
@@ -47,10 +85,27 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    
+    <!-- Module preload for better performance -->
+    <link rel="modulepreload" href="/src/App.tsx">
+    <link rel="modulepreload" href="/src/index.css">
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading spinner for initial load -->
+      <div class="loading-spinner" id="initial-loader"></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Remove loader when app starts -->
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          const loader = document.getElementById('initial-loader');
+          if (loader) loader.style.display = 'none';
+        }, 100);
+      });
+    </script>
   </body>
 </html>

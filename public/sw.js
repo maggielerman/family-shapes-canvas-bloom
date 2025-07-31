@@ -1,12 +1,85 @@
 const CACHE_NAME = 'family-shapes-v1';
 const STATIC_CACHE = 'static-v1';
 const DYNAMIC_CACHE = 'dynamic-v1';
+const IMAGE_CACHE = 'images-v1';
 
-// Files to cache immediately
+// Cache versions for easy updates
+const CACHE_VERSION = 1;
+const CACHE_WHITELIST = [STATIC_CACHE, DYNAMIC_CACHE, IMAGE_CACHE];
+
+// Files to cache immediately - expanded list
 const STATIC_FILES = [
   '/',
   '/index.html',
+  '/manifest.json',
+  '/favicon.svg',
+  '/placeholder.svg',
 ];
+
+// Cache strategies
+const CACHE_STRATEGIES = {
+  cacheFirst: (request, cacheName = DYNAMIC_CACHE) => {
+    return caches.match(request)
+      .then(response => {
+        if (response) {
+          // Return from cache but also update in background
+          fetch(request)
+            .then(networkResponse => {
+              if (networkResponse && networkResponse.status === 200) {
+                caches.open(cacheName)
+                  .then(cache => cache.put(request, networkResponse.clone()));
+              }
+            })
+            .catch(() => {}); // Silently fail background update
+          return response;
+        }
+        return fetch(request)
+          .then(response => {
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+            const responseToCache = response.clone();
+            caches.open(cacheName)
+              .then(cache => cache.put(request, responseToCache));
+            return response;
+          });
+      });
+  },
+  
+  networkFirst: (request, cacheName = DYNAMIC_CACHE, timeout = 3000) => {
+    return Promise.race([
+      fetch(request)
+        .then(response => {
+          if (!response || response.status !== 200) {
+            throw new Error('Network response was not ok');
+          }
+          const responseToCache = response.clone();
+          caches.open(cacheName)
+            .then(cache => cache.put(request, responseToCache));
+          return response;
+        }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Network timeout')), timeout)
+      )
+    ])
+    .catch(() => caches.match(request));
+  },
+  
+  staleWhileRevalidate: (request, cacheName = DYNAMIC_CACHE) => {
+    return caches.match(request)
+      .then(cachedResponse => {
+        const fetchPromise = fetch(request)
+          .then(networkResponse => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(cacheName)
+                .then(cache => cache.put(request, networkResponse.clone()));
+            }
+            return networkResponse;
+          });
+        return cachedResponse || fetchPromise;
+      });
+  }
+};
 
 // Install event - cache static files
 self.addEventListener('install', (event) => {
@@ -26,7 +99,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+          if (!CACHE_WHITELIST.includes(cacheName)) {
             console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
@@ -46,54 +119,39 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle API requests differently
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Cache successful API responses
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => cache.put(request, responseClone));
-          }
-          return response;
-        })
-        .catch(() => {
-          // Return cached API response if available
-          return caches.match(request);
-        })
-    );
+  // Skip Chrome extension requests
+  if (url.protocol === 'chrome-extension:') {
     return;
   }
 
-  // Handle static assets
-  event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+  // Handle different resource types with appropriate strategies
+  
+  // API requests - network first with timeout
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
+    event.respondWith(CACHE_STRATEGIES.networkFirst(request, DYNAMIC_CACHE, 5000));
+    return;
+  }
 
-        return fetch(request)
-          .then((response) => {
-            // Don't cache non-successful responses
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
+  // Images - cache first
+  if (request.destination === 'image' || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url.pathname)) {
+    event.respondWith(CACHE_STRATEGIES.cacheFirst(request, IMAGE_CACHE));
+    return;
+  }
 
-            // Clone the response
-            const responseToCache = response.clone();
+  // JavaScript and CSS - stale while revalidate
+  if (/\.(js|css)$/i.test(url.pathname)) {
+    event.respondWith(CACHE_STRATEGIES.staleWhileRevalidate(request, STATIC_CACHE));
+    return;
+  }
 
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseToCache);
-              });
+  // HTML pages - network first with quick timeout
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(CACHE_STRATEGIES.networkFirst(request, DYNAMIC_CACHE, 2000));
+    return;
+  }
 
-            return response;
-          });
-      })
-  );
+  // Default - stale while revalidate
+  event.respondWith(CACHE_STRATEGIES.staleWhileRevalidate(request));
 });
 
 // Background sync for offline actions
