@@ -12,9 +12,7 @@ const OrganizationHero = () => {
             {/* <span className="text-xxs uppercase tracking-widest text-coral-600 font-medium">
               Enterprise SaaS Platform
             </span> */}
-            <p className="text-xxs uppercase tracking-wider text-sage-600 mb-2 sm:mb-3 lg:mb-4 font-medium">
-              The Complete Solution for Modern Reproductive Healthcare
-            </p>
+          
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-extralight text-navy-900 mb-4 sm:mb-6 lg:mb-8 leading-none tracking-tighter">

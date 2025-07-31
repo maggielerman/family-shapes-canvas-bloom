@@ -246,9 +246,7 @@ const FamilyShapesLanding = () => {
                   <p className="text-xs uppercase tracking-wider text-slate-600 mb-1">
                     Limited Beta Spots
                   </p>
-                  <p className="text-xs text-slate-600 font-light">
-                    Launching Spring 2024
-                  </p>
+                
                 </div>
               </div>
             </div>

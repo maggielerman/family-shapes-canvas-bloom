@@ -9,9 +9,9 @@ const RecipientHero = () => {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8 sm:mb-12 lg:mb-16 animate-gentle-fade">
           <div className="mb-4 sm:mb-6 lg:mb-8">
-            <span className="text-xxs uppercase tracking-widest text-coral-600 font-medium">
+            {/* <span className="text-xxs uppercase tracking-widest text-coral-600 font-medium">
               Connecting Families
-            </span>
+            </span> */}
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-extralight text-navy-900 mb-4 sm:mb-6 lg:mb-8 leading-none tracking-tighter">
@@ -21,9 +21,7 @@ const RecipientHero = () => {
           </h1>
           
           <div className="max-w-2xl mx-auto mb-8 sm:mb-10 lg:mb-12">
-            <p className="text-xxs uppercase tracking-wider text-sage-600 mb-2 sm:mb-3 lg:mb-4 font-medium">
-              Where love takes form
-            </p>
+           
             <p className="text-base sm:text-lg text-navy-700 leading-relaxed font-light px-4 sm:px-0">
             Build meaningful relationships with your genetic relatives in a safe, private environment.
             </p>

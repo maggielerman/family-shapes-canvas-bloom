@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const CTA = () => {
   return (
-    <section className="w-full px-4 sm:px-6 lg:px-12 py-16 sm:py-20 lg:py-24 xl:py-32 bg-white">
+    <section className="w-full px-4 sm:px-6 lg:px-12 py-16 sm:py-20 lg:py-24 xl:py-32 bg-coral-100">
       <div className="max-w-4xl mx-auto text-center">
         <div className="relative">
           {/* Background decoration */}
@@ -14,13 +14,7 @@ const CTA = () => {
           </div>
           
           <div className="relative z-10 p-6 sm:p-8 lg:p-12 bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-warm-200">
-            <div className="flex items-center justify-center mb-4 sm:mb-6">
-              <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-coral-500 mr-2 sm:mr-3" />
-              <span className="text-xxs uppercase tracking-widest text-sage-600 font-medium">
-                Join the Beta
-              </span>
-              <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-coral-500 ml-2 sm:ml-3" />
-            </div>
+            
             
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extralight text-navy-900 mb-6 sm:mb-8 tracking-tighter leading-none">
               Ready to Begin
@@ -46,14 +40,7 @@ const CTA = () => {
                 </Link>
               </Button>
               
-              <div className="text-center">
-                <p className="text-xxs uppercase tracking-wider text-sage-600 mb-1">
-                  Limited Beta Spots
-                </p>
-                <p className="text-xs text-navy-600 font-light">
-                  Launching Spring 2024
-                </p>
-              </div>
+          
             </div>
           </div>
         </div>
