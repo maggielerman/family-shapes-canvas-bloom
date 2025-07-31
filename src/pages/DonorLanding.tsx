@@ -51,26 +51,6 @@ const DonorLanding = () => {
       
       <DonorHero />
 
-      {/* Stats Section */}
-      <section className="px-4 sm:px-6 lg:px-12 py-16 bg-sage-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-coral-600 mb-2">5,000+</div>
-              <div className="text-navy-600">Active Donors</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-coral-600 mb-2">200+</div>
-              <div className="text-navy-600">Partner Clinics</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-coral-600 mb-2">98%</div>
-              <div className="text-navy-600">Privacy Satisfaction</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Features Grid */}
       <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20">
         <div className="max-w-6xl mx-auto">
@@ -103,94 +83,8 @@ const DonorLanding = () => {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20 bg-sage-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-light text-navy-800 mb-4">
-              Why Donors Choose Family Shapes
-            </h2>
-            <p className="text-lg text-navy-600 max-w-3xl mx-auto">
-              Join thousands of donors who have taken control of their donation experience.
-            </p>
-          </div>
+   
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <ul className="space-y-4">
-                {benefits.map((benefit, index) => (
-                  <li key={index} className="flex items-start">
-                    <CheckCircle className="w-6 h-6 text-coral-600 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-navy-700">{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-white p-8 rounded-2xl shadow-lg border border-sage-200">
-              <h3 className="text-2xl font-semibold text-navy-800 mb-4">
-                "Finally, transparency and control"
-              </h3>
-              <p className="text-navy-600 mb-6 italic">
-                "Family Shapes gave me the tools I needed to set clear boundaries while still being able to help families. 
-                I know exactly how my donations are being used and can control my privacy settings completely."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-coral-100 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-coral-600 font-semibold">M.K.</span>
-                </div>
-                <div>
-                  <div className="font-semibold text-navy-800">Michael K.</div>
-                  <div className="text-sm text-navy-600">Donor since 2019</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-light text-navy-800 mb-4">
-              Getting Started is Simple
-            </h2>
-            <p className="text-lg text-navy-600 max-w-3xl mx-auto">
-              Set up your donor profile and privacy preferences in minutes.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-coral-600 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">
-                1
-              </div>
-              <h3 className="text-xl font-semibold text-navy-800 mb-4">Create Your Profile</h3>
-              <p className="text-navy-600">
-                Set up your secure donor profile and connect it to your existing clinic relationships.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-coral-600 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">
-                2
-              </div>
-              <h3 className="text-xl font-semibold text-navy-800 mb-4">Set Your Preferences</h3>
-              <p className="text-navy-600">
-                Define your privacy settings, communication boundaries, and sharing preferences.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-coral-600 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">
-                3
-              </div>
-              <h3 className="text-xl font-semibold text-navy-800 mb-4">Stay in Control</h3>
-              <p className="text-navy-600">
-                Monitor your donations, update preferences, and maintain healthy boundaries.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20 bg-gradient-to-r from-coral-600 to-dusty-600">
@@ -210,7 +104,7 @@ const DonorLanding = () => {
             </Button>
             <Button asChild variant="ghost" size="lg" className="border-white text-white hover:bg-white hover:text-coral-600 px-8 py-6 text-lg">
               <Link to="/contact">
-                Contact Support
+                Contact Us
               </Link>
             </Button>
           </div>
