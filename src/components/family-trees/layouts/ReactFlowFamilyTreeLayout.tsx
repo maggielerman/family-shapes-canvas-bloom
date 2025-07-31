@@ -315,7 +315,7 @@ export function RadialLayout({
       const circle = nodeElement.append('circle')
         .attr('r', nodeRadius)
         .attr('fill', 'white')
-        .attr('stroke', generationColor)
+        .attr('stroke', '#e5e7eb')
         .attr('stroke-width', 4);
 
       // Special styling for self

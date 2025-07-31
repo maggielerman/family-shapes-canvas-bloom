@@ -312,11 +312,11 @@ export function RadialLayout({
       const generationColor = generationInfo?.color || '#e5e7eb';
       const nodeRadius = 30;
       
-      // Main circle with generation color
+      // Main circle with default styling
       const circle = nodeElement.append('circle')
         .attr('r', nodeRadius)
         .attr('fill', 'white')
-        .attr('stroke', generationColor)
+        .attr('stroke', '#e5e7eb')
         .attr('stroke-width', 4);
 
       // Special styling for self

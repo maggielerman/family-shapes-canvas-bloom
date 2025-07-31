@@ -46,7 +46,7 @@ export function FamilyTreePersonCard({
       style={{
         borderWidth: '3px',
         borderStyle: 'solid',
-        borderColor: generationColor || '#e5e7eb'
+        borderColor: '#e5e7eb'
       }}
       onClick={handleClick}
     >
@@ -193,7 +193,7 @@ export function FamilyTreePersonCardSVG({
         rx="8"
         ry="8"
         fill="white"
-        stroke={isHighlighted ? "#3b82f6" : (generationColor || "#e5e7eb")}
+        stroke={isHighlighted ? "#3b82f6" : "#e5e7eb"}
         strokeWidth={isHighlighted ? "2" : "3"}
         style={{ cursor: 'pointer' }}
         onClick={handleClick}

@@ -44,10 +44,6 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
   return (
     <Card 
       className="w-56 shadow-lg border-2 hover:border-primary/50 transition-colors"
-      style={{
-        borderColor: generationColor || 'hsl(var(--border))',
-        backgroundColor: generationColor ? `${generationColor}10` : undefined
-      }}
     >
       <Handle type="target" position={Position.Top} className="w-3 h-3" />
       
@@ -55,17 +51,10 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
         <div className="flex flex-col items-center gap-3 mb-3">
           <Avatar 
             className="w-16 h-16 ring-2 shadow-md"
-            style={{ 
-              ringColor: generationColor || 'hsl(var(--border))'
-            }}
           >
             <AvatarImage src={person.profile_photo_url || undefined} />
             <AvatarFallback 
               className="text-lg font-semibold"
-              style={{
-                backgroundColor: generationColor || undefined,
-                color: generationColor ? '#ffffff' : undefined
-              }}
             >
               {initials}
             </AvatarFallback>
@@ -82,11 +71,7 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
                   {age && ` (${age})`}
                 </span>
               )}
-              {generation !== undefined && (
-                <div className="text-xs font-medium mt-1" style={{ color: generationColor }}>
-                  Gen {generation}
-                </div>
-              )}
+
             </div>
           </div>
         </div>

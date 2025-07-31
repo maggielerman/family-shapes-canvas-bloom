@@ -282,7 +282,7 @@ export function DagreLayout({
         .attr('rx', 8)
         .attr('ry', 8)
         .attr('fill', 'white')
-        .attr('stroke', generationColor)
+        .attr('stroke', '#e5e7eb')
         .attr('stroke-width', 3);
 
       // Avatar circle background

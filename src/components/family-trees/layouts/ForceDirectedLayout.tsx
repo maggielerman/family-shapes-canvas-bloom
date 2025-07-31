@@ -158,11 +158,12 @@ export function ForceDirectedLayout({
         connection
       }));
 
-    // Create simulation with updated forces for vertical card nodes
+    // Create simulation with positioning forces for disjoint force-directed graph
     const simulation = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links).id((d: any) => d.id).distance(300))
       .force('charge', d3.forceManyBody().strength(-600))
-      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('x', d3.forceX(width / 2).strength(0.1))  // Positioning force for X
+      .force('y', d3.forceY(height / 2).strength(0.1))  // Positioning force for Y
       .force('collision', d3.forceCollide().radius(45));
 
     const g = svg.append('g');
@@ -217,11 +218,11 @@ export function ForceDirectedLayout({
       const generationColor = generationInfo?.color || '#e5e7eb';
       const nodeRadius = 30;
       
-      // Main circle with generation color
+      // Main circle with default styling
       const circle = nodeElement.append('circle')
         .attr('r', nodeRadius)
         .attr('fill', 'white')
-        .attr('stroke', generationColor)
+        .attr('stroke', '#e5e7eb')
         .attr('stroke-width', 4);
 
       // Special styling for self
