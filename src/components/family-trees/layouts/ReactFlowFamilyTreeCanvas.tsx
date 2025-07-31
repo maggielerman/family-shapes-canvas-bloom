@@ -15,8 +15,8 @@ interface ReactFlowFamilyTreeCanvasProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
-  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow';
-  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow') => void;
+  currentLayout: 'force' | 'radial' | 'dagre' | 'reactflow' | 'xyflow';
+  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'reactflow' | 'xyflow') => void;
 }
 
 export default function ReactFlowFamilyTreeCanvas({

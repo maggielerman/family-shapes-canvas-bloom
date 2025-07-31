@@ -65,7 +65,7 @@
     "dotenv": "^17.2.0",
     "elkjs": "^0.10.0",
     "embla-carousel-react": "^8.3.0",
-    "family-chart": "^0.7.2",
+
     "input-otp": "^1.2.4",
     "jsdom": "^26.1.0",
     "jszip": "^3.10.1",

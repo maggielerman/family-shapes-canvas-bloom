@@ -23,8 +23,8 @@ interface RadialLayoutProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
-  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow';
-  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow') => void;
+  currentLayout: 'force' | 'radial' | 'dagre' | 'xyflow';
+  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'xyflow') => void;
 }
 
 
@@ -42,7 +42,7 @@ const RADIAL_CONFIG: RadialConfig = {
   centerRadius: 140,
   generationSpacing: 280,
   maxRadius: 800,
-  linkDistance: 200,
+  linkDistance: 100,
   chargeStrength: -500,
   collisionRadius: 45
 };

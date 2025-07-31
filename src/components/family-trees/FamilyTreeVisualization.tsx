@@ -7,7 +7,6 @@ import { AddPersonDialog } from './AddPersonDialog';
 import { ForceDirectedLayout } from './layouts/ForceDirectedLayout';
 import { RadialLayout } from './layouts/RadialLayout';
 import { DagreLayout } from './layouts/DagreLayout';
-import { FamilyChartLayout } from './layouts/FamilyChartLayout';
 import { XYFlowTreeBuilder } from './XYFlowTreeBuilder';
 import { usePersonManagement } from '@/hooks/use-person-management';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +33,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow'>('force');
+  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre' | 'xyflow'>('radial');
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -84,7 +83,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     setViewingPerson(person);
   };
 
-  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow') => {
+  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'xyflow') => {
     console.log('Layout changed to:', layout);
     setCurrentLayout(layout);
   };
@@ -133,17 +132,6 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                 />
               ) : currentLayout === 'dagre' ? (
                 <DagreLayout
-                  persons={persons}
-                  connections={connections}
-                  relationshipTypes={relationshipTypes}
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  onPersonClick={handlePersonClick}
-                  currentLayout={currentLayout}
-                  onLayoutChange={handleLayoutChange}
-                />
-              ) : currentLayout === 'family-chart' ? (
-                <FamilyChartLayout
                   persons={persons}
                   connections={connections}
                   relationshipTypes={relationshipTypes}

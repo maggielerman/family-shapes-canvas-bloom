@@ -74,7 +74,7 @@ interface FamilyTree {
     auto_backup?: boolean;
     backup_frequency?: 'daily' | 'weekly' | 'monthly';
     theme?: 'default' | 'dark' | 'light';
-    layout?: 'force' | 'radial' | 'dagre' | 'family-chart';
+            layout?: 'force' | 'radial' | 'dagre';
     privacy_level?: 'strict' | 'moderate' | 'open';
     notification_preferences?: {
       new_members?: boolean;
@@ -554,7 +554,7 @@ export default function FamilyTreeSettings() {
                       <SelectItem value="force">Force Directed</SelectItem>
                       <SelectItem value="radial">Radial</SelectItem>
                       <SelectItem value="dagre">Hierarchical</SelectItem>
-                      <SelectItem value="family-chart">Family Chart</SelectItem>
+      
                     </SelectContent>
                   </Select>
                 </div>
