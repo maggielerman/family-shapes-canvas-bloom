@@ -24,7 +24,7 @@ file_size_limit = "50MiB"
 
 [auth]
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://familyshapes.com", "https://localhost:3000", "https://6e4109b6-b165-4556-baab-bd21469c6dee.lovableproject.com"]
+additional_redirect_urls = ["https://familyshapes.com", "https://localhost:3000"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
