@@ -67,9 +67,6 @@ const FamilyShapesLanding = () => {
           <a href="#features" className="text-xs uppercase tracking-wider text-slate-600 hover:text-orange-600 transition-colors">
             Features
           </a>
-          <a href="#about" className="text-xs uppercase tracking-wider text-slate-600 hover:text-orange-600 transition-colors">
-            About
-          </a>
           <a href="#contact" className="text-xs uppercase tracking-wider text-slate-600 hover:text-orange-600 transition-colors">
             Contact
           </a>
@@ -292,7 +289,6 @@ const FamilyShapesLanding = () => {
             <div>
               <h3 className="text-sm font-medium mb-4 tracking-wide text-white">Connect</h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-xs uppercase tracking-wider text-slate-400 hover:text-orange-400 transition-colors">About Us</a></li>
                 <li><a href="#" className="text-xs uppercase tracking-wider text-slate-400 hover:text-orange-400 transition-colors">Blog</a></li>
                 <li><a href="#" className="text-xs uppercase tracking-wider text-slate-400 hover:text-orange-400 transition-colors">Contact</a></li>
                 <li><a href="#" className="text-xs uppercase tracking-wider text-slate-400 hover:text-orange-400 transition-colors">Careers</a></li>

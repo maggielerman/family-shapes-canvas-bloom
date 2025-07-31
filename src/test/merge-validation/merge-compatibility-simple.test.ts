@@ -36,7 +36,6 @@ describe('Merge Compatibility - Core Functionality Tests', () => {
     it('should preserve all original route configurations', () => {
       const routes = [
         '/',
-        '/about',
         '/contact',
         '/auth',
         '/dashboard',
@@ -329,7 +328,6 @@ describe('Merge Compatibility - Core Functionality Tests', () => {
     it('should support lazy loading patterns', () => {
       const lazyComponents = [
         'Index',
-        'About',
         'Contact',
         'Auth',
         'Dashboard',

@@ -12,7 +12,7 @@ import MainLayout from "@/components/layouts/MainLayout";
 
 // Lazy load heavy components for better performance
 const Index = lazy(() => import("./pages/Index"));
-const About = lazy(() => import("./pages/About"));
+// const About = lazy(() => import("./pages/About")); // Temporarily hidden
 const Contact = lazy(() => import("./pages/Contact"));
 const Auth = lazy(() => import("./pages/Auth"));
 const RecipientDashboard = lazy(() => import("./pages/RecipientDashboard"));
@@ -69,7 +69,7 @@ const App = () => (
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<MainLayout><Index /></MainLayout>} />
-              <Route path="/about" element={<MainLayout><About /></MainLayout>} />
+              {/* <Route path="/about" element={<MainLayout><About /></MainLayout>} /> */}
               <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/for-donors" element={<MainLayout><DonorLanding /></MainLayout>} />

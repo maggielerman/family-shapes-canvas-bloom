@@ -121,7 +121,6 @@ const Header = () => {
     { href: "#features", label: "Features", isFeatures: true },
     { href: "/for-donors", label: "For Donors" },
     { href: "/for-recipient-families", label: "For Families" },
-    { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ];
 

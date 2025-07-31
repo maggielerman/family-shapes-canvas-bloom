@@ -34,7 +34,6 @@ const Footer = () => {
           <div>
             <h3 className="text-sm font-medium mb-3 sm:mb-4 tracking-wide text-white">Connect</h3>
             <ul className="space-y-2 sm:space-y-3">
-              <li><Link to="/about" className="text-xs sm:text-xxs uppercase tracking-wider text-warm-400 hover:text-coral-400 transition-colors">About Us</Link></li>
               <li><a href="#" className="text-xs sm:text-xxs uppercase tracking-wider text-warm-400 hover:text-coral-400 transition-colors">Blog</a></li>
               <li><Link to="/contact" className="text-xs sm:text-xxs uppercase tracking-wider text-warm-400 hover:text-coral-400 transition-colors">Contact</Link></li>
               <li><Link to="/style-guide" className="text-xs sm:text-xxs uppercase tracking-wider text-warm-400 hover:text-coral-400 transition-colors">Style Guide</Link></li>
