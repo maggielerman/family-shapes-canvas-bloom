@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 
 import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
-import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
 import { RadialLayout } from "./layouts/RadialLayout";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -77,12 +76,12 @@ export function PublicFamilyTreeViewer({
   const [connections, setConnections] = useState<PublicConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
-  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre'>('force');
+  const [currentLayout, setCurrentLayout] = useState<'radial' | 'dagre'>('radial');
 
   // Use centralized relationship types
   const relationshipTypes = RelationshipTypeHelpers.getForSelection();
 
-  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre') => {
+  const handleLayoutChange = (layout: 'radial' | 'dagre') => {
     setCurrentLayout(layout);
   };
 
@@ -324,18 +323,7 @@ export function PublicFamilyTreeViewer({
                     </AlertDescription>
                   </Alert>
                 </div>
-                {currentLayout === 'force' ? (
-                  <ForceDirectedLayout
-                    persons={persons as any[]}
-                    connections={connections as any[]}
-                    relationshipTypes={relationshipTypes}
-                    width={800}
-                    height={600}
-                    onPersonClick={() => {}}
-                    currentLayout={currentLayout}
-                    onLayoutChange={handleLayoutChange}
-                  />
-                ) : currentLayout === 'radial' ? (
+                {currentLayout === 'radial' ? (
                   <RadialLayout
                     persons={persons as any[]}
                     connections={connections as any[]}

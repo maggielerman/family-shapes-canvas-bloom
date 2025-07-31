@@ -4,7 +4,6 @@ import { Plus, Users } from 'lucide-react';
 import { PersonCardDialog } from '@/components/people/PersonCard';
 import { EditPersonDialog } from '@/components/people/EditPersonDialog';
 import { AddPersonDialog } from './AddPersonDialog';
-import { ForceDirectedLayout } from './layouts/ForceDirectedLayout';
 import { RadialLayout } from './layouts/RadialLayout';
 import { DagreLayout } from './layouts/DagreLayout';
 import { XYFlowTreeBuilder } from './XYFlowTreeBuilder';
@@ -33,7 +32,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre' | 'xyflow'>('radial');
+  const [currentLayout, setCurrentLayout] = useState<'radial' | 'dagre' | 'xyflow'>('radial');
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -83,7 +82,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     setViewingPerson(person);
   };
 
-  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'xyflow') => {
+  const handleLayoutChange = (layout: 'radial' | 'dagre' | 'xyflow') => {
     console.log('Layout changed to:', layout);
     setCurrentLayout(layout);
   };
@@ -108,18 +107,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
           {/* Canvas */}
           <div className="border rounded-lg bg-card">
             <Suspense fallback={<ChartLoadingSpinner />}>
-              {currentLayout === 'force' ? (
-                <ForceDirectedLayout
-                  persons={persons}
-                  connections={connections}
-                  relationshipTypes={relationshipTypes}
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  onPersonClick={handlePersonClick}
-                  currentLayout={currentLayout}
-                  onLayoutChange={handleLayoutChange}
-                />
-              ) : currentLayout === 'radial' ? (
+              {currentLayout === 'radial' ? (
                 <RadialLayout
                   persons={persons}
                   connections={connections}
