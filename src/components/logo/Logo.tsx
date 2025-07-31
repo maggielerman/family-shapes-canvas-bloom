@@ -67,7 +67,7 @@ const Logo = ({
       {showText && (
         <span className={cn("font-medium tracking-normal -ml-1", text, className)}>
           <span>Family</span>
-          <span className="text-coral-600">Shapes</span>
+          <span className={variant === "dark" ? "text-white" : "text-coral-600"}>Shapes</span>
         </span>
       )}
     </div>
