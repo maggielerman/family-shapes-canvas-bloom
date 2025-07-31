@@ -200,7 +200,12 @@ export function DagreLayout({
     edgeEnter.append('path')
       .attr('d', (d) => {
         const edge = g.edge(d);
-        return `M ${edge.points[0].x} ${edge.points[0].y} ${edge.points.map(p => `L ${p.x} ${p.y}`).join(' ')}`;
+        // Use D3's linkVertical generator for smooth curves
+        const linkGenerator = d3.linkVertical()
+          .source((d: any) => [edge.points[0].x, edge.points[0].y])
+          .target((d: any) => [edge.points[edge.points.length - 1].x, edge.points[edge.points.length - 1].y]);
+        
+        return linkGenerator({ source: [edge.points[0].x, edge.points[0].y], target: [edge.points[edge.points.length - 1].x, edge.points[edge.points.length - 1].y] });
       })
       .attr('fill', 'none')
       .attr('stroke', (d) => {
