@@ -11,7 +11,7 @@ import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
 import { RelationshipFilter } from './RelationshipFilter';
 import { FamilyTreePersonCardSVG } from './FamilyTreePersonCard';
-import { GenerationLegend } from './GenerationLegend';
+
 import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './relationshipConstants';
 
 interface DagreLayoutProps {
@@ -620,12 +620,7 @@ export function DagreLayout({
         />
       </div>
 
-      {/* Generation Legend - top left below relationship filter */}
-      <div className="absolute top-36 left-4 z-10">
-        <GenerationLegend
-          generationMap={generationMap}
-        />
-      </div>
+
 
       {/* Info Panel - bottom left */}
       <div className="absolute bottom-4 left-4 z-10">

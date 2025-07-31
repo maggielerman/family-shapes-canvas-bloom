@@ -3,7 +3,7 @@ import ReactFlowFamilyTree, { ReactFlowFamilyTreeHandle } from './ReactFlowFamil
 import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { RelationshipFilter } from './RelationshipFilter';
-import { GenerationLegend } from './GenerationLegend';
+
 import { InfoPanel } from './InfoPanel';
 import { Person } from '../../../types/person';
 import { Connection } from '../../../types/connection';
@@ -101,7 +101,7 @@ export default function ReactFlowFamilyTreeCanvas({
 
       {/* Generation Legend */}
       <div className="absolute bottom-4 left-4 z-10">
-        <GenerationLegend generationMap={generationMap} />
+
       </div>
 
       {/* Info Panel */}
