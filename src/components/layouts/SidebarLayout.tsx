@@ -160,7 +160,7 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
         <SidebarHeader className="border-b px-2 py-4">
           {/* App Logo */}
           <div className="px-4 py-2 mb-3">
-            <Logo size="md" showText={true} linkTo="/" showIcon={false} />
+            <Logo size="md" showText={false} linkTo="/" showIcon={true} />
           </div>
           
           {/* Context Switcher */}

@@ -11,7 +11,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-2">
             <div className="mb-4 sm:mb-6">
-              <Logo size="lg" className="text-white" linkTo="/" showIcon={false} />
+              <Logo size="lg" className="text-white" linkTo="/" showIcon={true} showText={false} variant="dark" />
             </div>
             <p className="text-sm text-warm-300 leading-relaxed font-light max-w-md">
               Thoughtfully designed to nurture family connections and celebrate 

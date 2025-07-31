@@ -42,7 +42,7 @@ const SignIn = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center mb-8">
-          <Logo size="lg" className="text-navy-800" linkTo="/" showIcon={false} />
+          <Logo size="lg" className="text-navy-800" linkTo="/" showIcon={true} />
         </div>
         
         <h2 className="text-center text-3xl font-light text-navy-800">

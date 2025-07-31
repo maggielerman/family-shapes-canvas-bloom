@@ -170,7 +170,7 @@ const Auth = () => {
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="flex items-center justify-center">
-          <Logo size="xl" linkTo="/" showIcon={false} />
+          <Logo size="xl" linkTo="/" showIcon={true} />
         </div>
 
         <Card className="shadow-lg">
