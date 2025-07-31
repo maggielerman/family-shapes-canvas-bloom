@@ -102,20 +102,36 @@ const RecipientFeatureBullets = ({ variant = 'default' }: RecipientFeatureBullet
                 ? 'border-coral-500 bg-coral-500' 
                 : 'border-warm-200 bg-gradient-to-br from-coral-100 to-dusty-100'
             } flex items-center justify-center`}>
-              <div className="text-center p-8">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                  isCoralVariant ? 'bg-white text-coral-600' : 'bg-coral-600 text-white'
-                }`}>
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
+              <div className="w-full h-full relative">
+                <img 
+                  src="/images/dibling-group-radial-view.png" 
+                  alt="Family network visualization showing donor connections and family tree"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to placeholder if image doesn't exist
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                {/* Fallback content if image doesn't load */}
+                <div className={`absolute inset-0 flex items-center justify-center ${isCoralVariant ? 'bg-coral-500' : 'bg-gradient-to-br from-coral-100 to-dusty-100'} hidden`}>
+                  <div className="text-center p-8">
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                      isCoralVariant ? 'bg-white text-coral-600' : 'bg-coral-600 text-white'
+                    }`}>
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </div>
+                    <h3 className={`text-xl font-medium mb-2 ${
+                      isCoralVariant ? 'text-white' : 'text-navy-900'
+                    }`}>Family Connections</h3>
+                    <p className={`text-sm ${
+                      isCoralVariant ? 'text-coral-100' : 'text-navy-600'
+                    }`}>Discover and build meaningful relationships with your genetic family</p>
+                  </div>
                 </div>
-                <h3 className={`text-xl font-medium mb-2 ${
-                  isCoralVariant ? 'text-white' : 'text-navy-900'
-                }`}>Family Connections</h3>
-                <p className={`text-sm ${
-                  isCoralVariant ? 'text-coral-100' : 'text-navy-600'
-                }`}>Discover and build meaningful relationships with your genetic family</p>
               </div>
             </div>
           </div>

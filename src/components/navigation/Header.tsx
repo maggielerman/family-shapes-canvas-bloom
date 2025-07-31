@@ -119,8 +119,8 @@ const Header = () => {
 
   const navigationItems = [
     { href: "#features", label: "Features", isFeatures: true },
-    { href: "/for-donors", label: "For Donors" },
     { href: "/for-recipient-families", label: "For Families" },
+    { href: "/for-donors", label: "For Donors" },
     { href: "/contact", label: "Contact" },
   ];
 
