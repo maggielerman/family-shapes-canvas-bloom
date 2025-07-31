@@ -127,7 +127,7 @@ const Header = () => {
   return (
     <>
       <header className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 flex items-center justify-between relative z-50">
-        <Logo size="xl" className="text-navy-800" linkTo="/" showIcon={true} />
+        <Logo size="xl" className="text-navy-800" linkTo="/" showIcon={false} />
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8 lg:space-x-12">

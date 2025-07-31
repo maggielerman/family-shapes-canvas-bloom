@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import logomarkSvg from "./logomark01.svg";
+import logomarkSvg from "./logomark01c.svg";
 import logomarkDarkSvg from "./logomark01-dark.svg";
 
 const Logomark = ({ className, variant = "light" }: { className?: string; variant?: "light" | "dark" }) => (
