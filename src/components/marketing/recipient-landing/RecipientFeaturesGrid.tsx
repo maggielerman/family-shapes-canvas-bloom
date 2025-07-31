@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Heart, Shield, MessageSquare, Search, Network } from "lucide-react";
+import { Users, Heart, Shield, MessageSquare, Search, Network, FolderOpen } from "lucide-react";
 
 const RecipientFeaturesGrid = () => {
   const features = [
@@ -33,6 +33,11 @@ const RecipientFeaturesGrid = () => {
       icon: Search,
       title: "Search & Discovery",
       description: "Use advanced search tools to find family members based on donor information, location, and other criteria."
+    },
+    {
+      icon: FolderOpen,
+      title: "Media & Document Storage",
+      description: "Organize, store, and share photos, documents, and memories in a dedicated space designed for donor families."
     }
   ];
 
@@ -48,7 +53,7 @@ const RecipientFeaturesGrid = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
             <Card key={index} className="border-sage-200 hover:shadow-lg transition-shadow duration-300">
               <CardHeader>
