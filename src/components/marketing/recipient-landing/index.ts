@@ -1,0 +1,9 @@
+export { default as RecipientHero } from './RecipientHero';
+export { default as RecipientFeatures } from './RecipientFeatures';
+export { default as RecipientStats } from './RecipientStats';
+export { default as RecipientFeaturesGrid } from './RecipientFeaturesGrid';
+export { default as RecipientFeatureBullets } from './RecipientFeatureBullets';
+export { default as RecipientHowItWorks } from './RecipientHowItWorks';
+export { default as RecipientTestimonials } from './RecipientTestimonials';
+export { default as RecipientCTA } from './RecipientCTA';
+export { default as CTA } from './CTA'; 

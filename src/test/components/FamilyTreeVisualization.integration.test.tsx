@@ -5,13 +5,7 @@ import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
 
 // Mock the heavy chart components
-vi.mock('@/components/family-trees/layouts/ForceDirectedLayout', () => ({
-  ForceDirectedLayout: ({ onPersonClick }: { onPersonClick: (person: Person) => void }) => (
-    <div data-testid="force-directed-layout">
-      <button onClick={() => onPersonClick(mockPerson)}>Click Person</button>
-    </div>
-  )
-}));
+
 
 vi.mock('@/components/family-trees/layouts/DagreLayout', () => ({
   DagreLayout: ({ onPersonClick }: { onPersonClick: (person: Person) => void }) => (
@@ -117,7 +111,7 @@ describe('FamilyTreeVisualization', () => {
 
   it('renders without crashing', () => {
     render(<FamilyTreeVisualization {...defaultProps} />);
-    expect(screen.getByTestId('force-directed-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('radial-layout')).toBeInTheDocument();
   });
 
   it('shows empty state when no persons', () => {
@@ -146,16 +140,16 @@ describe('FamilyTreeVisualization', () => {
     expect(addButton).toBeInTheDocument();
   });
 
-  it('renders force directed layout by default', () => {
+  it('renders radial layout by default', () => {
     render(<FamilyTreeVisualization {...defaultProps} />);
-    expect(screen.getByTestId('force-directed-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('radial-layout')).toBeInTheDocument();
   });
 
   it('switches to dagre layout when toggle is clicked', async () => {
     render(<FamilyTreeVisualization {...defaultProps} />);
     
-    // Initially shows force layout
-    expect(screen.getByTestId('force-directed-layout')).toBeInTheDocument();
+    // Initially shows radial layout
+    expect(screen.getByTestId('radial-layout')).toBeInTheDocument();
     
     // Find and click the toggle button (it's an icon button)
     const toggleButton = screen.getByTitle('Switch to Tree view');
@@ -166,7 +160,7 @@ describe('FamilyTreeVisualization', () => {
     });
   });
 
-  it('switches back to force layout when toggle is clicked again', async () => {
+  it('switches back to radial layout when toggle is clicked again', async () => {
     render(<FamilyTreeVisualization {...defaultProps} />);
     
     // Click toggle to switch to dagre
@@ -177,12 +171,12 @@ describe('FamilyTreeVisualization', () => {
       expect(screen.getByTestId('dagre-layout')).toBeInTheDocument();
     });
     
-    // Click toggle again to switch back to force
-    const forceViewButton = screen.getByTitle('Switch to Force view');
-    forceViewButton.click();
+    // Click toggle again to switch back to radial
+    const radialViewButton = screen.getByTitle('Switch to Radial view');
+    radialViewButton.click();
     
     await waitFor(() => {
-      expect(screen.getByTestId('force-directed-layout')).toBeInTheDocument();
+      expect(screen.getByTestId('radial-layout')).toBeInTheDocument();
     });
   });
 

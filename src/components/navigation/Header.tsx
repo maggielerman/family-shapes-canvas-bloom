@@ -1,10 +1,12 @@
 
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, Heart, User, Settings, LogOut, X } from "lucide-react";
+import { Menu, User, Settings, LogOut, X, TreePine } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Logo } from "@/components/logo";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +17,58 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  // Fetch user profile when user changes
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    } else {
+      setProfile(null);
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, avatar_url, bio')
+        .eq('id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+      } else if (data && data.length > 0) {
+        setProfile(data[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  // Refresh profile data when location changes to catch avatar updates
+  useEffect(() => {
+    if (user && location.pathname !== '/profile') {
+      // Refresh profile data when user navigates away from profile page
+      fetchUserProfile();
+    }
+  }, [location.pathname, user]);
 
   const handleSignOut = async () => {
     console.log('Header sign out clicked');
@@ -54,28 +103,44 @@ const Header = () => {
     }
   };
 
+  const handleFeaturesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === '/') {
+      // If on home page, scroll to features section
+      const featuresSection = document.getElementById('features');
+      if (featuresSection) {
+        featuresSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // If on different page, navigate to home page with features anchor
+      navigate('/#features');
+    }
+  };
+
   const navigationItems = [
-    { href: "#features", label: "Features" },
-    { href: "/for-donors", label: "For Donors" },
+    { href: "#features", label: "Features", isFeatures: true },
     { href: "/for-recipient-families", label: "For Families" },
-    { href: "/about", label: "About" },
+    { href: "/for-donors", label: "For Donors" },
     { href: "/contact", label: "Contact" },
   ];
 
   return (
     <>
-      <header className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 flex items-center justify-between relative z-50">
-        <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-          </div>
-          <span className="text-lg sm:text-xl lg:text-2xl font-light tracking-wide text-navy-800">Family Shapes</span>
-        </Link>
+      <header className="w-full px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 flex items-center justify-between relative z-40">
+        <Logo size="xl" className="text-navy-800" linkTo="/" showIcon={false} />
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8 lg:space-x-12">
           {navigationItems.map((item) => (
-            item.href.startsWith('#') ? (
+            item.isFeatures ? (
+              <button
+                key={item.href}
+                onClick={handleFeaturesClick}
+                className="text-xxs uppercase tracking-wider text-navy-600 hover:text-coral-600 transition-colors"
+              >
+                {item.label}
+              </button>
+            ) : item.href.startsWith('#') ? (
               <a 
                 key={item.href}
                 href={item.href} 
@@ -101,7 +166,7 @@ const Header = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                    <AvatarImage src={profile?.avatar_url || undefined} alt={user.email} />
                     <AvatarFallback className="bg-coral-600 text-white">
                       {user.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -132,7 +197,7 @@ const Header = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/family-trees" className="cursor-pointer">
-                    <Heart className="mr-2 h-4 w-4" />
+                    <TreePine className="mr-2 h-4 w-4" />
                     <span>Family Trees</span>
                   </Link>
                 </DropdownMenuItem>
@@ -195,10 +260,10 @@ const Header = () => {
 
       {/* Mobile Navigation Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           {/* Background overlay */}
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50"
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
           
@@ -207,12 +272,7 @@ const Header = () => {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b">
-                <Link to="/" className="flex items-center space-x-3" onClick={() => setMobileMenuOpen(false)}>
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-                    <Heart className="w-3 h-3 text-white" />
-                  </div>
-                  <span className="text-lg font-light tracking-wide text-navy-800">Family Shapes</span>
-                </Link>
+                <Logo size="lg" className="text-navy-800" linkTo="/" showIcon={true} />
                 <Button
                   variant="ghost"
                   size="sm"
@@ -228,7 +288,17 @@ const Header = () => {
                 <ul className="space-y-4">
                   {navigationItems.map((item) => (
                     <li key={item.href}>
-                      {item.href.startsWith('#') ? (
+                      {item.isFeatures ? (
+                        <button
+                          onClick={(e) => {
+                            handleFeaturesClick(e);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="block w-full text-left py-3 px-4 text-base text-navy-700 hover:text-coral-600 hover:bg-coral-50 rounded-lg transition-colors"
+                        >
+                          {item.label}
+                        </button>
+                      ) : item.href.startsWith('#') ? (
                         <a
                           href={item.href}
                           className="block py-3 px-4 text-base text-navy-700 hover:text-coral-600 hover:bg-coral-50 rounded-lg transition-colors"

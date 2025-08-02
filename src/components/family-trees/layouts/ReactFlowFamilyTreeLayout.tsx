@@ -7,7 +7,7 @@ import { TreeToolbar } from './TreeToolbar';
 import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
 import { RelationshipFilter } from './RelationshipFilter';
-import { GenerationLegend } from './GenerationLegend';
+
 import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './relationshipConstants';
 
 interface RelationshipType {
@@ -23,8 +23,8 @@ interface RadialLayoutProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
-  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow';
-  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow') => void;
+  currentLayout: 'radial' | 'dagre' | 'xyflow';
+  onLayoutChange: (layout: 'radial' | 'dagre' | 'xyflow') => void;
 }
 
 // Radial layout configuration
@@ -315,7 +315,7 @@ export function RadialLayout({
       const circle = nodeElement.append('circle')
         .attr('r', nodeRadius)
         .attr('fill', 'white')
-        .attr('stroke', generationColor)
+        .attr('stroke', '#e5e7eb')
         .attr('stroke-width', 4);
 
       // Special styling for self
@@ -524,12 +524,7 @@ export function RadialLayout({
         />
       </div>
 
-      {/* Generation Legend - top left below relationship filter */}
-      <div className="absolute top-36 left-4 z-10">
-        <GenerationLegend
-          generationMap={generationMap}
-        />
-      </div>
+
 
       {/* Info Panel - bottom left */}
       <div className="absolute bottom-4 left-4 z-10">

@@ -13,19 +13,37 @@ interface PersonNodeData {
 }
 
 export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
+  // Add error handling for missing data
+  if (!data || !data.person) {
+    console.error('PersonNode: Missing person data', data);
+    return (
+      <Card className="w-56 shadow-lg border-2 border-red-500">
+        <CardContent className="p-4">
+          <div className="text-center text-red-500">
+            <p className="text-sm">Error: Missing person data</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const person = data.person as Person;
   const generationColor = data.generationColor;
   const generation = data.generation;
   const age = person.date_of_birth ? calculateAge(person.date_of_birth) : null;
   const initials = PersonUtils.getInitials(person);
 
+  // Add debugging
+  console.log('PersonNode rendering:', {
+    personId: person.id,
+    personName: person.name,
+    generationColor,
+    generation
+  });
+
   return (
     <Card 
       className="w-56 shadow-lg border-2 hover:border-primary/50 transition-colors"
-      style={{
-        borderColor: generationColor || 'hsl(var(--border))',
-        backgroundColor: generationColor ? `${generationColor}10` : undefined
-      }}
     >
       <Handle type="target" position={Position.Top} className="w-3 h-3" />
       
@@ -33,17 +51,10 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
         <div className="flex flex-col items-center gap-3 mb-3">
           <Avatar 
             className="w-16 h-16 ring-2 shadow-md"
-            style={{ 
-              ringColor: generationColor || 'hsl(var(--border))'
-            }}
           >
             <AvatarImage src={person.profile_photo_url || undefined} />
             <AvatarFallback 
               className="text-lg font-semibold"
-              style={{
-                backgroundColor: generationColor || undefined,
-                color: generationColor ? '#ffffff' : undefined
-              }}
             >
               {initials}
             </AvatarFallback>
@@ -60,11 +71,7 @@ export const PersonNode = memo(({ data }: NodeProps<PersonNodeData>) => {
                   {age && ` (${age})`}
                 </span>
               )}
-              {generation !== undefined && (
-                <div className="text-xs font-medium mt-1" style={{ color: generationColor }}>
-                  Gen {generation}
-                </div>
-              )}
+
             </div>
           </div>
         </div>

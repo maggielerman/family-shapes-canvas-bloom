@@ -44,7 +44,7 @@ import { PersonTreesManager } from './PersonTreesManager';
 import { MarkAsSelfDialog } from './MarkAsSelfDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { formatDate, calculateAge, formatDateShort } from '@/utils/dateUtils';
+import { formatDate, calculateAge, formatDateShort, formatPartialDate } from '@/utils/dateUtils';
 import { Donor } from '@/types/donor';
 import { DonorUtils } from '@/types/donor';
 import { Person } from '@/types/person';
@@ -329,29 +329,18 @@ export function PersonCard({
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Badge className={getStatusColor(person.status)}>
-                {person.status}
-              </Badge>
+              {person.status === 'deceased' && (
+                <Badge className={getStatusColor(person.status)}>
+                  {person.status}
+                </Badge>
+              )}
               {person.is_self && (
                 <Badge variant="default" className="bg-[hsl(9,67%,49%)] text-white border-[hsl(9,67%,49%)]">
                   Self
                 </Badge>
               )}
-              {(showActions || onEdit || onDelete || showRemoveFromTree) && (
+              {(showRemoveFromTree || (showActions && onDelete)) && (
                 <div className="flex items-center gap-1">
-                  {onEdit && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(person);
-                      }}
-                      title="Edit person"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  )}
                   {showRemoveFromTree && onRemoveFromTree && (
                     <Button
                       size="sm"
@@ -390,7 +379,7 @@ export function PersonCard({
           {person.date_of_birth && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              Born {formatDateShort(person.date_of_birth)}
+              Born {formatPartialDate(person.date_of_birth)}
             </div>
           )}
           
@@ -405,6 +394,13 @@ export function PersonCard({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Phone className="w-4 h-4" />
               {person.phone}
+            </div>
+          )}
+          
+          {person.address && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin className="w-4 h-4" />
+              {person.address}
             </div>
           )}
           
@@ -473,9 +469,11 @@ export function PersonCard({
                     {person.gender}
                   </Badge>
                 )}
-                <Badge variant={person.status === 'living' ? 'default' : 'secondary'}>
-                  {person.status}
-                </Badge>
+                {person.status === 'deceased' && (
+                  <Badge variant="secondary">
+                    {person.status}
+                  </Badge>
+                )}
                 {person.donor && (
                   <Badge variant="outline" className="text-orange-600 border-orange-600">
                     <Dna className="h-3 w-3 mr-1" />
@@ -525,7 +523,7 @@ export function PersonCard({
                 <div className="flex items-center text-sm">
                   <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                   <span className="text-muted-foreground">Born:</span>
-                  <span className="ml-2">{formatDateLocal(person.date_of_birth)}</span>
+                  <span className="ml-2">{formatPartialDate(person.date_of_birth)}</span>
                   {person.date_of_birth && getAge(person.date_of_birth) && (
                     <span className="ml-2 text-muted-foreground">
                       (Age {getAge(person.date_of_birth)})

@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { Logo } from "@/components/logo";
 import { Link } from "react-router-dom";
 
 const SignIn = () => {
@@ -40,12 +41,9 @@ const SignIn = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         {/* Logo */}
-        <Link to="/" className="flex items-center justify-center space-x-3 mb-8 hover:opacity-80 transition-opacity">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-            <Heart className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-3xl font-light tracking-wide text-navy-800">Family Shapes</span>
-        </Link>
+        <div className="flex items-center justify-center mb-8">
+          <Logo size="lg" className="text-navy-800" linkTo="/" showIcon={true} />
+        </div>
         
         <h2 className="text-center text-3xl font-light text-navy-800">
           Sign in to your account

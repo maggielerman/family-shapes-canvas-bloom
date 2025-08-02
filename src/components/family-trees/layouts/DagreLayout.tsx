@@ -11,7 +11,7 @@ import { LayoutSwitcher } from './LayoutSwitcher';
 import { InfoPanel } from './InfoPanel';
 import { RelationshipFilter } from './RelationshipFilter';
 import { FamilyTreePersonCardSVG } from './FamilyTreePersonCard';
-import { GenerationLegend } from './GenerationLegend';
+
 import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './relationshipConstants';
 
 interface DagreLayoutProps {
@@ -21,8 +21,8 @@ interface DagreLayoutProps {
   width: number;
   height: number;
   onPersonClick?: (person: Person) => void;
-  currentLayout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow';
-  onLayoutChange: (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'xyflow') => void;
+  currentLayout: 'radial' | 'dagre' | 'xyflow';
+  onLayoutChange: (layout: 'radial' | 'dagre' | 'xyflow') => void;
 }
 
 interface DagreNodeData {
@@ -200,7 +200,12 @@ export function DagreLayout({
     edgeEnter.append('path')
       .attr('d', (d) => {
         const edge = g.edge(d);
-        return `M ${edge.points[0].x} ${edge.points[0].y} ${edge.points.map(p => `L ${p.x} ${p.y}`).join(' ')}`;
+        // Use D3's linkVertical generator for smooth curves
+        const linkGenerator = d3.linkVertical()
+          .source((d: any) => [edge.points[0].x, edge.points[0].y])
+          .target((d: any) => [edge.points[edge.points.length - 1].x, edge.points[edge.points.length - 1].y]);
+        
+        return linkGenerator({ source: [edge.points[0].x, edge.points[0].y], target: [edge.points[edge.points.length - 1].x, edge.points[edge.points.length - 1].y] });
       })
       .attr('fill', 'none')
       .attr('stroke', (d) => {
@@ -282,7 +287,7 @@ export function DagreLayout({
         .attr('rx', 8)
         .attr('ry', 8)
         .attr('fill', 'white')
-        .attr('stroke', generationColor)
+        .attr('stroke', '#e5e7eb')
         .attr('stroke-width', 3);
 
       // Avatar circle background
@@ -343,7 +348,7 @@ export function DagreLayout({
         }
       }
 
-      // Contact info (email or phone)
+      // Contact info (email, phone, or address)
       if (person.email) {
         cardGroup.append('text')
           .attr('x', 96)
@@ -361,6 +366,15 @@ export function DagreLayout({
           .attr('fill', '#9ca3af')
           .attr('font-size', '10px')
           .text(person.phone);
+        yOffset += 20;
+      } else if (person.address) {
+        cardGroup.append('text')
+          .attr('x', 96)
+          .attr('y', yOffset)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#9ca3af')
+          .attr('font-size', '10px')
+          .text(person.address.length > 20 ? person.address.substring(0, 20) + '...' : person.address);
         yOffset += 20;
       }
 
@@ -611,12 +625,7 @@ export function DagreLayout({
         />
       </div>
 
-      {/* Generation Legend - top left below relationship filter */}
-      <div className="absolute top-36 left-4 z-10">
-        <GenerationLegend
-          generationMap={generationMap}
-        />
-      </div>
+
 
       {/* Info Panel - bottom left */}
       <div className="absolute bottom-4 left-4 z-10">

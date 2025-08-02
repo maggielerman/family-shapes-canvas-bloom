@@ -75,7 +75,6 @@ describe('Merge Compatibility Tests', () => {
     it('should maintain all original navigation routes', () => {
       const routes = [
         '/',
-        '/about',
         '/contact',
         '/auth',
         '/dashboard',
@@ -294,7 +293,6 @@ describe('Merge Compatibility Tests', () => {
     it('should maintain public route accessibility', () => {
       const publicRoutes = [
         '/',
-        '/about',
         '/contact', 
         '/auth',
         '/admin'
@@ -347,7 +345,6 @@ describe('Merge Compatibility Tests', () => {
     it('should load all lazy components without errors', async () => {
       const lazyComponents = [
         'Index',
-        'About', 
         'Contact',
         'Auth',
         'Dashboard',

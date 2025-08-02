@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import {
   ReactFlow,
   Node,
   Edge,
-  Controls,
   Background,
   useNodesState,
   useEdgesState,
@@ -18,62 +17,72 @@ import {
   ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Button } from '@/components/ui/button';
-import { Plus, Users, Network, RotateCcw } from 'lucide-react';
-import { AddPersonDialog } from './AddPersonDialog';
-import { PersonCardDialog } from '@/components/people/PersonCard';
-import { XYFlowLegend } from './XYFlowLegend';
-import { XYFlowLayoutSelector, LayoutType } from './XYFlowLayoutSelector';
-import { XYFlowLayoutService, LayoutResult } from './layouts/XYFlowLayoutService';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { PersonNode } from './PersonNode';
-import { Person, CreatePersonData } from '@/types/person';
+import { Person } from '@/types/person';
 import { ConnectionUtils, Connection as ConnectionType, RelationshipType } from '@/types/connection';
 import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
 import { ConnectionService } from '@/services/connectionService';
-import { PersonService } from '@/services/personService';
 import { 
   calculateGenerations, 
   getGenerationalConnections, 
-  isGenerationalConnection,
   GenerationInfo 
 } from '@/utils/generationUtils';
-import { usePersonManagement } from '@/hooks/use-person-management';
-import { EditPersonDialog } from '@/components/people/EditPersonDialog';
+import { LayoutSwitcher } from './layouts/LayoutSwitcher';
+import { RelationshipFilter } from './layouts/RelationshipFilter';
+import { TreeToolbar } from './layouts/TreeToolbar';
+import { RELATIONSHIP_CATEGORIES, RelationshipCategory } from './layouts/relationshipConstants';
+import { XYFlowLayoutService, LayoutResult } from './layouts/XYFlowLayoutService';
 
 interface XYFlowTreeBuilderProps {
   familyTreeId: string;
   persons: Person[];
-  onPersonAdded: () => void;
+  connections: ConnectionType[];
+  width: number;
+  height: number;
+  onPersonClick?: (person: Person) => void;
+  currentLayout: string;
+  onLayoutChange: (layout: string) => void;
 }
 
 const nodeTypes = {
   personNode: PersonNode,
 };
 
-export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFlowTreeBuilderProps) {
+export function XYFlowTreeBuilder({ 
+  familyTreeId, 
+  persons, 
+  connections, 
+  width, 
+  height, 
+  onPersonClick,
+  currentLayout,
+  onLayoutChange
+}: XYFlowTreeBuilderProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [connections, setConnections] = useState<ConnectionType[]>([]);
   const [generationMap, setGenerationMap] = useState<Map<string, GenerationInfo>>(new Map());
-  const [addPersonDialogOpen, setAddPersonDialogOpen] = useState(false);
-  const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
-  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [currentLayout, setCurrentLayout] = useState<LayoutType>('dagre');
-  const [isLayoutLoading, setIsLayoutLoading] = useState(false);
-  const [hasAppliedInitialLayout, setHasAppliedInitialLayout] = useState(false);
+  const [relationshipFilters, setRelationshipFilters] = useState({
+    generational: true,
+    lateral: true,
+    donor: true
+  });
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const reactFlowRef = useRef<ReactFlowInstance | null>(null);
-  const { toast } = useToast();
 
-  // Use centralized relationship types - memoized to prevent unnecessary re-renders
+  // Use centralized relationship types
   const relationshipTypes = useMemo(() => RelationshipTypeHelpers.getForSelection(), []);
 
   // Calculate generations whenever persons or connections change
   useEffect(() => {
     if (persons.length > 0 && connections.length > 0) {
-      const generations = calculateGenerations(persons, connections);
+      // Convert connections to the expected type for generation calculations
+      const connectionsForGeneration = connections.map(conn => ({
+        id: conn.id,
+        from_person_id: conn.from_person_id,
+        to_person_id: conn.to_person_id,
+        relationship_type: conn.relationship_type
+      }));
+      const generations = calculateGenerations(persons, connectionsForGeneration);
       setGenerationMap(generations);
     } else {
       setGenerationMap(new Map());
@@ -82,13 +91,24 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
 
   // Convert persons to nodes with generation coloring
   useEffect(() => {
+    if (persons.length === 0) {
+      setNodes([]);
+      return;
+    }
+
     const personNodes: Node[] = persons.map((person, index) => {
       const generationInfo = generationMap.get(person.id);
+      
+      // Use fallback positioning if no layout has been applied yet
+      const position = {
+        x: 100 + (index * 200),
+        y: 100 + (index * 100)
+      };
       
       return {
         id: person.id,
         type: 'personNode',
-        position: { x: 100 + (index * 200), y: 100 + (index * 100) },
+        position,
         data: { 
           person,
           generationColor: generationInfo?.color,
@@ -96,21 +116,50 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
         },
       };
     });
+    
+    console.log('Creating nodes:', personNodes.length, 'nodes');
     setNodes(personNodes);
   }, [persons, generationMap, setNodes]);
 
-  // Fetch connections and convert to edges
+  // Convert connections to edges
   useEffect(() => {
-    fetchConnections();
-  }, [familyTreeId]);
+    if (connections.length === 0) {
+      setEdges([]);
+      return;
+    }
 
-  useEffect(() => {
-    // Filter connections to only show generational connections (parent-child)
-    // Sibling connections are hidden from the visual tree but remain in connection manager
-    const generationalConnections = getGenerationalConnections(connections);
-    const deduplicatedConnections = ConnectionUtils.deduplicate(generationalConnections);
+    // First deduplicate all connections
+    const deduplicatedConnections = ConnectionUtils.deduplicate(connections);
     
-    const connectionEdges: Edge[] = deduplicatedConnections.map((connection) => {
+    // Then filter connections based on relationship filters
+    const filteredConnections = deduplicatedConnections.filter(connection => {
+      const relType = connection.relationship_type;
+      
+      // Check each category
+      if (RELATIONSHIP_CATEGORIES.generational.includes(relType as any)) {
+        return relationshipFilters.generational;
+      }
+      if (RELATIONSHIP_CATEGORIES.lateral.includes(relType as any)) {
+        return relationshipFilters.lateral;
+      }
+      if (RELATIONSHIP_CATEGORIES.donor.includes(relType as any)) {
+        return relationshipFilters.donor;
+      }
+      
+      // Default to showing unknown relationship types
+      return true;
+    });
+    
+    // Then filter connections to only show generational connections (parent-child)
+    const connectionsForGeneration = filteredConnections.map(conn => ({
+      id: conn.id,
+      from_person_id: conn.from_person_id,
+      to_person_id: conn.to_person_id,
+      relationship_type: conn.relationship_type
+    }));
+    const generationalConnections = getGenerationalConnections(connectionsForGeneration);
+    
+    const connectionEdges: Edge[] = generationalConnections.map((connection) => {
       const relationshipType = relationshipTypes.find(rt => rt.value === connection.relationship_type);
       const isBidirectional = ConnectionUtils.isBidirectional(connection.relationship_type as RelationshipType);
       
@@ -122,7 +171,7 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
         label: relationshipType?.label || connection.relationship_type,
         style: {
           stroke: relationshipType?.color || '#6b7280',
-          strokeWidth: 2,
+          strokeWidth: 3, // Increased stroke width for better visibility
         },
         markerEnd: isBidirectional ? undefined : {
           type: MarkerType.ArrowClosed,
@@ -133,131 +182,74 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
         data: { connection },
       };
     });
+    
+    console.log('Creating edges:', connectionEdges.length, 'edges');
     setEdges(connectionEdges);
-  }, [connections, relationshipTypes, setEdges]);
+  }, [connections, relationshipTypes, setEdges, relationshipFilters]);
 
-  // Apply layout when layout type changes or when nodes are first loaded
+  // Apply layout when nodes or edges change
   useEffect(() => {
     if (nodes.length === 0) return;
 
-    let isCancelled = false;
-
     const applyLayout = async () => {
-      setIsLayoutLoading(true);
       try {
-        const containerWidth = 800;
-        const containerHeight = 600;
+        console.log('Applying layout with', nodes.length, 'nodes and', edges.length, 'edges');
         
-        // Add timeout to prevent blocking
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Layout timeout')), 5000);
-        });
-        
-        const layoutPromise = XYFlowLayoutService.applyLayout(
+        const result = await XYFlowLayoutService.applyLayout(
           nodes,
           edges,
-          currentLayout,
-          containerWidth,
-          containerHeight
+          'dagre',
+          width,
+          height
         );
         
-        const result = await Promise.race([layoutPromise, timeoutPromise]) as LayoutResult;
+        console.log('Layout applied successfully:', result.nodes.length, 'nodes positioned');
+        setNodes(result.nodes);
+        setEdges(result.edges);
         
-        if (!isCancelled) {
-          setNodes(result.nodes);
-          setEdges(result.edges);
-          setHasAppliedInitialLayout(true);
-          
-          // Fit view after layout is applied
-          setTimeout(() => {
-            if (reactFlowRef.current && !isCancelled) {
-              reactFlowRef.current.fitView({ padding: 0.1 });
-            }
-          }, 100);
-        }
+        // Fit view after layout is applied with more padding
+        setTimeout(() => {
+          if (reactFlowRef.current) {
+            reactFlowRef.current.fitView({ padding: 0.2, minZoom: 0.1, maxZoom: 2 });
+          }
+        }, 100);
         
       } catch (error) {
-        if (!isCancelled) {
-          console.error('Layout application error:', error);
-          toast({
-            title: "Layout Error",
-            description: (error instanceof Error && error.message === 'Layout timeout') 
-              ? "Layout took too long. Try a different layout or fewer nodes."
-              : "Failed to apply layout. Please try again.",
-            variant: "destructive",
-          });
-          // Fallback to dagre layout on error
-          setCurrentLayout('dagre');
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLayoutLoading(false);
-        }
+        console.error('Layout application error:', error);
       }
     };
 
     applyLayout();
+  }, [nodes.length, edges.length, width, height]);
 
-    return () => {
-      isCancelled = true;
-    };
-  }, [currentLayout]); // Only depend on currentLayout
+  const handleRelationshipFilterChange = (category: RelationshipCategory, enabled: boolean) => {
+    setRelationshipFilters(prev => ({
+      ...prev,
+      [category]: enabled
+    }));
+  };
 
-  // Apply initial layout when nodes are first loaded
-  useEffect(() => {
-    if (nodes.length > 0 && edges.length > 0 && !hasAppliedInitialLayout && !isLayoutLoading) {
-      // Force trigger the layout by temporarily changing the layout
-      const tempLayout = currentLayout === 'dagre' ? 'elk' : 'dagre';
-      setCurrentLayout(tempLayout);
-      // Change back immediately to trigger the layout effect
-      setTimeout(() => setCurrentLayout(currentLayout), 10);
-    }
-  }, [nodes.length, edges.length, hasAppliedInitialLayout, isLayoutLoading, currentLayout]);
-
-  const fetchConnections = async () => {
-    try {
-      const connectionsData = await ConnectionService.getConnectionsForFamilyTree(familyTreeId);
-      setConnections(connectionsData);
-    } catch (error) {
-      console.error('Error fetching connections:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load connections",
-        variant: "destructive",
-      });
+  const handleCenterSelf = () => {
+    if (!reactFlowRef.current) return;
+    
+    const selfPerson = persons.find(p => p.is_self);
+    if (!selfPerson) return;
+    
+    const selfNode = nodes.find(n => n.id === selfPerson.id);
+    if (selfNode) {
+      reactFlowRef.current.setCenter(selfNode.position.x, selfNode.position.y, { zoom: 1.2 });
     }
   };
 
-  const { handleAddPerson, handleAddDonor } = usePersonManagement({
-    familyTreeId,
-    onPersonAdded: () => {
-      setAddPersonDialogOpen(false);
-      // Refresh the tree data
-      if (onNodesChange) {
-        // Trigger a refresh of the tree
-        onNodesChange([]);
-      }
-    },
-    onDonorAdded: () => {
-      setAddPersonDialogOpen(false);
-      // Refresh the tree data
-      if (onNodesChange) {
-        // Trigger a refresh of the tree
-        onNodesChange([]);
-      }
-    },
-  });
+  const handleZoomToFit = () => {
+    if (!reactFlowRef.current) return;
+    reactFlowRef.current.fitView({ padding: 0.2, minZoom: 0.1, maxZoom: 2 });
+  };
 
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     const person = node.data.person as Person;
-    setViewingPerson(person);
-    setSelectedNode(node);
-  }, []);
-
-  const handleNodeDoubleClick = useCallback((event: React.MouseEvent, node: Node) => {
-    const person = node.data.person as Person;
-    setViewingPerson(person);
-  }, []);
+    onPersonClick?.(person);
+  }, [onPersonClick]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -281,113 +273,164 @@ export function XYFlowTreeBuilder({ familyTreeId, persons, onPersonAdded }: XYFl
     [setEdges]
   );
 
-  // Count visible connections (generational only)
-  const visibleConnections = getGenerationalConnections(connections);
-  const totalConnections = connections.length;
-  const hiddenSiblingConnections = totalConnections - visibleConnections.length;
+  console.log('XYFlowTreeBuilder render:', {
+    personsCount: persons.length,
+    nodesCount: nodes.length,
+    edgesCount: edges.length,
+    connectionsCount: connections.length,
+    width,
+    height
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-2">
-          <Button onClick={() => setAddPersonDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Person
-          </Button>
-
-        </div>
-        
-        <div className="text-sm text-muted-foreground">
-          Generation-based coloring • Lines show parent-child relationships
-        </div>
+    <div className="relative" style={{ width, height }}>
+      {/* Layout Switcher - top left */}
+      <div className="absolute top-4 left-4 z-10">
+        <LayoutSwitcher
+          currentLayout={currentLayout as any}
+          onLayoutChange={onLayoutChange as any}
+        />
       </div>
 
-      {/* Layout Selector */}
-      <XYFlowLayoutSelector
-        currentLayout={currentLayout}
-        onLayoutChange={setCurrentLayout}
-        disabled={isLayoutLoading}
-      />
+      {/* Relationship Filter - top left below layout switcher */}
+      <div className="absolute top-16 left-4 z-10">
+        <RelationshipFilter
+          relationshipFilters={relationshipFilters}
+          onRelationshipFilterChange={handleRelationshipFilterChange}
+        />
+      </div>
 
-      {/* Legend */}
-      <XYFlowLegend />
+      {/* Toolbar - top right */}
+      <div className="absolute top-4 right-4 z-10">
+        <TreeToolbar
+          persons={persons}
+          currentLayout={currentLayout as any}
+          onCenterSelf={handleCenterSelf}
+          onZoomToFit={handleZoomToFit}
+          className="bg-background/80 backdrop-blur-sm rounded-lg p-3"
+        />
+      </div>
 
+      {/* Debug Panel Toggle - bottom right */}
+      <div className="absolute bottom-4 right-4 z-10">
+        <button
+          onClick={() => setShowDebugPanel(!showDebugPanel)}
+          className="bg-background/80 backdrop-blur-sm rounded-lg p-2 text-xs border"
+        >
+          {showDebugPanel ? 'Hide' : 'Show'} Debug
+        </button>
+      </div>
 
-      {/* XYFlow Canvas */}
-      {persons.length === 0 ? (
-        <div className="border rounded-lg bg-card">
-          <div className="flex flex-col items-center justify-center h-96 text-center">
-            <Users className="w-16 h-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No family members yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Start building your family tree by adding family members.
-            </p>
-            <Button onClick={() => setAddPersonDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add First Person
-            </Button>
+      <ReactFlow
+        ref={reactFlowRef as any}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={handleEdgesChange}
+        onConnect={onConnect}
+        onNodeClick={handleNodeClick}
+        nodeTypes={nodeTypes as any}
+        fitView
+        minZoom={0.1}
+        maxZoom={2}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+        attributionPosition="bottom-left"
+      >
+        <Background />
+        <Panel position="top-right" className="bg-background/80 backdrop-blur-sm rounded-lg p-2">
+          <div className="text-xs text-muted-foreground">
+            {persons.length} people • {edges.length} connections
+          </div>
+        </Panel>
+      </ReactFlow>
+
+      {/* Debug Panel */}
+      {showDebugPanel && (
+        <div className="absolute inset-0 z-20 bg-background/95 overflow-auto">
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">XYFlow Debug Panel</h3>
+              <button
+                onClick={() => setShowDebugPanel(false)}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                Close
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* State Overview */}
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-medium mb-2">State Overview</h4>
+                <div className="text-sm space-y-1">
+                  <div>Persons: {persons.length}</div>
+                  <div>Nodes: {nodes.length}</div>
+                  <div>Edges: {edges.length}</div>
+                  <div>Connections: {connections.length}</div>
+                  <div>Generation Map Size: {generationMap.size}</div>
+                  <div>Canvas Size: {width} x {height}</div>
+                </div>
+              </div>
+
+              {/* Nodes Debug */}
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Nodes ({nodes.length})</h4>
+                <div className="text-sm space-y-2 max-h-40 overflow-y-auto">
+                  {nodes.map((node, index) => (
+                    <div key={node.id} className="border-l-2 border-primary pl-2">
+                      <div><strong>ID:</strong> {node.id}</div>
+                      <div><strong>Position:</strong> ({node.position.x.toFixed(0)}, {node.position.y.toFixed(0)})</div>
+                      <div><strong>Type:</strong> {node.type}</div>
+                      <div><strong>Person:</strong> {node.data.person?.name}</div>
+                      <div><strong>Generation:</strong> {node.data.generation}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Edges Debug */}
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Edges ({edges.length})</h4>
+                <div className="text-sm space-y-2 max-h-40 overflow-y-auto">
+                  {edges.map((edge, index) => (
+                    <div key={edge.id} className="border-l-2 border-green-500 pl-2">
+                      <div><strong>ID:</strong> {edge.id}</div>
+                      <div><strong>Source:</strong> {edge.source}</div>
+                      <div><strong>Target:</strong> {edge.target}</div>
+                      <div><strong>Type:</strong> {edge.type}</div>
+                      <div><strong>Label:</strong> {edge.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Generation Map Debug */}
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Generation Map</h4>
+                <div className="text-sm space-y-2 max-h-40 overflow-y-auto">
+                  {Array.from(generationMap.entries()).map(([personId, info]) => (
+                    <div key={personId} className="border-l-2 border-blue-500 pl-2">
+                      <div><strong>Person ID:</strong> {personId}</div>
+                      <div><strong>Generation:</strong> {info.generation}</div>
+                      <div><strong>Color:</strong> {info.color}</div>
+                      <div><strong>Depth:</strong> {info.depth}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Relationship Filters Debug */}
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Relationship Filters</h4>
+                <div className="text-sm space-y-1">
+                  <div>Generational: {relationshipFilters.generational ? '✅' : '❌'}</div>
+                  <div>Lateral: {relationshipFilters.lateral ? '✅' : '❌'}</div>
+                  <div>Donor: {relationshipFilters.donor ? '✅' : '❌'}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      ) : (
-        <div className="h-[600px] border rounded-lg">
-          <ReactFlow
-            ref={reactFlowRef}
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={handleNodesChange}
-            onEdgesChange={handleEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={handleNodeClick}
-            onNodeDoubleClick={handleNodeDoubleClick}
-            nodeTypes={nodeTypes}
-            fitView
-            attributionPosition="bottom-left"
-          >
-            <Controls />
-            <Background />
-            <Panel position="top-right" className="bg-background/80 backdrop-blur-sm rounded-lg p-2">
-              <div className="text-xs text-muted-foreground">
-                {persons.length} people • {visibleConnections.length} generational connections
-                {hiddenSiblingConnections > 0 && (
-                  <span className="block">{hiddenSiblingConnections} sibling connections (color-coded)</span>
-                )}
-                {isLayoutLoading && (
-                  <span className="ml-2 text-blue-500">• Applying layout...</span>
-                )}
-              </div>
-            </Panel>
-          </ReactFlow>
-        </div>
-      )}
-
-      <AddPersonDialog
-        open={addPersonDialogOpen}
-        onOpenChange={setAddPersonDialogOpen}
-        onSubmit={handleAddPerson}
-        onDonorSubmit={handleAddDonor}
-      />
-
-      <PersonCardDialog
-        person={viewingPerson}
-        open={!!viewingPerson}
-        onOpenChange={(open) => !open && setViewingPerson(null)}
-        onEdit={() => {
-          setEditingPerson(viewingPerson);
-          setViewingPerson(null);
-        }}
-      />
-
-      {editingPerson && (
-        <EditPersonDialog
-          person={editingPerson}
-          open={!!editingPerson}
-          onOpenChange={(open) => !open && setEditingPerson(null)}
-          onPersonUpdated={() => {
-            onPersonAdded();
-            setEditingPerson(null);
-          }}
-        />
       )}
     </div>
   );

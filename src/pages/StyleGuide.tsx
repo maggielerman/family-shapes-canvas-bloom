@@ -406,6 +406,182 @@ export default function StyleGuide() {
               </Card>
             </div>
 
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Deep Blue Colors */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="w-5 h-5 text-deep-blue-600" />
+                    Deep Blue Colors
+                  </CardTitle>
+                  <CardDescription>
+                    Deep blue represents depth, sophistication, and professional trust.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-50 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 50</div>
+                        <div className="text-muted-foreground">#f0f2f7</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-100 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 100</div>
+                        <div className="text-muted-foreground">#e1e5ef</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-200 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 200</div>
+                        <div className="text-muted-foreground">#c3cbe0</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-300 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 300</div>
+                        <div className="text-muted-foreground">#9ba8c8</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-400 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 400</div>
+                        <div className="text-muted-foreground">#6b7ba8</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-500 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 500</div>
+                        <div className="text-muted-foreground">#4a5a8a</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-600 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 600</div>
+                        <div className="text-muted-foreground">#3a4970</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-700 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 700</div>
+                        <div className="text-muted-foreground">#2f3b5a</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-800 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 800</div>
+                        <div className="text-muted-foreground">#283147</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-deep-blue-900 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Deep Blue 900</div>
+                        <div className="text-muted-foreground">#0F1632</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Ocean Blue Colors */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="w-5 h-5 text-ocean-blue-600" />
+                    Ocean Blue Colors
+                  </CardTitle>
+                  <CardDescription>
+                    Ocean blue represents trust, reliability, and professional communication.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-50 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 50</div>
+                        <div className="text-muted-foreground">#f0f8ff</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-100 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 100</div>
+                        <div className="text-muted-foreground">#e0f2fe</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-200 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 200</div>
+                        <div className="text-muted-foreground">#bae6fd</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-300 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 300</div>
+                        <div className="text-muted-foreground">#7dd3fc</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-400 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 400</div>
+                        <div className="text-muted-foreground">#38bdf8</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-500 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 500</div>
+                        <div className="text-muted-foreground">#005DBC</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-600 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 600</div>
+                        <div className="text-muted-foreground">#0052a3</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-700 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 700</div>
+                        <div className="text-muted-foreground">#004785</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-800 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 800</div>
+                        <div className="text-muted-foreground">#003c6b</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-ocean-blue-900 rounded-lg border"></div>
+                      <div className="text-sm">
+                        <div className="font-medium">Ocean Blue 900</div>
+                        <div className="text-muted-foreground">#003152</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Semantic Colors */}
             <Card>
               <CardHeader>
@@ -489,6 +665,8 @@ export default function StyleGuide() {
                       <h2 className="text-xl font-semibold text-navy-700">Secondary Heading</h2>
                               <p className="text-sage-600">Sage text for subtle emphasis</p>
         <p className="text-terracotta-600">Terracotta text for warm accents</p>
+        <p className="text-deep-blue-600">Deep blue text for professional emphasis</p>
+        <p className="text-ocean-blue-600">Ocean blue text for trust and reliability</p>
         <p className="text-muted-foreground">Body text with proper contrast</p>
                     </div>
                   </div>
@@ -500,6 +678,8 @@ export default function StyleGuide() {
                                 <Badge variant="secondary">Secondary Badge</Badge>
         <Badge className="bg-sage-100 text-sage-700 border-sage-200">Sage Badge</Badge>
         <Badge className="bg-terracotta-100 text-terracotta-700 border-terracotta-200">Terracotta Badge</Badge>
+        <Badge className="bg-deep-blue-100 text-deep-blue-700 border-deep-blue-200">Deep Blue Badge</Badge>
+        <Badge className="bg-ocean-blue-100 text-ocean-blue-700 border-ocean-blue-200">Ocean Blue Badge</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Use appropriate colors for badges, links, and interactive elements.

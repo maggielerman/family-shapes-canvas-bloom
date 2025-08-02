@@ -12,6 +12,7 @@ import { Connection, ConnectionUtils } from "@/types/connection";
 import { ConnectionService } from "@/services/connectionService";
 import { PersonService } from "@/services/personService";
 import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
+import { formatPartialDate } from "@/utils/dateUtils";
 
 interface FamilyTree {
   id: string;
@@ -428,8 +429,9 @@ export default function Connections() {
                       </div>
                       <div className="text-xs md:text-sm text-muted-foreground">
                         {person.email && <div>{person.email}</div>}
+                        {person.address && <div>{person.address}</div>}
                         {person.date_of_birth && (
-                          <div>Born: {new Date(person.date_of_birth).getFullYear()}</div>
+                          <div>Born: {formatPartialDate(person.date_of_birth)}</div>
                         )}
                       </div>
                     </div>

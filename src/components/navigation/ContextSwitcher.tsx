@@ -20,6 +20,13 @@ interface Organization {
   role: string;
 }
 
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+}
+
 interface ContextSwitcherProps {
   className?: string;
 }
@@ -31,18 +38,29 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentContext, setCurrentContext] = useState<string>("personal");
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchOrganizations();
+      fetchUserProfile();
       detectCurrentContext();
     } else {
       // Clear state when user is not authenticated
       setOrganizations([]);
       setCurrentContext("personal");
+      setProfile(null);
       setLoading(false);
     }
   }, [user, location.pathname]);
+
+  // Refresh profile data when location changes to catch avatar updates
+  useEffect(() => {
+    if (user && location.pathname === '/profile') {
+      // Refresh profile data when user visits profile page
+      fetchUserProfile();
+    }
+  }, [location.pathname, user]);
 
   const fetchOrganizations = async () => {
     if (!user) {
@@ -107,6 +125,27 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
     }
   };
 
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, avatar_url, bio')
+        .eq('id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+      } else if (data && data.length > 0) {
+        setProfile(data[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
   const detectCurrentContext = () => {
     const path = location.pathname;
     
@@ -136,11 +175,16 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
 
   const getCurrentContextDisplay = () => {
     if (currentContext === "personal") {
+      const fullName = profile?.full_name;
+      const email = user?.email;
+      const displayName = fullName || (email ? email.split('@')[0] : "User");
+      const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      
       return {
-        name: "Personal Account",
+        name: displayName,
         type: "individual",
-        icon: <User className="w-4 h-4" />,
-        initials: (user?.email?.charAt(0) || user?.user_metadata?.full_name?.charAt(0) || "U").toUpperCase()
+        icon: null, // Remove icon since we have avatar
+        initials: initials
       };
     }
 
@@ -150,7 +194,7 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
         name: org.name,
         type: org.type,
         role: org.role,
-        icon: <Building2 className="w-4 h-4" />,
+        icon: null, // Remove icon since we have avatar
         initials: org.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || "ORG"
       };
     }
@@ -158,7 +202,7 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
     return {
       name: "Unknown Context",
       type: "unknown",
-      icon: <User className="w-4 h-4" />,
+      icon: null, // Remove icon since we have avatar
       initials: "?"
     };
   };
@@ -181,42 +225,42 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
   return (
     <div className={`relative ${className}`}>
       <Select value={currentContext} onValueChange={handleContextSwitch}>
-        <SelectTrigger className="w-full min-w-[200px] h-auto p-3">
-          <div className="flex items-center space-x-3 flex-1">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs bg-primary/10">
+        <SelectTrigger className="w-full min-w-[180px] h-9 px-3 py-1.5 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80 transition-colors shadow-sm">
+          <div className="flex items-center space-x-2 flex-1 min-w-0">
+            <Avatar className="h-6 w-6 flex-shrink-0">
+              <AvatarImage src={profile?.avatar_url || undefined} alt={contextDisplay.name} />
+              <AvatarFallback className="text-xs bg-primary/10 text-primary">
                 {contextDisplay.initials}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 text-left">
-              <div className="flex items-center space-x-2">
-                {contextDisplay.icon}
-                <span className="font-medium truncate">{contextDisplay.name}</span>
+            <div className="flex-1 text-left min-w-0 overflow-hidden">
+              <div className="flex items-center space-x-1.5 min-w-0">
+                <span className="font-medium text-sm truncate">{contextDisplay.name}</span>
                 {contextDisplay.role && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 flex-shrink-0">
                     {contextDisplay.role}
                   </Badge>
                 )}
               </div>
-              <div className="text-xs text-muted-foreground capitalize">
-                {contextDisplay.type === "individual" ? "Personal Account" : contextDisplay.type.replace('_', ' ')}
-              </div>
             </div>
           </div>
-          <ChevronDown className="h-4 w-4 opacity-50" />
+          {/* <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" /> */}
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-[280px]">
           {/* Personal Account Option */}
-          <SelectItem value="personal">
-            <div className="flex items-center space-x-3 py-1">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="text-xs bg-primary/10">
-                  <User className="w-4 h-4" />
+          <SelectItem value="personal" className="py-2 px-2">
+            <div className="flex items-center space-x-2">
+              <Avatar className="h-6 w-6 flex-shrink-0">
+                <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "User"} />
+                <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                  <User className="w-3 h-3" />
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <div className="font-medium">Personal Account</div>
-                <div className="text-xs text-muted-foreground">Your individual dashboard</div>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="font-medium text-sm truncate">
+                  {profile?.full_name || (user?.email ? user.email.split('@')[0] : "User")}
+                </div>
+                <div className="text-xs text-muted-foreground">Personal Account</div>
               </div>
             </div>
           </SelectItem>
@@ -224,21 +268,21 @@ const ContextSwitcher = ({ className }: ContextSwitcherProps) => {
           {/* Organizations */}
           {organizations.length > 0 && (
             <>
-              <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t">
+              <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground border-t border-border/50">
                 Organizations
               </div>
               {organizations.map((org) => (
-                <SelectItem key={org.id} value={org.id}>
-                  <div className="flex items-center space-x-3 py-1">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="text-xs bg-primary/10">
+                <SelectItem key={org.id} value={org.id} className="py-2 px-2">
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-6 w-6 flex-shrink-0">
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {org.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">{org.name}</span>
-                        <Badge variant="secondary" className="text-xs">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-center space-x-1.5 min-w-0">
+                        <span className="font-medium text-sm truncate">{org.name}</span>
+                        <Badge variant="secondary" className="text-xs px-1.5 py-0.5 flex-shrink-0">
                           {org.role}
                         </Badge>
                       </div>

@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { Heart, Eye, EyeOff, Building2, User } from "lucide-react";
+import { Eye, EyeOff, Building2, User } from "lucide-react";
+import { Logo } from "@/components/logo";
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -168,14 +169,9 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center justify-center space-x-3 hover:opacity-80 transition-opacity">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-coral-400 to-dusty-500 flex items-center justify-center">
-            <Heart className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-3xl font-light tracking-wide text-foreground">
-            Family Shapes
-          </span>
-        </Link>
+        <div className="flex items-center justify-center">
+          <Logo size="xl" linkTo="/" showIcon={false} />
+        </div>
 
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
@@ -187,13 +183,13 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+            {/* <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-1 mb-6">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="signin">
+              <TabsContent value="signin"> */}
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
@@ -245,9 +241,9 @@ const Auth = () => {
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </form>
-              </TabsContent>
+              {/* </TabsContent> */}
 
-              <TabsContent value="signup">
+              {/* <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -328,8 +324,8 @@ const Auth = () => {
                     {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </form>
-              </TabsContent>
-            </Tabs>
+              </TabsContent> */}
+            {/* </Tabs> */}
           </CardContent>
         </Card>
       </div>

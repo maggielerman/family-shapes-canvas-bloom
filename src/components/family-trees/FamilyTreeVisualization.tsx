@@ -4,17 +4,14 @@ import { Plus, Users } from 'lucide-react';
 import { PersonCardDialog } from '@/components/people/PersonCard';
 import { EditPersonDialog } from '@/components/people/EditPersonDialog';
 import { AddPersonDialog } from './AddPersonDialog';
-import { ForceDirectedLayout } from './layouts/ForceDirectedLayout';
 import { RadialLayout } from './layouts/RadialLayout';
 import { DagreLayout } from './layouts/DagreLayout';
-import { FamilyChartLayout } from './layouts/FamilyChartLayout';
 import { XYFlowTreeBuilder } from './XYFlowTreeBuilder';
 import { usePersonManagement } from '@/hooks/use-person-management';
 import { useToast } from '@/hooks/use-toast';
 import { Person } from '@/types/person';
 import { Connection } from '@/types/connection';
 import { RelationshipTypeHelpers } from '@/types/relationshipTypes';
-import ReactFlowFamilyTreeCanvas from './layouts/ReactFlowFamilyTreeCanvas';
 
 interface FamilyTreeVisualizationProps {
   familyTreeId: string;
@@ -35,9 +32,17 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
   const [viewingPerson, setViewingPerson] = useState<Person | null>(null);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow'>('force');
+  const [currentLayout, setCurrentLayout] = useState<'radial' | 'dagre' | 'xyflow'>('radial');
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Add debugging
+  console.log('FamilyTreeVisualization render:', {
+    familyTreeId,
+    personsCount: persons.length,
+    connectionsCount: connections.length,
+    currentLayout
+  });
 
   const { handleAddPerson, handleAddDonor } = usePersonManagement({
     familyTreeId,
@@ -77,7 +82,8 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
     setViewingPerson(person);
   };
 
-  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre' | 'family-chart' | 'reactflow' | 'xyflow') => {
+  const handleLayoutChange = (layout: 'radial' | 'dagre' | 'xyflow') => {
+    console.log('Layout changed to:', layout);
     setCurrentLayout(layout);
   };
 
@@ -101,18 +107,7 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
           {/* Canvas */}
           <div className="border rounded-lg bg-card">
             <Suspense fallback={<ChartLoadingSpinner />}>
-              {currentLayout === 'force' ? (
-                <ForceDirectedLayout
-                  persons={persons}
-                  connections={connections}
-                  relationshipTypes={relationshipTypes}
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  onPersonClick={handlePersonClick}
-                  currentLayout={currentLayout}
-                  onLayoutChange={handleLayoutChange}
-                />
-              ) : currentLayout === 'radial' ? (
+              {currentLayout === 'radial' ? (
                 <RadialLayout
                   persons={persons}
                   connections={connections}
@@ -134,32 +129,16 @@ export function FamilyTreeVisualization({ familyTreeId, persons, connections, on
                   currentLayout={currentLayout}
                   onLayoutChange={handleLayoutChange}
                 />
-              ) : currentLayout === 'family-chart' ? (
-                <FamilyChartLayout
-                  persons={persons}
-                  connections={connections}
-                  relationshipTypes={relationshipTypes}
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  onPersonClick={handlePersonClick}
-                  currentLayout={currentLayout}
-                  onLayoutChange={handleLayoutChange}
-                />
-              ) : currentLayout === 'reactflow' ? (
-                <ReactFlowFamilyTreeCanvas
-                  persons={persons}
-                  connections={connections}
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  onPersonClick={handlePersonClick}
-                  currentLayout={currentLayout}
-                  onLayoutChange={handleLayoutChange}
-                />
               ) : (
                 <XYFlowTreeBuilder
                   familyTreeId={familyTreeId}
                   persons={persons}
-                  onPersonAdded={onPersonAdded}
+                  connections={connections}
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  onPersonClick={handlePersonClick}
+                  currentLayout={currentLayout}
+                  onLayoutChange={handleLayoutChange}
                 />
               )}
             </Suspense>

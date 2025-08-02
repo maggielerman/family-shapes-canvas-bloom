@@ -399,21 +399,36 @@ export default function People() {
             <PersonCard
               key={person.id}
               person={person}
-              onEdit={() => setEditingPerson(person)}
+              variant="card"
+              onClick={() => setViewingPerson(person)}
+              onEdit={(p) => setEditingPerson(p)}
               onDelete={() => setDeletingPerson(person)}
-              onView={() => setViewingPerson(person)}
+              onPersonUpdated={fetchPersons}
             />
           ))}
         </div>
       )}
 
       {/* Dialogs */}
+      <PersonCardDialog
+        person={viewingPerson}
+        open={!!viewingPerson}
+        onOpenChange={(open) => !open && setViewingPerson(null)}
+        onEdit={() => {
+          setEditingPerson(viewingPerson);
+          setViewingPerson(null);
+        }}
+      />
+
       {editingPerson && (
         <EditPersonDialog
           person={editingPerson}
           open={!!editingPerson}
-          onOpenChange={() => setEditingPerson(null)}
-          onSave={handleEditPerson}
+          onOpenChange={(open) => !open && setEditingPerson(null)}
+          onPersonUpdated={() => {
+            fetchPersons();
+            setEditingPerson(null);
+          }}
         />
       )}
 
@@ -423,14 +438,6 @@ export default function People() {
           open={!!deletingPerson}
           onOpenChange={() => setDeletingPerson(null)}
           onConfirm={handleDeletePerson}
-        />
-      )}
-
-      {viewingPerson && (
-        <PersonCardDialog
-          person={viewingPerson}
-          open={!!viewingPerson}
-          onOpenChange={() => setViewingPerson(null)}
         />
       )}
 

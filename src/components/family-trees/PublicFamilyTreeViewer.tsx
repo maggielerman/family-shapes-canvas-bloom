@@ -20,11 +20,11 @@ import {
 } from "lucide-react";
 
 import { RelationshipTypeHelpers } from "@/types/relationshipTypes";
-import { ForceDirectedLayout } from "./layouts/ForceDirectedLayout";
 import { RadialLayout } from "./layouts/RadialLayout";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatPartialDate } from "@/utils/dateUtils";
 
 interface PublicFamilyTree {
   id: string;
@@ -45,6 +45,7 @@ interface PublicPerson {
   status: string;
   email?: string | null;
   phone?: string | null;
+  address?: string | null;
   notes?: string | null;
 }
 
@@ -75,12 +76,12 @@ export function PublicFamilyTreeViewer({
   const [connections, setConnections] = useState<PublicConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
-  const [currentLayout, setCurrentLayout] = useState<'force' | 'radial' | 'dagre'>('force');
+  const [currentLayout, setCurrentLayout] = useState<'radial' | 'dagre'>('radial');
 
   // Use centralized relationship types
   const relationshipTypes = RelationshipTypeHelpers.getForSelection();
 
-  const handleLayoutChange = (layout: 'force' | 'radial' | 'dagre') => {
+  const handleLayoutChange = (layout: 'radial' | 'dagre') => {
     setCurrentLayout(layout);
   };
 
@@ -178,6 +179,9 @@ export function PublicFamilyTreeViewer({
             gender,
             profile_photo_url,
             status,
+            email,
+            phone,
+            address,
             notes
           )
         `)
@@ -319,18 +323,7 @@ export function PublicFamilyTreeViewer({
                     </AlertDescription>
                   </Alert>
                 </div>
-                {currentLayout === 'force' ? (
-                  <ForceDirectedLayout
-                    persons={persons as any[]}
-                    connections={connections as any[]}
-                    relationshipTypes={relationshipTypes}
-                    width={800}
-                    height={600}
-                    onPersonClick={() => {}}
-                    currentLayout={currentLayout}
-                    onLayoutChange={handleLayoutChange}
-                  />
-                ) : currentLayout === 'radial' ? (
+                {currentLayout === 'radial' ? (
                   <RadialLayout
                     persons={persons as any[]}
                     connections={connections as any[]}
@@ -373,13 +366,19 @@ export function PublicFamilyTreeViewer({
                           {person.date_of_birth && (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              <span>{formatDate(person.date_of_birth)}</span>
+                              <span>{formatPartialDate(person.date_of_birth)}</span>
                             </div>
                           )}
                           {person.birth_place && (
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
                               <span className="truncate">{person.birth_place}</span>
+                            </div>
+                          )}
+                          {person.address && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              <span className="truncate">{person.address}</span>
                             </div>
                           )}
                           <Badge variant="secondary" className="text-xs">
