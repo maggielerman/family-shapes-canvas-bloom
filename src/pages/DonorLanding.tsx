@@ -85,6 +85,7 @@ const DonorLanding = () => {
 
    
 
+
       {/* CTA Section */}
       <section className="px-4 sm:px-6 lg:px-12 py-16 sm:py-20 bg-gradient-to-r from-coral-600 to-dusty-600">
         <div className="max-w-4xl mx-auto text-center text-white">
@@ -106,14 +107,6 @@ const DonorLanding = () => {
                 Contact Us
               </Link>
             </Button>
-          </div>
-          
-          {/* Sign in for existing donors */}
-          <div className="mt-8 text-sm">
-            <p className="opacity-80 mb-2">Already signed up?</p>
-            <Link to="/donor/auth" className="text-white underline hover:no-underline font-medium">
-              Sign in to your Donor Portal
-            </Link>
           </div>
         </div>
       </section>

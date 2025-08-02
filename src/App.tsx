@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import DonorProtectedRoute from "@/components/auth/DonorProtectedRoute";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
 import MainLayout from "@/components/layouts/MainLayout";
 
@@ -39,12 +38,6 @@ const RecipientPrivateBeta = lazy(() => import("./pages/RecipientPrivateBeta"));
 const DonorWaitlist = lazy(() => import("./pages/DonorWaitlist"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide"));
-const DonorAuth = lazy(() => import("./pages/DonorAuth"));
-const DonorDashboard = lazy(() => import("./pages/DonorDashboard"));
-const DonorProfile = lazy(() => import("./pages/DonorProfile"));
-const DonorHealth = lazy(() => import("./pages/DonorHealth"));
-const DonorCommunication = lazy(() => import("./pages/DonorCommunicationPlaceholder"));
-const DonorPrivacy = lazy(() => import("./pages/DonorPrivacy"));
 
 // Loading component for Suspense fallback
 const LoadingSpinner = () => (
@@ -90,7 +83,6 @@ const App = () => (
               <Route path="/invite/:action/:token" element={<OrganizationInvitePage />} />
               <Route path="/invite/:action/P/:token" element={<OrganizationInvitePage />} />
               <Route path="/invitation/:action/:token" element={<InvitationPage />} />
-              <Route path="/donor/auth" element={<DonorAuth />} />
               
               {/* Admin routes */}
               <Route path="/admin" element={<Admin />} />
@@ -116,12 +108,6 @@ const App = () => (
               <Route path="/organizations/:id/settings" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SidebarLayout><Settings /></SidebarLayout></ProtectedRoute>} />
 
-              {/* Donor portal routes */}
-              <Route path="/donor/dashboard" element={<DonorProtectedRoute><SidebarLayout><DonorDashboard /></SidebarLayout></DonorProtectedRoute>} />
-              <Route path="/donor/profile" element={<DonorProtectedRoute><SidebarLayout><DonorProfile /></SidebarLayout></DonorProtectedRoute>} />
-              <Route path="/donor/health" element={<DonorProtectedRoute><SidebarLayout><DonorHealth /></SidebarLayout></DonorProtectedRoute>} />
-              <Route path="/donor/communication" element={<DonorProtectedRoute><SidebarLayout><DonorCommunication /></SidebarLayout></DonorProtectedRoute>} />
-              <Route path="/donor/privacy" element={<DonorProtectedRoute><SidebarLayout><DonorPrivacy /></SidebarLayout></DonorProtectedRoute>} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
