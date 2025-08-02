@@ -48,6 +48,13 @@ A comprehensive web application for building interactive family trees, managing 
 - **Organization Waitlist**: Cryobank and clinic registration system
 - **Donor Interest Tracking**: Donor feature interest collection
 
+### 🧑‍⚕️ Donor Portal (NEW)
+- **Self-Service Onboarding**: Quick 3-minute signup with donor-specific workflow
+- **Privacy Controls**: Anonymous, semi-open, or open donation with granular settings
+- **Health Management**: Medical history tracking with 12-month update reminders
+- **Secure Communication**: Policy-compliant messaging with recipient families
+- **Profile Preview**: Real-time preview of how information appears to different audiences
+
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 18, TypeScript, Vite
