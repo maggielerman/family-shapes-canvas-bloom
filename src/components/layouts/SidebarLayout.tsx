@@ -106,27 +106,28 @@ const SidebarInner = ({ children }: { children: React.ReactNode }) => {
 
   // Check if user is a donor
   useEffect(() => {
-    const checkUserType = async () => {
-      if (!user) return;
-      
-      try {
-        const { data: personData } = await supabase
-          .from('persons')
-          .select('person_type')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (personData?.person_type === 'donor') {
-          setIsDonor(true);
-          setSidebarItems(DonorNav);
-          setCurrentContext("donor");
+          const checkUserType = async () => {
+        if (!user) return;
+        
+        try {
+          // Check user_profiles table for account_type
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('account_type')
+            .eq('id', user.id)
+            .single();
+            
+          if (profileData?.account_type === 'donor') {
+            setIsDonor(true);
+            setSidebarItems(DonorNav);
+            setCurrentContext("donor");
+          }
+        } catch (error) {
+          console.error('Error checking user type:', error);
         }
-      } catch (error) {
-        console.error('Error checking user type:', error);
-      }
-    };
-    
-    checkUserType();
+      };
+      
+      checkUserType();
   }, [user]);
 
   // Detect current context and update sidebar items accordingly

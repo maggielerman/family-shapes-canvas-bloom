@@ -17,10 +17,16 @@ const DonorProtectedRoute = ({ children }: DonorProtectedRouteProps) => {
         // Not authenticated, redirect to donor auth
         navigate("/donor/auth");
       } else if (!loading && user) {
-        // Check if user is a donor
-        const isDonor = await donorAuthService.isDonor(user.id);
-        if (!isDonor) {
-          // User is authenticated but not a donor, redirect to donor auth
+        try {
+          // Check if user is a donor
+          const isDonor = await donorAuthService.isDonor(user.id);
+          if (!isDonor) {
+            // User is authenticated but not a donor, redirect to donor auth
+            navigate("/donor/auth");
+          }
+        } catch (error) {
+          console.error('Error checking donor access:', error);
+          // In case of error, redirect to donor auth
           navigate("/donor/auth");
         }
       }

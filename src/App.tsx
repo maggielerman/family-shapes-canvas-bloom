@@ -41,7 +41,7 @@ const DonorAuth = lazy(() => import("./pages/DonorAuth"));
 const DonorDashboard = lazy(() => import("./pages/DonorDashboard"));
 const DonorProfile = lazy(() => import("./pages/DonorProfile"));
 const DonorHealth = lazy(() => import("./pages/DonorHealth"));
-const DonorCommunication = lazy(() => import("./pages/DonorCommunication"));
+const DonorCommunication = lazy(() => import("./pages/DonorCommunicationPlaceholder"));
 const DonorPrivacy = lazy(() => import("./pages/DonorPrivacy"));
 
 // Loading component for Suspense fallback

@@ -24,7 +24,7 @@ export const donorAuthService = {
         options: {
           data: {
             full_name: data.fullName,
-            user_type: 'donor'
+            account_type: 'donor' // Store in user metadata
           }
         }
       });
@@ -32,22 +32,41 @@ export const donorAuthService = {
       if (authError) throw authError;
       if (!authData.user) throw new Error('User creation failed');
 
-      // Step 2: Create person record
+      // Step 2: Create/update user_profile with donor account type
+      const { data: userProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: authData.user.id,
+          account_type: 'donor',
+          full_name: data.fullName,
+          settings: {
+            privacy_level: data.isAnonymous ? 'anonymous' : 'semi-open',
+            consent_to_contact: data.consentToContact
+          }
+        })
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Error creating user profile:', profileError);
+        // Don't throw, continue with other steps
+      }
+
+      // Step 3: Create person record
       const { data: personData, error: personError } = await supabase
         .from('persons')
         .insert({
           user_id: authData.user.id,
-          first_name: data.fullName.split(' ')[0],
-          last_name: data.fullName.split(' ').slice(1).join(' ') || '',
+          name: data.fullName,
           email: data.email,
-          person_type: 'donor'
+          donor: true // Mark as donor in persons table
         })
         .select()
         .single();
 
       if (personError) throw personError;
 
-      // Step 3: Create donor record
+      // Step 4: Create donor record in existing donors table
       const { data: donorData, error: donorError } = await supabase
         .from('donors')
         .insert({
@@ -86,6 +105,41 @@ export const donorAuthService = {
 
       if (donorError) throw donorError;
 
+      // Step 5: Try to create donor_profiles record if table exists
+      try {
+        const { data: donorProfile } = await supabase
+          .from('donor_profiles')
+          .insert({
+            user_id: authData.user.id,
+            person_id: personData.id,
+            donor_number: data.donorNumber,
+            cryobank_name: data.cryobankName,
+            donor_type: data.donorType,
+            is_anonymous: data.isAnonymous,
+            privacy_settings: {
+              privacy_level: data.isAnonymous ? 'anonymous' : 'semi-open',
+              allow_family_messages: true,
+              allow_clinic_messages: true,
+              require_message_approval: true,
+              message_notifications: true,
+              show_basic_info: true,
+              show_physical_characteristics: true,
+              show_health_history: true,
+              show_education: !data.isAnonymous,
+              show_occupation: !data.isAnonymous,
+              show_interests: !data.isAnonymous,
+              show_personal_statement: !data.isAnonymous,
+              show_contact_info: false,
+              show_photos: false
+            }
+          })
+          .select()
+          .single();
+      } catch (e) {
+        // Table might not exist yet, that's okay
+        console.log('donor_profiles table may not exist yet');
+      }
+
       return {
         user: authData.user,
         person: personData,
@@ -108,103 +162,103 @@ export const donorAuthService = {
    */
   async isDonor(userId: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      // First check user_profiles table
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('account_type')
+        .eq('id', userId)
+        .single();
+
+      if (profileData?.account_type === 'donor') {
+        return true;
+      }
+
+      // Fallback: check persons table
+      const { data: personData } = await supabase
         .from('persons')
-        .select('person_type')
+        .select('donor')
         .eq('user_id', userId)
         .single();
 
-      if (error) throw error;
-      return data?.person_type === 'donor';
+      return personData?.donor === true;
     } catch (error) {
-      console.error('Error checking donor status:', error);
+      console.error('Error checking if user is donor:', error);
       return false;
     }
   },
 
   /**
-   * Get donor profile
+   * Get donor profile data
    */
   async getDonorProfile(userId: string) {
     try {
-      const { data: personData, error: personError } = await supabase
+      // Get user profile
+      const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      // Get person data
+      const { data: person } = await supabase
         .from('persons')
-        .select('id')
+        .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (personError) throw personError;
+      if (!person) {
+        throw new Error('Person record not found');
+      }
 
-      const { data: donorData, error: donorError } = await supabase
+      // Get donor data
+      const { data: donor } = await supabase
         .from('donors')
-        .select(`
-          *,
-          person:person_id (
-            id,
-            first_name,
-            last_name,
-            date_of_birth,
-            email,
-            phone,
-            user_id
-          )
-        `)
-        .eq('person_id', personData.id)
+        .select('*')
+        .eq('person_id', person.id)
         .single();
 
-      if (donorError) throw donorError;
-
       return {
-        data: donorData,
+        userProfile,
+        person,
+        donor,
         error: null
       };
     } catch (error) {
-      console.error('Error fetching donor profile:', error);
+      console.error('Error getting donor profile:', error);
       return {
-        data: null,
+        userProfile: null,
+        person: null,
+        donor: null,
         error
       };
     }
   },
 
   /**
-   * Update donor privacy settings
+   * Update privacy settings
    */
-  async updatePrivacySettings(userId: string, settings: any) {
+  async updatePrivacySettings(donorId: string, privacySettings: any) {
     try {
-      const { data: personData } = await supabase
-        .from('persons')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-
-      if (!personData) throw new Error('Person not found');
-
       const { data, error } = await supabase
         .from('donors')
         .update({
-          is_anonymous: settings.privacyLevel === 'anonymous',
-          metadata: {
-            privacy_settings: settings
-          },
-          updated_at: new Date().toISOString()
+          metadata: supabase.sql`
+            jsonb_set(
+              COALESCE(metadata, '{}'::jsonb),
+              '{privacy_settings}',
+              ${JSON.stringify(privacySettings)}::jsonb
+            )
+          `
         })
-        .eq('person_id', personData.id)
+        .eq('id', donorId)
         .select()
         .single();
 
       if (error) throw error;
-
-      return {
-        data,
-        error: null
-      };
+      return { data, error: null };
     } catch (error) {
       console.error('Error updating privacy settings:', error);
-      return {
-        data: null,
-        error
-      };
+      return { data: null, error };
     }
   }
 };

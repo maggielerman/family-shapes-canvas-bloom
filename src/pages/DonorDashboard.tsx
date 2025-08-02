@@ -155,15 +155,11 @@ const DonorDashboard = () => {
       });
       setHealthReminder(reminder);
 
-      // Load recent activity
-      const { data: activities } = await supabase
-        .from('activity_log')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Load recent activity - placeholder for now
+      // TODO: Implement when donor_activity_log table is created
+      const activities: any[] = [];
       
-      setRecentActivity(activities || []);
+      setRecentActivity(activities);
       
     } catch (error) {
       console.error('Error loading dashboard data:', error);
