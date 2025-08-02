@@ -258,18 +258,6 @@ export function OrganizationDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="overflow-x-auto">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 h-auto">
-            <TabsTrigger value="overview" className="text-xs lg:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="members" className="text-xs lg:text-sm">Members</TabsTrigger>
-            <TabsTrigger value="donors" className="text-xs lg:text-sm">Donor Database</TabsTrigger>
-            <TabsTrigger value="siblings" className="text-xs lg:text-sm">Sibling Groups</TabsTrigger>
-            <TabsTrigger value="groups" className="text-xs lg:text-sm">Groups</TabsTrigger>
-            <TabsTrigger value="trees" className="text-xs lg:text-sm">Family Trees</TabsTrigger>
-            {canManage && <TabsTrigger value="analytics" className="text-xs lg:text-sm">Analytics</TabsTrigger>}
-            {isOwner && <TabsTrigger value="settings" className="text-xs lg:text-sm">Settings</TabsTrigger>}
-          </TabsList>
-        </div>
 
         <TabsContent value="overview">
           <OrganizationStats organizationId={organization.id} />
