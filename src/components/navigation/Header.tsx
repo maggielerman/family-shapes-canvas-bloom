@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, User, Settings, LogOut, X, TreePine } from "lucide-react";
+import { Menu, User, Settings, LogOut, X, TreePine, Heart } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -205,6 +205,13 @@ const Header = () => {
                   <Link to="/dashboard" className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/donor/auth" className="cursor-pointer">
+                    <Heart className="mr-2 h-4 w-4" />
+                    <span>Donor Portal</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
