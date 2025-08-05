@@ -23,6 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.local
+.env.*.local
 supabase/migrations/20250722163000_remove_groups_tables.sql
 supabase/.temp/rest-version
 supabase/.temp/project-ref

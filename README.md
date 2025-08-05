@@ -83,7 +83,7 @@ npm install
 
 # Set up environment variables
 cp .env.example .env.local
-# Add your Supabase URL and anon key to .env.local
+# Edit .env.local with your actual values
 
 # Start development server
 npm run dev
@@ -91,12 +91,27 @@ npm run dev
 
 ### Environment Variables
 
-Create a `.env.local` file with:
+Create a `.env.local` file by copying `.env.example`:
+
+```bash
+cp .env.example .env.local
+```
+
+Then update the following required variables:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
+# Required for application to function
+VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Required for email functionality
+RESEND_API_KEY=your_resend_api_key
+
+# Required for server-side operations
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
+
+See `.env.example` for complete documentation of all environment variables.
 
 ## 📁 Project Structure
 
