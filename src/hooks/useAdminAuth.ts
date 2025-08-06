@@ -145,7 +145,7 @@ export function useAdminAuth() {
       // Track admin login
       await supabase.from('admin_sessions').insert({
         user_id: data.user.id,
-        ip_address: window.location.hostname, // In production, get real IP from server
+        // ip_address is nullable - real IP should be captured server-side
         user_agent: navigator.userAgent,
       });
 

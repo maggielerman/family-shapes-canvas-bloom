@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,11 @@ export default function AdminSignIn() {
   const navigate = useNavigate();
 
   // Redirect if already authenticated as admin
-  if (isAuthenticated && isAdmin) {
-    navigate('/admin');
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated && isAdmin) {
+      navigate('/admin');
+    }
+  }, [isAuthenticated, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

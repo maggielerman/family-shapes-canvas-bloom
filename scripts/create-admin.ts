@@ -11,8 +11,14 @@ import { parseArgs } from 'node:util';
 // Load environment variables
 config();
 
-const supabaseUrl = process.env.VITE_SUPABASE_PROJECT_URL || "https://nhkufibfwskdpzdjwirr.supabase.co";
+const supabaseUrl = process.env.VITE_SUPABASE_PROJECT_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl) {
+  console.error('❌ Error: VITE_SUPABASE_PROJECT_URL environment variable is required');
+  console.error('Please add it to your .env file');
+  process.exit(1);
+}
 
 if (!supabaseServiceKey) {
   console.error('❌ Error: SUPABASE_SERVICE_ROLE_KEY environment variable is required');
@@ -86,13 +92,16 @@ async function createAdminUser() {
     console.log('✅ User created successfully');
 
     // Step 2: Update the user profile to set admin role
-    const { error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .update({ role: 'super_admin' })
-      .eq('id', authData.user.id);
+      .eq('id', authData.user.id)
+      .select()
+      .single();
 
-    if (profileError) {
-      // If profile doesn't exist, create it
+    // If update returned no rows, the profile doesn't exist yet
+    if (profileError && profileError.code === 'PGRST116') {
+      // Profile doesn't exist, create it
       const { error: insertError } = await supabase
         .from('user_profiles')
         .insert({
@@ -104,11 +113,17 @@ async function createAdminUser() {
       if (insertError) {
         throw new Error(`Failed to create user profile: ${insertError.message}`);
       }
+    } else if (profileError) {
+      // Some other error occurred
+      throw new Error(`Failed to update user profile: ${profileError.message}`);
     }
 
     console.log('✅ Admin role assigned successfully');
     console.log('\n🎉 Admin user created successfully!');
-    console.log(`\nYou can now sign in at: ${supabaseUrl.replace('.supabase.co', '')}/admin/signin`);
+    
+    // Use the app's actual URL
+    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+    console.log(`\nYou can now sign in at: ${appUrl}/admin/signin`);
     console.log(`Email: ${email}`);
     console.log(`Password: [hidden]`);
     

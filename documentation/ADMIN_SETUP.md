@@ -48,8 +48,14 @@ This hook adds admin role claims to JWT tokens when users sign in.
 Add the following to your `.env` file:
 
 ```bash
+# Required for the application
+VITE_SUPABASE_PROJECT_URL=https://your-project.supabase.co
+
 # For the admin creation script only (keep this secure!)
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# Optional: Set your app URL for the admin creation script
+APP_URL=https://your-app-domain.com
 ```
 
 ⚠️ **Security Note**: Never commit the service role key to version control. It has full database access.
