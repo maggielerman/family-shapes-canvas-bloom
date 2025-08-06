@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,8 @@ import {
   Settings,
   Loader2,
   UserPlus,
-  Search
+  Search,
+  Building2
 } from "lucide-react";
 
 interface Group {
@@ -53,6 +54,10 @@ interface Group {
   created_at: string;
   owner_id: string;
   organization_id?: string;
+  organizations?: {
+    id: string;
+    name: string;
+  };
   _count?: {
     members: number;
   };
@@ -62,6 +67,7 @@ interface Group {
 export default function Groups() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -99,10 +105,13 @@ export default function Groups() {
           visibility,
           created_at,
           owner_id,
-          organization_id
+          organization_id,
+          organizations (
+            id,
+            name
+          )
         `)
-        .eq('owner_id', user.id)
-        .is('organization_id', null); // Only personal groups, not organization groups
+        .eq('owner_id', user.id);
 
       if (ownedError) throw ownedError;
 
@@ -120,7 +129,11 @@ export default function Groups() {
             visibility,
             created_at,
             owner_id,
-            organization_id
+            organization_id,
+            organizations (
+              id,
+              name
+            )
           )
         `)
         .eq('user_id', user.id);
@@ -131,7 +144,7 @@ export default function Groups() {
       const allGroups = [
         ...(ownedGroups || []).map(g => ({ ...g, role: 'owner' })),
         ...(membershipData || [])
-          .filter(m => m.groups && !m.groups.organization_id) // Filter out organization groups
+          .filter(m => m.groups)
           .map(m => ({ ...m.groups, role: m.role }))
       ];
 
@@ -156,6 +169,7 @@ export default function Groups() {
       );
 
       setGroups(groupsWithCounts);
+
     } catch (error) {
       console.error('Error fetching groups:', error);
       toast({
@@ -165,65 +179,6 @@ export default function Groups() {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateGroup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    setIsCreating(true);
-
-    try {
-      // Create the group
-      const { data: groupData, error: groupError } = await supabase
-        .from('groups')
-        .insert({
-          label: formData.label,
-          type: formData.type,
-          description: formData.description,
-          visibility: formData.visibility,
-          owner_id: user.id
-        })
-        .select()
-        .single();
-
-      if (groupError) throw groupError;
-
-      // Add the creator as a member with owner role
-      const { error: membershipError } = await supabase
-        .from('group_memberships')
-        .insert({
-          group_id: groupData.id,
-          user_id: user.id,
-          role: 'owner'
-        });
-
-      if (membershipError) throw membershipError;
-
-      toast({
-        title: "Group Created",
-        description: `${formData.label} has been created successfully`
-      });
-
-      setFormData({
-        label: "",
-        type: "family",
-        description: "",
-        visibility: "private"
-      });
-      setCreateDialogOpen(false);
-      fetchGroups();
-
-    } catch (error) {
-      console.error('Error creating group:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create group",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -370,82 +325,33 @@ export default function Groups() {
               <DialogHeader>
                 <DialogTitle>Create New Group</DialogTitle>
                 <DialogDescription>
-                  Create a new group to connect with family members and build your community
+                  Groups help you connect with family members and build your community
                 </DialogDescription>
               </DialogHeader>
               
-              <form onSubmit={handleCreateGroup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="label">Group Name</Label>
-                  <Input
-                    id="label"
-                    value={formData.label}
-                    onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                    placeholder="e.g., Johnson Family, Donor #123 Siblings"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="type">Group Type</Label>
-                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="family">Family</SelectItem>
-                      <SelectItem value="donor_siblings">Donor Siblings</SelectItem>
-                      <SelectItem value="support">Support Group</SelectItem>
-                      <SelectItem value="research">Research Group</SelectItem>
-                      <SelectItem value="community">Community</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe the purpose and goals of this group..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="visibility">Visibility</Label>
-                  <Select value={formData.visibility} onValueChange={(value) => setFormData({ ...formData, visibility: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="private">Private - Invite only</SelectItem>
-                      <SelectItem value="public">Public - Anyone can find and join</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              <div className="text-center py-6">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-semibold mb-2">Organization Required</h3>
+                <p className="text-muted-foreground mb-4">
+                  Groups must be created within an organization. This helps organize and manage group permissions.
+                </p>
+                <p className="text-sm text-muted-foreground mb-6">
+                  You can create your own organization or join an existing one.
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCreateDialogOpen(false)}
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isCreating}>
-                    {isCreating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Group
-                      </>
-                    )}
+                  <Button
+                    onClick={() => navigate('/organizations')}
+                  >
+                    Go to Organizations
                   </Button>
-                </DialogFooter>
-              </form>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -470,14 +376,17 @@ export default function Groups() {
             <div className="text-center py-8">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">You're not a member of any groups yet</p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Groups are created within organizations. Join an organization to start collaborating with groups.
+              </p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => setJoinDialogOpen(true)}>
                   <UserPlus className="mr-2 h-4 w-4" />
                   Join a Group
                 </Button>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Group
+                <Button onClick={() => navigate('/organizations')}>
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Browse Organizations
                 </Button>
               </div>
             </div>
@@ -486,6 +395,7 @@ export default function Groups() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Organization</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Members</TableHead>
                   <TableHead>Role</TableHead>
@@ -511,6 +421,11 @@ export default function Groups() {
                           </p>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">
+                        {group.organizations?.name || 'Unknown'}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Badge variant={getTypeBadgeVariant(group.type)}>
