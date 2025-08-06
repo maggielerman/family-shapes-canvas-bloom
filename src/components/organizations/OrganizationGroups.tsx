@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -340,7 +341,9 @@ export function OrganizationGroups({ organizationId, canManage }: OrganizationGr
                   <TableRow key={group.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{group.label}</p>
+                        <Link to={`/groups/${group.id}`} className="font-medium hover:underline">
+                          {group.label}
+                        </Link>
                         {group.description && (
                           <p className="text-sm text-muted-foreground mt-1">
                             {group.description.length > 60 
@@ -376,12 +379,16 @@ export function OrganizationGroups({ organizationId, canManage }: OrganizationGr
                     {canManage && (
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Settings className="h-4 w-4" />
-                          </Button>
+                          <Link to={`/groups/${group.id}`}>
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link to={`/groups/${group.id}/settings`}>
+                            <Button variant="ghost" size="sm">
+                              <Settings className="h-4 w-4" />
+                            </Button>
+                          </Link>
                         </div>
                       </TableCell>
                     )}
