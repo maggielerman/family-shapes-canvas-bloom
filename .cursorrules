@@ -1,0 +1,40 @@
+# Non-negotiable rules for DB changes
+
+- All database schema changes must be made via Supabase migrations in `supabase/migrations/`. Do NOT edit production via the dashboard.
+- Before creating a migration, ensure local env is linked and up-to-date:
+  - Run `make db/reset` to rebuild from migrations.
+  - Run `make db/check` to verify NO DRIFT.
+- To create a migration: `make db/diff name=0002_<short_description>` then `make db/reset` to verify.
+- Never modify the baseline `*_0001_baseline_prod_schema.sql`. New changes start at `0002_*` and up.
+- Regenerate types if relevant: `make db/types`.
+- Open a PR with checklist:
+  - migration file added,
+  - `make db/reset` ok,
+  - `make db/check` → “No drift”,
+  - types updated if needed.
+- Only apply to prod via `make db/push` AFTER PR merge/CI green.
+
+If a command prompts for a password, use `.env` with:
+  `SUPABASE_PROJECT_REF=...`
+  `SUPABASE_DB_PASSWORD=...`
+
+
+# Documentation rules (read these before making changes)
+
+- **Authoritative docs** live under `documentation/`.
+  - Primary guide for agents/humans: `documentation/agents.md`.
+  - The README links to these docs; do not move them to `docs/`.
+- Agents (Cursor, etc.) must consult `documentation/agents.md` before generating or modifying any migration, RLS, function, or policy.
+- When updating the database process, update **both**:
+  1) `documentation/agents.md` (full guide)
+  2) `.cursorrules` (non‑negotiable rules)
+- PRs that alter the DB workflow must include a summary of changes and updated doc links.
+
+# Operational guardrails for agents
+
+- Always use Makefile targets: `make db/diff name=...`, `make db/reset`, `make db/check`, `make db/types`, `make db/push`.
+- Do **not** push if `make db/check` fails or hangs; seek human input.
+- Never modify or remove `*_0001_baseline_prod_schema.sql`. New work begins at `0002_*` and higher.
+- Do not commit `.env` or any secrets. Use GitHub Actions **secrets** for CI and local `.env` for development.
+- If a migration depends on data, add idempotent statements to `supabase/seed.sql` (optional), not to the migration.
+- Keep archived pre-baseline files in `supabase/_archived_migrations/`; do not move them back into the loader path.

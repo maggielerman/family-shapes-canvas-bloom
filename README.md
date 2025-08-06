@@ -1,5 +1,7 @@
 # Family Shapes - Family Tree & Donor Connection Platform
 
+> **DB Migrations & Drift Policy:** See [`.cursorrules`](./.cursorrules) and [Agent / Automation Instructions](./documentation/agents.md).
+
 A comprehensive web application for building interactive family trees, managing donor connections, and facilitating biological family relationships. Built for fertility clinics, sperm banks, donor communities, and families seeking to connect with biological relatives.
 
 ## 🌟 Key Features
@@ -98,6 +100,31 @@ VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
+For local DB tooling (Makefile/scripts), also create a root-level `.env` (not committed):
+
+```env
+SUPABASE_PROJECT_REF=nhkufibfwskdpzdjwirr
+SUPABASE_DB_PASSWORD=your-remote-db-password
+```
+
+### Database Migrations
+
+This repo uses **Supabase migrations as the source of truth**. Do not edit production in the Dashboard.
+
+**Common tasks**
+
+```bash
+make            # list all DB targets
+make db/status  # local stack status
+make db/reset   # rebuild local from migrations (+ seed.sql if present)
+make db/diff name=0002_short_description  # create a new migration
+make db/types   # regenerate TS types
+make db/check   # ensure no drift vs PROD
+make db/push    # apply migrations to PROD (after PR merge/CI green)
+```
+
+> Baseline migration already exists: `supabase/migrations/20250806171912_0001_baseline_prod_schema.sql`. New work starts at `0002_*`.
+
 ## 📁 Project Structure
 
 ```
@@ -158,6 +185,7 @@ Comprehensive documentation is available in the [`documentation/`](./documentati
 - [Contact Form Implementation](./documentation/CONTACT_FORM_IMPLEMENTATION.md) - Details on the Resend email integration
 - [Responsive Utilities Guide](./documentation/RESPONSIVE_UTILITIES.md) - Standardized responsive patterns and utilities
 - [Get Started Page](./documentation/GET_STARTED_PAGE.md) - Interactive onboarding for all user types
+- [Agent / Automation Instructions](./documentation/agents.md) — Required process for migrations and drift checks
 
 ## 🌐 Deployment
 
@@ -192,6 +220,78 @@ For support and questions:
 - Review existing issues on GitHub
 - Create a new issue for bugs or feature requests
 
+### Agent / Automation Instructions
+Agents (Cursor, etc.) must follow our migration workflow and guardrails. See:
+- `.cursorrules` – non‑negotiable rules
+- `documentation/agents.md` – full guide
+
 ---
 
 **Built with ❤️ for families, fertility clinics, and donor communities**
+
+
+# Agent Instructions: Supabase Migrations & Drift Policy
+
+This repository treats **SQL migrations in `supabase/migrations/` as the single source of truth** for the database schema. Agents (Cursor, etc.) and humans must follow this process. **Do not modify production via the Supabase Dashboard** except when explicitly instructed for emergencies.
+
+## Environment assumptions
+
+- Local `.env` exists at repo root and is **not committed**. Minimum keys:
+  ```env
+  SUPABASE_PROJECT_REF=nhkufibfwskdpzdjwirr
+  SUPABASE_DB_PASSWORD=your-remote-db-password
+  # Optional: SUPABASE_CI=1
+  ```
+- Supabase CLI is installed and the project is linked: `supabase link --project-ref <ref>` (the scripts auto-link if needed).
+
+## Allowed commands (run from repo root)
+
+- **Create a migration** from changes vs PROD:
+  ```bash
+  make db/diff name=0002_short_description
+  ```
+- **Verify** the repo can rebuild from migrations (idempotent):
+  ```bash
+  make db/reset
+  make db/check   # must print: ✅ No drift.
+  ```
+- **Regenerate API types** (for TypeScript):
+  ```bash
+  make db/types
+  ```
+- **Apply to production** (only after PR review / CI green):
+  ```bash
+  make db/push
+  ```
+
+## Prohibited
+
+- Editing production schema directly in the Supabase Dashboard.
+- Modifying or deleting the baseline migration: `*_0001_baseline_prod_schema.sql`.
+- Writing migrations outside `supabase/migrations/`.
+- Committing `.env` or any secrets.
+
+## File conventions
+
+- CLI creates timestamped files: `YYYYMMDDHHMMSS_name.sql`.
+- Dev/test data belongs in `supabase/seed.sql` (optional, idempotent), not inside schema migrations.
+- Pre-baseline files are kept in `supabase/_archived_migrations/`; do **not** move them back into the loader path.
+
+## Pull Request checklist (agents)
+
+- [ ] Migration added under `supabase/migrations/` with a clear name.
+- [ ] Local rebuild OK: `make db/reset`.
+- [ ] Drift check OK: `make db/check` → prints **No drift**.
+- [ ] Types updated if needed: `make db/types`.
+- [ ] PR description summarizes schema/RLS/trigger impacts and any rollout notes.
+
+## Troubleshooting
+
+- **Drift check hangs or prompts**: ensure `.env` has `SUPABASE_PROJECT_REF` and `SUPABASE_DB_PASSWORD` with no quotes; re-run `make db/check`.
+- **Local Postgres crash-loops after CLI update**: clear local Docker volumes and restart:
+  ```bash
+  supabase stop
+  docker volume rm $(docker volume ls -q --filter label=com.supabase.cli.project=nhkufibfwskdpzdjwirr)
+  supabase start
+  ```
+- **Pre‑push hook blocks push**: one-off bypass with `git push --no-verify`, then investigate with `make db/check`.
