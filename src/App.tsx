@@ -23,6 +23,7 @@ const Organizations = lazy(() => import("./pages/Organizations"));
 const OrganizationDashboard = lazy(() => import("./pages/OrganizationDashboard"));
 const OrganizationOnboardingPage = lazy(() => import("./pages/OrganizationOnboardingPage"));
 const InvitationPage = lazy(() => import("./pages/InvitationPage"));
+const GroupDashboard = lazy(() => import("./components/groups/GroupDashboard"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 const FamilyTrees = lazy(() => import("./pages/FamilyTrees"));
 const People = lazy(() => import("./pages/People"));
@@ -118,6 +119,8 @@ const App = () => {
                   <Route path="/organizations/:id" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
                   <Route path="/organizations/:id/onboarding" element={<ProtectedRoute><SidebarLayout><OrganizationOnboardingPage /></SidebarLayout></ProtectedRoute>} />
                   <Route path="/organizations/:id/settings" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
+                  <Route path="/groups/:id" element={<ProtectedRoute><SidebarLayout><GroupDashboard /></SidebarLayout></ProtectedRoute>} />
+                  <Route path="/groups/:id/*" element={<ProtectedRoute><SidebarLayout><GroupDashboard /></SidebarLayout></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><SidebarLayout><Settings /></SidebarLayout></ProtectedRoute>} />
 
                   {/* Donor portal routes */}

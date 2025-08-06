@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, TestTube, Database, Settings, Bug, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ExternalLink, TestTube, Database, Settings, Bug, Trash2, Building2, TreePine } from 'lucide-react';
 import { DatabaseTest } from '@/components/debug/DatabaseTest';
 import { useToast } from '@/hooks/use-toast';
 import { ConnectionService } from '@/services/connectionService';
+import { OrganizationStructureViewer } from '@/components/admin/OrganizationStructureViewer';
+import { OrganizationFlowExamples } from '@/components/admin/OrganizationFlowExamples';
 
 export default function Admin() {
   const [isCleaning, setIsCleaning] = useState(false);
@@ -90,6 +93,25 @@ export default function Admin() {
           <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
           <p className="text-muted-foreground">Development tools and system administration</p>
         </div>
+
+        {/* Organization Structure Tabs */}
+        <Tabs defaultValue="tools" className="mb-8">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="tools">
+              <Settings className="h-4 w-4 mr-2" />
+              Dev Tools
+            </TabsTrigger>
+            <TabsTrigger value="structure">
+              <Building2 className="h-4 w-4 mr-2" />
+              Organization Structure
+            </TabsTrigger>
+            <TabsTrigger value="examples">
+              <TreePine className="h-4 w-4 mr-2" />
+              Flow Examples
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tools">
 
         {/* Database Debug Component */}
         <Card className="mb-6 border-orange-200 bg-orange-50">
@@ -315,6 +337,16 @@ export default function Admin() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="structure">
+            <OrganizationStructureViewer />
+          </TabsContent>
+
+          <TabsContent value="examples">
+            <OrganizationFlowExamples />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
