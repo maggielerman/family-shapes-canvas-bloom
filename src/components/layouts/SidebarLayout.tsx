@@ -62,7 +62,7 @@ const IndividualUserNav = [
   { icon: Image, label: "Media", path: "/media" },
   { icon: Share2, label: "Share", path: "/share" },
   { icon: Building2, label: "Organizations", path: "/organizations" },
-  { icon: Dna, label: "Donor Portal", path: "/donor/auth" },
+  { icon: Users, label: "Groups", path: "/groups" },
 ];
 
 // Donor navigation items
