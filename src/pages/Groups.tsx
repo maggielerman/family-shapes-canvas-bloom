@@ -53,6 +53,10 @@ interface Group {
   created_at: string;
   owner_id: string;
   organization_id?: string;
+  organizations?: {
+    id: string;
+    name: string;
+  };
   _count?: {
     members: number;
   };
@@ -69,6 +73,8 @@ export default function Groups() {
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [joinCode, setJoinCode] = useState("");
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState("");
   const [formData, setFormData] = useState({
     label: "",
     type: "family",
@@ -79,8 +85,53 @@ export default function Groups() {
   useEffect(() => {
     if (user) {
       fetchGroups();
+      fetchUserOrganizations();
     }
   }, [user]);
+
+  const fetchUserOrganizations = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch organizations owned by user
+      const { data: ownedOrgs, error: ownedError } = await supabase
+        .from('organizations')
+        .select('id, name')
+        .eq('owner_id', user.id);
+
+      if (ownedError) throw ownedError;
+
+      // Fetch organizations where user is a member
+      const { data: memberOrgs, error: memberError } = await supabase
+        .from('organization_memberships')
+        .select(`
+          organizations (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (memberError) throw memberError;
+
+      // Combine and deduplicate organizations
+      const allOrgs = [
+        ...(ownedOrgs || []),
+        ...(memberOrgs?.map(m => m.organizations).filter(Boolean) || [])
+      ];
+
+      const uniqueOrgs = Array.from(
+        new Map(allOrgs.map(org => [org.id, org])).values()
+      );
+
+      setOrganizations(uniqueOrgs);
+      if (uniqueOrgs.length > 0) {
+        setSelectedOrgId(uniqueOrgs[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+    }
+  };
 
   const fetchGroups = async () => {
     if (!user) return;
@@ -88,8 +139,34 @@ export default function Groups() {
     try {
       setLoading(true);
 
-      // Fetch groups where user is owner
-      const { data: ownedGroups, error: ownedError } = await supabase
+      // Fetch all groups from user's organizations
+      const { data: userOrgs, error: orgsError } = await supabase
+        .from('organization_memberships')
+        .select('organization_id')
+        .eq('user_id', user.id);
+
+      if (orgsError) throw orgsError;
+
+      const orgIds = userOrgs?.map(o => o.organization_id) || [];
+
+      // Also include organizations owned by the user
+      const { data: ownedOrgs, error: ownedOrgsError } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('owner_id', user.id);
+
+      if (ownedOrgsError) throw ownedOrgsError;
+
+      const ownedOrgIds = ownedOrgs?.map(o => o.id) || [];
+      const allOrgIds = [...new Set([...orgIds, ...ownedOrgIds])];
+
+      if (allOrgIds.length === 0) {
+        setGroups([]);
+        return;
+      }
+
+      // Fetch groups from these organizations
+      const { data: orgGroups, error: groupsError } = await supabase
         .from('groups')
         .select(`
           id,
@@ -99,14 +176,17 @@ export default function Groups() {
           visibility,
           created_at,
           owner_id,
-          organization_id
+          organization_id,
+          organizations (
+            id,
+            name
+          )
         `)
-        .eq('owner_id', user.id)
-        .is('organization_id', null); // Only personal groups, not organization groups
+        .in('organization_id', allOrgIds);
 
-      if (ownedError) throw ownedError;
+      if (groupsError) throw groupsError;
 
-      // Fetch groups where user is a member
+      // Fetch group memberships for the user
       const { data: membershipData, error: membershipError } = await supabase
         .from('group_memberships')
         .select(`
@@ -127,35 +207,42 @@ export default function Groups() {
 
       if (membershipError) throw membershipError;
 
-      // Combine owned and member groups
-      const allGroups = [
-        ...(ownedGroups || []).map(g => ({ ...g, role: 'owner' })),
-        ...(membershipData || [])
-          .filter(m => m.groups && !m.groups.organization_id) // Filter out organization groups
-          .map(m => ({ ...m.groups, role: m.role }))
-      ];
+      // Create a map to track user roles in groups
+      const groupRoles = new Map();
+      membershipData?.forEach(m => {
+        if (m.group_id) {
+          groupRoles.set(m.group_id, m.role);
+        }
+      });
 
-      // Remove duplicates (in case user is both owner and member)
-      const uniqueGroups = allGroups.filter((group, index, self) =>
-        index === self.findIndex((g) => g.id === group.id)
-      );
+      // Add role information to groups
+      const groupsWithRoles = orgGroups?.map(g => ({
+        ...g,
+        role: g.owner_id === user.id ? 'owner' : groupRoles.get(g.id) || 'member'
+      })) || [];
 
-      // Fetch member counts for each group
-      const groupsWithCounts = await Promise.all(
-        uniqueGroups.map(async (group) => {
-          const { count } = await supabase
-            .from('group_memberships')
-            .select('*', { count: 'exact', head: true })
-            .eq('group_id', group.id);
+      // Count members for each group
+      const groupIds = groupsWithRoles.map(g => g.id);
+      if (groupIds.length > 0) {
+        const { data: memberCounts, error: countError } = await supabase
+          .from('group_memberships')
+          .select('group_id')
+          .in('group_id', groupIds);
 
-          return {
-            ...group,
-            _count: { members: count || 0 }
-          };
-        })
-      );
+        if (!countError && memberCounts) {
+          const countMap = memberCounts.reduce((acc, m) => {
+            acc[m.group_id] = (acc[m.group_id] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
 
-      setGroups(groupsWithCounts);
+          groupsWithRoles.forEach(g => {
+            g._count = { members: countMap[g.id] || 0 };
+          });
+        }
+      }
+
+      setGroups(groupsWithRoles);
+
     } catch (error) {
       console.error('Error fetching groups:', error);
       toast({
@@ -170,7 +257,7 @@ export default function Groups() {
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !selectedOrgId) return;
 
     setIsCreating(true);
 
@@ -183,7 +270,8 @@ export default function Groups() {
           type: formData.type,
           description: formData.description,
           visibility: formData.visibility,
-          owner_id: user.id
+          owner_id: user.id,
+          organization_id: selectedOrgId
         })
         .select()
         .single();
@@ -375,76 +463,109 @@ export default function Groups() {
               </DialogHeader>
               
               <form onSubmit={handleCreateGroup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="label">Group Name</Label>
-                  <Input
-                    id="label"
-                    value={formData.label}
-                    onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                    placeholder="e.g., Johnson Family, Donor #123 Siblings"
-                    required
-                  />
-                </div>
+                {organizations.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground mb-4">
+                      You need to be a member of an organization to create groups.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => window.location.href = '/organizations'}
+                    >
+                      Go to Organizations
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="organization">Organization</Label>
+                      <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an organization" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organizations.map((org) => (
+                            <SelectItem key={org.id} value={org.id}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="type">Group Type</Label>
-                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="family">Family</SelectItem>
-                      <SelectItem value="donor_siblings">Donor Siblings</SelectItem>
-                      <SelectItem value="support">Support Group</SelectItem>
-                      <SelectItem value="research">Research Group</SelectItem>
-                      <SelectItem value="community">Community</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="label">Group Name</Label>
+                      <Input
+                        id="label"
+                        value={formData.label}
+                        onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                        placeholder="e.g., Johnson Family, Donor #123 Siblings"
+                        required
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe the purpose and goals of this group..."
-                    rows={3}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="type">Group Type</Label>
+                      <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="family">Family</SelectItem>
+                          <SelectItem value="donor_siblings">Donor Siblings</SelectItem>
+                          <SelectItem value="support">Support Group</SelectItem>
+                          <SelectItem value="research">Research Group</SelectItem>
+                          <SelectItem value="community">Community</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="visibility">Visibility</Label>
-                  <Select value={formData.visibility} onValueChange={(value) => setFormData({ ...formData, visibility: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="private">Private - Invite only</SelectItem>
-                      <SelectItem value="public">Public - Anyone can find and join</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Describe the purpose of this group..."
+                        rows={3}
+                      />
+                    </div>
 
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isCreating}>
-                    {isCreating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Group
-                      </>
-                    )}
-                  </Button>
-                </DialogFooter>
+                    <div className="space-y-2">
+                      <Label htmlFor="visibility">Visibility</Label>
+                      <Select value={formData.visibility} onValueChange={(value) => setFormData({ ...formData, visibility: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="private">Private</SelectItem>
+                          <SelectItem value="public">Public</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isCreating}>
+                        {isCreating ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Group
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
               </form>
             </DialogContent>
           </Dialog>
@@ -486,6 +607,7 @@ export default function Groups() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Organization</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Members</TableHead>
                   <TableHead>Role</TableHead>
@@ -511,6 +633,11 @@ export default function Groups() {
                           </p>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">
+                        {group.organizations?.name || 'Unknown'}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Badge variant={getTypeBadgeVariant(group.type)}>
