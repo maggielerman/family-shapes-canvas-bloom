@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DonorProtectedRoute from "@/components/auth/DonorProtectedRoute";
+import { AdminProtectedRoute } from "@/components/admin/AdminProtectedRoute";
 import SidebarLayout from "@/components/layouts/SidebarLayout";
 import MainLayout from "@/components/layouts/MainLayout";
 
@@ -36,6 +37,7 @@ const Media = lazy(() => import("./pages/Media"));
 const Share = lazy(() => import("./pages/Share"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Admin = lazy(() => import("./pages/Admin"));
+const AdminSignIn = lazy(() => import("./pages/AdminSignIn"));
 const Settings = lazy(() => import("./pages/Settings"));
 const DonorLanding = lazy(() => import("./pages/DonorLanding"));
 const RecipientLanding = lazy(() => import("./pages/RecipientLanding"));
@@ -105,7 +107,10 @@ const App = () => {
                   <Route path="/donor/auth" element={<DonorAuth />} />
                   
                   {/* Admin routes */}
-                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/admin/signin" element={<AdminSignIn />} />
+                  <Route element={<AdminProtectedRoute />}>
+                    <Route path="/admin" element={<Admin />} />
+                  </Route>
                   
                   {/* Protected routes with sidebar layout */}
                   <Route path="/dashboard" element={<ProtectedRoute><SidebarLayout><RecipientDashboard /></SidebarLayout></ProtectedRoute>} />

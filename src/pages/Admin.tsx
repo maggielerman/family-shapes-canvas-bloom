@@ -2,12 +2,32 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ExternalLink, TestTube, Database, Settings, Bug, Trash2, Building2, TreePine } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  ExternalLink, 
+  TestTube, 
+  Database, 
+  Settings, 
+  Bug, 
+  Trash2, 
+  Building2, 
+  TreePine,
+  Shield,
+  LogOut,
+  Users,
+  Activity,
+  BarChart,
+  Clock
+} from 'lucide-react';
 import { DatabaseTest } from '@/components/debug/DatabaseTest';
 import { useToast } from '@/hooks/use-toast';
 import { ConnectionService } from '@/services/connectionService';
 import { OrganizationStructureViewer } from '@/components/admin/OrganizationStructureViewer';
 import { OrganizationFlowExamples } from '@/components/admin/OrganizationFlowExamples';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { format } from 'date-fns';
 
 export default function Admin() {
   const [isCleaning, setIsCleaning] = useState(false);
@@ -24,6 +44,7 @@ export default function Admin() {
     }>;
   } | null>(null);
   const { toast } = useToast();
+  const { user, userRole, signOut, isSuperAdmin } = useAdminAuth();
 
   const openVitestUI = () => {
     // In development, Vitest UI is typically served on port 51204
@@ -48,7 +69,7 @@ export default function Admin() {
       console.error('Debug error:', error);
       toast({
         title: "Debug Error",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        description: "Failed to debug connections. Check console for details.",
         variant: "destructive",
       });
     } finally {
@@ -57,28 +78,41 @@ export default function Admin() {
   };
 
   const handleCleanupDuplicates = async () => {
-    if (!window.confirm('This will remove duplicate connections from the database. Continue?')) {
+    if (!debugResult || debugResult.duplicates.length === 0) {
+      toast({
+        title: "No duplicates to clean",
+        description: "Run debug first to identify duplicates.",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsCleaning(true);
     try {
-      const result = await ConnectionService.cleanupDuplicateConnections();
+      let cleanedCount = 0;
+      
+      for (const dup of debugResult.duplicates) {
+        // Keep the first connection, remove the rest
+        const [keep, ...remove] = dup.connectionIds;
+        
+        for (const id of remove) {
+          await ConnectionService.deleteConnection(id);
+          cleanedCount++;
+        }
+      }
       
       toast({
         title: "Cleanup Complete",
-        description: `Removed ${result.removed} duplicate connections. ${result.errors.length} errors occurred.`,
-        variant: result.errors.length > 0 ? "destructive" : "default",
+        description: `Removed ${cleanedCount} duplicate connections.`,
       });
-
-      if (result.errors.length > 0) {
-        console.error('Cleanup errors:', result.errors);
-      }
+      
+      // Re-run debug to show updated state
+      await handleDebugConnections();
     } catch (error) {
       console.error('Cleanup error:', error);
       toast({
         title: "Cleanup Error",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        description: "Failed to clean up duplicates. Check console for details.",
         variant: "destructive",
       });
     } finally {
@@ -87,264 +121,268 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Development tools and system administration</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Admin Header */}
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Shield className="h-6 w-6 text-primary" />
+                <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+              </div>
+              <Badge variant={isSuperAdmin ? "default" : "secondary"}>
+                {userRole}
+              </Badge>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="font-medium">{user?.email}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold">--</span>
+                <Users className="h-4 w-4 text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Active Sessions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold">--</span>
+                <Activity className="h-4 w-4 text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Organizations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold">--</span>
+                <Building2 className="h-4 w-4 text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Last Login</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">{format(new Date(), 'HH:mm')}</span>
+                <Clock className="h-4 w-4 text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Organization Structure Tabs */}
-        <Tabs defaultValue="tools" className="mb-8">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="tools">
-              <Settings className="h-4 w-4 mr-2" />
-              Dev Tools
-            </TabsTrigger>
-            <TabsTrigger value="structure">
-              <Building2 className="h-4 w-4 mr-2" />
-              Organization Structure
-            </TabsTrigger>
-            <TabsTrigger value="examples">
-              <TreePine className="h-4 w-4 mr-2" />
-              Flow Examples
-            </TabsTrigger>
+        {/* Main Admin Tabs */}
+        <Tabs defaultValue="testing" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="testing">Testing</TabsTrigger>
+            <TabsTrigger value="database">Database</TabsTrigger>
+            <TabsTrigger value="organizations">Organizations</TabsTrigger>
+            <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="tools">
-
-        {/* Database Debug Component */}
-        <Card className="mb-6 border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-800">
-              <Bug className="w-5 h-5" />
-              Database Connectivity Testing
-            </CardTitle>
-            <CardDescription className="text-orange-700">
-              Test database connections, RLS policies, and query functionality
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DatabaseTest />
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Vitest UI Card */}
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TestTube className="w-5 h-5" />
-                Test Runner
-              </CardTitle>
-              <CardDescription>
-                Run and monitor tests with Vitest's built-in UI
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Use Vitest's comprehensive test interface for running, debugging, and analyzing your test suites.
-                </p>
-                <Button 
-                  onClick={openVitestUI}
-                  className="w-full flex items-center gap-2"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Open Vitest UI
-                </Button>
-                <div className="text-xs text-muted-foreground">
-                  Requires: <code>npm run test:ui</code> to be running
+          <TabsContent value="testing" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TestTube className="h-5 w-5" />
+                  Testing Tools
+                </CardTitle>
+                <CardDescription>
+                  Development and testing utilities
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div>
+                    <h3 className="font-medium">Vitest UI</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Interactive test runner and results viewer
+                    </p>
+                  </div>
+                  <Button onClick={openVitestUI} size="sm">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Open Vitest UI
+                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Database Admin Card */}
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
-                Database Admin
-              </CardTitle>
-              <CardDescription>
-                Manage Supabase database and inspect data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Access the Supabase dashboard for database management, table inspection, and real-time data monitoring.
-                </p>
-                <Button 
-                  variant="outline"
-                  onClick={() => window.open('https://supabase.com/dashboard', '_blank')}
-                  className="w-full flex items-center gap-2"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Open Supabase Dashboard
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Database Cleanup Card */}
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trash2 className="w-5 h-5" />
-                Database Cleanup
-              </CardTitle>
-              <CardDescription>
-                Remove duplicate connections for all relationship types
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Clean up duplicate database records for all relationship types (parent/child, sibling, partner, etc.).
-                </p>
                 
+                <Separator />
+                
+                <div className="space-y-2">
+                  <h3 className="font-medium">Quick Commands</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Run these commands in your terminal:
+                  </p>
+                  <div className="space-y-2">
+                    <code className="block p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+                      npm run test:ui
+                    </code>
+                    <code className="block p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+                      npm run test
+                    </code>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="database" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  Database Tools
+                </CardTitle>
+                <CardDescription>
+                  Database testing and maintenance utilities
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DatabaseTest />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bug className="h-5 w-5" />
+                  Connection Debugging
+                </CardTitle>
+                <CardDescription>
+                  Debug and clean up duplicate connections
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="flex gap-2">
                   <Button 
-                    variant="outline" 
                     onClick={handleDebugConnections}
                     disabled={isDebugging}
+                    variant="outline"
                   >
-                    {isDebugging ? "Checking..." : "Check for Duplicates"}
+                    {isDebugging ? "Debugging..." : "Debug Connections"}
                   </Button>
                   <Button 
-                    variant="destructive" 
                     onClick={handleCleanupDuplicates}
-                    disabled={isCleaning}
+                    disabled={isCleaning || !debugResult || debugResult.duplicates.length === 0}
+                    variant="destructive"
                   >
-                    {isCleaning ? "Cleaning..." : "Remove Duplicates"}
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => window.open('/connections', '_blank')}
-                  >
-                    Test Connections Page
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {isCleaning ? "Cleaning..." : "Clean Duplicates"}
                   </Button>
                 </div>
 
-                {/* Debug Results Display */}
                 {debugResult && (
-                  <div className="mt-4 p-4 bg-muted rounded-lg">
-                    <h4 className="font-medium mb-2">Debug Results:</h4>
-                    <div className="space-y-2 text-sm">
-                      <div><strong>Total bidirectional connections:</strong> {debugResult.total}</div>
-                      <div><strong>Duplicate groups found:</strong> {debugResult.duplicates.length}</div>
-                      
-                      {Object.entries(debugResult.byType).length > 0 && (
-                        <div>
-                          <strong>By relationship type:</strong>
-                          <ul className="ml-4 mt-1">
-                            {Object.entries(debugResult.byType).map(([type, count]) => (
-                              <li key={type}>• {type}: {count}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {debugResult.duplicates.length > 0 && (
-                        <div>
-                          <strong>Duplicate groups:</strong>
-                          <ul className="ml-4 mt-1 space-y-1">
-                            {debugResult.duplicates.map((dup, index) => (
-                              <li key={index} className="text-xs">
-                                • {dup.type}: {dup.personA} ↔ {dup.personB} ({dup.count} records)
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Total Connections</p>
+                        <p className="text-2xl font-bold">{debugResult.total}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Duplicate Groups</p>
+                        <p className="text-2xl font-bold">{debugResult.duplicates.length}</p>
+                      </div>
                     </div>
+
+                    {debugResult.duplicates.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Duplicates Found:</h4>
+                        <ScrollArea className="h-64 w-full rounded-lg border">
+                          <div className="p-4 space-y-2">
+                            {debugResult.duplicates.map((dup, idx) => (
+                              <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-800 rounded text-sm">
+                                <p className="font-medium">{dup.type} Connection</p>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                  {dup.personA} ↔ {dup.personB} ({dup.count} duplicates)
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    )}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                <div className="text-xs text-muted-foreground">
-                  This will permanently remove duplicate connection records
+          <TabsContent value="organizations" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Organization Structure
+                </CardTitle>
+                <CardDescription>
+                  View and analyze organization relationships
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <OrganizationStructureViewer />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TreePine className="h-5 w-5" />
+                  Organization Flow Examples
+                </CardTitle>
+                <CardDescription>
+                  Test organization invitation and setup flows
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <OrganizationFlowExamples />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="monitoring" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart className="h-5 w-5" />
+                  System Monitoring
+                </CardTitle>
+                <CardDescription>
+                  Monitor system health and performance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-gray-500">
+                  <BarChart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>Monitoring features coming soon</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Development Tools Card */}
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                Development Tools
-              </CardTitle>
-              <CardDescription>
-                Additional development utilities and debugging tools
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Access browser dev tools, network monitoring, and other debugging utilities.
-                </p>
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    console.log('Development mode enabled');
-                    alert('Check browser console for development logs');
-                  }}
-                  className="w-full"
-                >
-                  Enable Debug Mode
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Instructions */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Quick Start</CardTitle>
-            <CardDescription>
-              How to use the admin dashboard effectively
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-medium mb-2">1. Start Vitest UI</h4>
-              <code className="text-sm bg-muted px-2 py-1 rounded">npm run test:ui</code>
-              <p className="text-sm text-muted-foreground mt-1">
-                This starts Vitest's web interface with real-time test running, coverage reports, and debugging tools.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">2. Run Tests</h4>
-              <p className="text-sm text-muted-foreground">
-                Use the Vitest UI to run specific tests, watch for changes, and view detailed results with stack traces.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">3. Database Management</h4>
-              <p className="text-sm text-muted-foreground">
-                Use the Supabase dashboard to inspect tables, run queries, and manage your database schema.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">4. Database Cleanup</h4>
-              <p className="text-sm text-muted-foreground">
-                Use the cleanup tool to remove duplicate bidirectional connections that may have been created before the fix.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-          </TabsContent>
-
-          <TabsContent value="structure">
-            <OrganizationStructureViewer />
-          </TabsContent>
-
-          <TabsContent value="examples">
-            <OrganizationFlowExamples />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
