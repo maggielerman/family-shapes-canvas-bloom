@@ -41,7 +41,8 @@ import {
   Settings,
   Loader2,
   UserPlus,
-  Search
+  Search,
+  Building2
 } from "lucide-react";
 
 interface Group {
@@ -73,8 +74,6 @@ export default function Groups() {
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [joinCode, setJoinCode] = useState("");
-  const [organizations, setOrganizations] = useState<any[]>([]);
-  const [selectedOrgId, setSelectedOrgId] = useState("");
   const [formData, setFormData] = useState({
     label: "",
     type: "family",
@@ -85,53 +84,8 @@ export default function Groups() {
   useEffect(() => {
     if (user) {
       fetchGroups();
-      fetchUserOrganizations();
     }
   }, [user]);
-
-  const fetchUserOrganizations = async () => {
-    if (!user) return;
-    
-    try {
-      // Fetch organizations owned by user
-      const { data: ownedOrgs, error: ownedError } = await supabase
-        .from('organizations')
-        .select('id, name')
-        .eq('owner_id', user.id);
-
-      if (ownedError) throw ownedError;
-
-      // Fetch organizations where user is a member
-      const { data: memberOrgs, error: memberError } = await supabase
-        .from('organization_memberships')
-        .select(`
-          organizations (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', user.id);
-
-      if (memberError) throw memberError;
-
-      // Combine and deduplicate organizations
-      const allOrgs = [
-        ...(ownedOrgs || []),
-        ...(memberOrgs?.map(m => m.organizations).filter(Boolean) || [])
-      ];
-
-      const uniqueOrgs = Array.from(
-        new Map(allOrgs.map(org => [org.id, org])).values()
-      );
-
-      setOrganizations(uniqueOrgs);
-      if (uniqueOrgs.length > 0) {
-        setSelectedOrgId(uniqueOrgs[0].id);
-      }
-    } catch (error) {
-      console.error('Error fetching organizations:', error);
-    }
-  };
 
   const fetchGroups = async () => {
     if (!user) return;
@@ -139,34 +93,8 @@ export default function Groups() {
     try {
       setLoading(true);
 
-      // Fetch all groups from user's organizations
-      const { data: userOrgs, error: orgsError } = await supabase
-        .from('organization_memberships')
-        .select('organization_id')
-        .eq('user_id', user.id);
-
-      if (orgsError) throw orgsError;
-
-      const orgIds = userOrgs?.map(o => o.organization_id) || [];
-
-      // Also include organizations owned by the user
-      const { data: ownedOrgs, error: ownedOrgsError } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('owner_id', user.id);
-
-      if (ownedOrgsError) throw ownedOrgsError;
-
-      const ownedOrgIds = ownedOrgs?.map(o => o.id) || [];
-      const allOrgIds = [...new Set([...orgIds, ...ownedOrgIds])];
-
-      if (allOrgIds.length === 0) {
-        setGroups([]);
-        return;
-      }
-
-      // Fetch groups from these organizations
-      const { data: orgGroups, error: groupsError } = await supabase
+      // Fetch groups where user is owner
+      const { data: ownedGroups, error: ownedError } = await supabase
         .from('groups')
         .select(`
           id,
@@ -182,11 +110,11 @@ export default function Groups() {
             name
           )
         `)
-        .in('organization_id', allOrgIds);
+        .eq('owner_id', user.id);
 
-      if (groupsError) throw groupsError;
+      if (ownedError) throw ownedError;
 
-      // Fetch group memberships for the user
+      // Fetch groups where user is a member
       const { data: membershipData, error: membershipError } = await supabase
         .from('group_memberships')
         .select(`
@@ -200,48 +128,46 @@ export default function Groups() {
             visibility,
             created_at,
             owner_id,
-            organization_id
+            organization_id,
+            organizations (
+              id,
+              name
+            )
           )
         `)
         .eq('user_id', user.id);
 
       if (membershipError) throw membershipError;
 
-      // Create a map to track user roles in groups
-      const groupRoles = new Map();
-      membershipData?.forEach(m => {
-        if (m.group_id) {
-          groupRoles.set(m.group_id, m.role);
-        }
-      });
+      // Combine owned and member groups
+      const allGroups = [
+        ...(ownedGroups || []).map(g => ({ ...g, role: 'owner' })),
+        ...(membershipData || [])
+          .filter(m => m.groups)
+          .map(m => ({ ...m.groups, role: m.role }))
+      ];
 
-      // Add role information to groups
-      const groupsWithRoles = orgGroups?.map(g => ({
-        ...g,
-        role: g.owner_id === user.id ? 'owner' : groupRoles.get(g.id) || 'member'
-      })) || [];
+      // Remove duplicates (in case user is both owner and member)
+      const uniqueGroups = allGroups.filter((group, index, self) =>
+        index === self.findIndex((g) => g.id === group.id)
+      );
 
-      // Count members for each group
-      const groupIds = groupsWithRoles.map(g => g.id);
-      if (groupIds.length > 0) {
-        const { data: memberCounts, error: countError } = await supabase
-          .from('group_memberships')
-          .select('group_id')
-          .in('group_id', groupIds);
+      // Fetch member counts for each group
+      const groupsWithCounts = await Promise.all(
+        uniqueGroups.map(async (group) => {
+          const { count } = await supabase
+            .from('group_memberships')
+            .select('*', { count: 'exact', head: true })
+            .eq('group_id', group.id);
 
-        if (!countError && memberCounts) {
-          const countMap = memberCounts.reduce((acc, m) => {
-            acc[m.group_id] = (acc[m.group_id] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
+          return {
+            ...group,
+            _count: { members: count || 0 }
+          };
+        })
+      );
 
-          groupsWithRoles.forEach(g => {
-            g._count = { members: countMap[g.id] || 0 };
-          });
-        }
-      }
-
-      setGroups(groupsWithRoles);
+      setGroups(groupsWithCounts);
 
     } catch (error) {
       console.error('Error fetching groups:', error);
@@ -255,64 +181,27 @@ export default function Groups() {
     }
   };
 
-  const handleCreateGroup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !selectedOrgId) return;
-
-    setIsCreating(true);
-
-    try {
-      // Create the group
-      const { data: groupData, error: groupError } = await supabase
-        .from('groups')
-        .insert({
-          label: formData.label,
-          type: formData.type,
-          description: formData.description,
-          visibility: formData.visibility,
-          owner_id: user.id,
-          organization_id: selectedOrgId
-        })
-        .select()
-        .single();
-
-      if (groupError) throw groupError;
-
-      // Add the creator as a member with owner role
-      const { error: membershipError } = await supabase
-        .from('group_memberships')
-        .insert({
-          group_id: groupData.id,
-          user_id: user.id,
-          role: 'owner'
-        });
-
-      if (membershipError) throw membershipError;
-
-      toast({
-        title: "Group Created",
-        description: `${formData.label} has been created successfully`
-      });
-
-      setFormData({
-        label: "",
-        type: "family",
-        description: "",
-        visibility: "private"
-      });
-      setCreateDialogOpen(false);
-      fetchGroups();
-
-    } catch (error) {
-      console.error('Error creating group:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create group",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreating(false);
-    }
+  const handleCreateGroup = async () => {
+    // Show a message that users need to create groups within organizations
+    toast({
+      title: "Organization Required",
+      description: (
+        <div className="space-y-2">
+          <p>Groups must be created within an organization.</p>
+          <p className="text-sm">Please visit the Organizations page to create or join an organization first.</p>
+        </div>
+      ),
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.location.href = '/organizations'}
+        >
+          Go to Organizations
+        </Button>
+      )
+    });
+    setCreateDialogOpen(false);
   };
 
   const handleJoinGroup = async (e: React.FormEvent) => {
@@ -458,115 +347,33 @@ export default function Groups() {
               <DialogHeader>
                 <DialogTitle>Create New Group</DialogTitle>
                 <DialogDescription>
-                  Create a new group to connect with family members and build your community
+                  Groups help you connect with family members and build your community
                 </DialogDescription>
               </DialogHeader>
               
-              <form onSubmit={handleCreateGroup} className="space-y-4">
-                {organizations.length === 0 ? (
-                  <div className="text-center py-4">
-                    <p className="text-muted-foreground mb-4">
-                      You need to be a member of an organization to create groups.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => window.location.href = '/organizations'}
-                    >
-                      Go to Organizations
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="organization">Organization</Label>
-                      <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an organization" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {organizations.map((org) => (
-                            <SelectItem key={org.id} value={org.id}>
-                              {org.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="label">Group Name</Label>
-                      <Input
-                        id="label"
-                        value={formData.label}
-                        onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                        placeholder="e.g., Johnson Family, Donor #123 Siblings"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="type">Group Type</Label>
-                      <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="family">Family</SelectItem>
-                          <SelectItem value="donor_siblings">Donor Siblings</SelectItem>
-                          <SelectItem value="support">Support Group</SelectItem>
-                          <SelectItem value="research">Research Group</SelectItem>
-                          <SelectItem value="community">Community</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        placeholder="Describe the purpose of this group..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="visibility">Visibility</Label>
-                      <Select value={formData.visibility} onValueChange={(value) => setFormData({ ...formData, visibility: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="private">Private</SelectItem>
-                          <SelectItem value="public">Public</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={isCreating}>
-                        {isCreating ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating...
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create Group
-                          </>
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </>
-                )}
-              </form>
+              <div className="text-center py-6">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-semibold mb-2">Organization Required</h3>
+                <p className="text-muted-foreground mb-4">
+                  Groups must be created within an organization. This helps organize and manage group permissions.
+                </p>
+                <p className="text-sm text-muted-foreground mb-6">
+                  You can create your own organization or join an existing one.
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCreateDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => window.location.href = '/organizations'}
+                  >
+                    Go to Organizations
+                  </Button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -591,14 +398,17 @@ export default function Groups() {
             <div className="text-center py-8">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">You're not a member of any groups yet</p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Groups are created within organizations. Join an organization to start collaborating with groups.
+              </p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => setJoinDialogOpen(true)}>
                   <UserPlus className="mr-2 h-4 w-4" />
                   Join a Group
                 </Button>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Group
+                <Button onClick={() => window.location.href = '/organizations'}>
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Browse Organizations
                 </Button>
               </div>
             </div>
