@@ -207,13 +207,7 @@ const Header = () => {
                     <span>Dashboard</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/donor/auth" className="cursor-pointer">
-                    <Heart className="mr-2 h-4 w-4" />
-                    <span>Donor Portal</span>
-                  </Link>
-                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
