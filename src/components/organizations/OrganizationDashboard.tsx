@@ -258,8 +258,6 @@ export function OrganizationDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        
-
         <TabsContent value="overview">
           <OrganizationStats organizationId={organization.id} />
         </TabsContent>

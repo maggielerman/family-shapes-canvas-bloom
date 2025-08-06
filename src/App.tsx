@@ -124,6 +124,12 @@ const App = () => {
                   <Route path="/organizations" element={<ProtectedRoute><SidebarLayout><Organizations /></SidebarLayout></ProtectedRoute>} />
                   <Route path="/organizations/:id" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
                   <Route path="/organizations/:id/onboarding" element={<ProtectedRoute><SidebarLayout><OrganizationOnboardingPage /></SidebarLayout></ProtectedRoute>} />
+                  <Route path="/organizations/:id/members" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
+                  <Route path="/organizations/:id/donors" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
+                  <Route path="/organizations/:id/siblings" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
+                  <Route path="/organizations/:id/groups" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
+                  <Route path="/organizations/:id/trees" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
+                  <Route path="/organizations/:id/analytics" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
                   <Route path="/organizations/:id/settings" element={<ProtectedRoute><SidebarLayout><OrganizationDashboard /></SidebarLayout></ProtectedRoute>} />
                   <Route path="/groups" element={<ProtectedRoute><SidebarLayout><Groups /></SidebarLayout></ProtectedRoute>} />
                   <Route path="/groups/:id" element={<ProtectedRoute><SidebarLayout><GroupDashboard /></SidebarLayout></ProtectedRoute>} />
