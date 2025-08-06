@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/components/auth/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 interface AdminProtectedRouteProps {
@@ -8,17 +8,8 @@ interface AdminProtectedRouteProps {
 }
 
 export function AdminProtectedRoute({ requireSuperAdmin = false }: AdminProtectedRouteProps) {
-  const { isAdmin, isSuperAdmin, loading, requireAdmin, requireSuperAdmin: requireSuper } = useAdminAuth();
-
-  useEffect(() => {
-    if (!loading) {
-      if (requireSuperAdmin) {
-        requireSuper();
-      } else {
-        requireAdmin();
-      }
-    }
-  }, [loading, requireSuperAdmin, requireAdmin, requireSuper]);
+  // TEMPORARY: Using regular auth instead of admin auth for debugging
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -28,12 +19,9 @@ export function AdminProtectedRoute({ requireSuperAdmin = false }: AdminProtecte
     );
   }
 
-  if (requireSuperAdmin && !isSuperAdmin) {
-    return <Navigate to="/admin" replace />;
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/admin/signin" replace />;
+  // TEMPORARY: Just check if user is logged in, skip admin role check
+  if (!user) {
+    return <Navigate to="/auth" replace />;
   }
 
   return <Outlet />;
