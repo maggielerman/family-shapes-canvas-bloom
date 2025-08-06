@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,7 @@ interface Group {
 export default function Groups() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -179,29 +180,6 @@ export default function Groups() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCreateGroup = async () => {
-    // Show a message that users need to create groups within organizations
-    toast({
-      title: "Organization Required",
-      description: (
-        <div className="space-y-2">
-          <p>Groups must be created within an organization.</p>
-          <p className="text-sm">Please visit the Organizations page to create or join an organization first.</p>
-        </div>
-      ),
-      action: (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.location.href = '/organizations'}
-        >
-          Go to Organizations
-        </Button>
-      )
-    });
-    setCreateDialogOpen(false);
   };
 
   const handleJoinGroup = async (e: React.FormEvent) => {
@@ -368,7 +346,7 @@ export default function Groups() {
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => window.location.href = '/organizations'}
+                    onClick={() => navigate('/organizations')}
                   >
                     Go to Organizations
                   </Button>
@@ -406,7 +384,7 @@ export default function Groups() {
                   <UserPlus className="mr-2 h-4 w-4" />
                   Join a Group
                 </Button>
-                <Button onClick={() => window.location.href = '/organizations'}>
+                <Button onClick={() => navigate('/organizations')}>
                   <Building2 className="mr-2 h-4 w-4" />
                   Browse Organizations
                 </Button>
