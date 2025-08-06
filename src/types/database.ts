@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -40,6 +39,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sessions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          ip_address: unknown | null
+          is_active: boolean | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       album_media: {
         Row: {
           album_id: string
@@ -1728,10 +1757,12 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          last_login_at: string | null
           location: string | null
           organization_id: string | null
           phone: string | null
           preferred_contact: string | null
+          role: string | null
           settings: Json | null
           updated_at: string | null
           website: string | null
@@ -1744,10 +1775,12 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          last_login_at?: string | null
           location?: string | null
           organization_id?: string | null
           phone?: string | null
           preferred_contact?: string | null
+          role?: string | null
           settings?: Json | null
           updated_at?: string | null
           website?: string | null
@@ -1760,10 +1793,12 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          last_login_at?: string | null
           location?: string | null
           organization_id?: string | null
           phone?: string | null
           preferred_contact?: string | null
+          role?: string | null
           settings?: Json | null
           updated_at?: string | null
           website?: string | null
@@ -1903,6 +1938,10 @@ export type Database = {
       create_organization_for_user: {
         Args: { org_name: string; org_type?: string; org_description?: string }
         Returns: string
+      }
+      custom_access_token_hook: {
+        Args: { event: Json }
+        Returns: Json
       }
       delete_user_data: {
         Args: { p_user_uuid: string }
